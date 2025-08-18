@@ -1,7 +1,7 @@
-
 import React, { useState } from 'react';
-import { collection, doc, updateDoc, addDoc } from 'firebase/firestore';
-import { db } from '../../services/firebase';
+import { collection, doc, updateDoc, setDoc } from 'firebase/firestore';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { db, auth } from '../../services/firebase';
 import { UserData, UserRole } from '../../types';
 
 interface UserModalProps {
@@ -14,6 +14,8 @@ const UserModal: React.FC<UserModalProps> = ({ user, closeModal }) => {
     const [email, setEmail] = useState(user ? user.email : '');
     const [noWhatsapp, setNoWhatsapp] = useState(user ? user.noWhatsapp : '');
     const [role, setRole] = useState<UserRole>(user ? user.role : 'pegawai');
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -21,29 +23,44 @@ const UserModal: React.FC<UserModalProps> = ({ user, closeModal }) => {
         setLoading(true);
 
         try {
-            if (user) { 
+            if (user) { // Edit existing user
                 const userRef = doc(db, "users", user.id);
                 await updateDoc(userRef, { nama, email, noWhatsapp, role });
-            } else { 
-                const firstName = nama.split(' ')[0].toLowerCase();
-                const username = `${firstName}@proapp.local`;
-                const password = `${firstName}123`;
+                alert('Data pegawai berhasil diperbarui.');
+            } else { // Add new user
+                if (password !== confirmPassword) {
+                    alert("Password tidak cocok.");
+                    setLoading(false);
+                    return;
+                }
+                if (password.length < 6) {
+                    alert("Password minimal harus 6 karakter.");
+                    setLoading(false);
+                    return;
+                }
+                
+                // This creates the user in Firebase Authentication.
+                // NOTE: This will sign out the admin and sign in the new user due to Firebase SDK limitations.
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const newUser = userCredential.user;
 
-                // In a real app, this should trigger a Firebase Function to create the auth user.
-                // This client-side implementation just adds to Firestore.
-                await addDoc(collection(db, "users"), {
+                // Create the user document in Firestore, using the UID from Auth as the document ID.
+                // This is crucial for linking Auth and Firestore data.
+                await setDoc(doc(db, "users", newUser.uid), {
+                    uid: newUser.uid,
                     nama,
                     email,
                     noWhatsapp,
                     role,
-                    uid: "UID_generated_by_auth_in_backend" // Placeholder UID
                 });
-                alert(`Pegawai ${nama} ditambahkan ke database. Akun otentikasi harus dibuat secara terpisah.\n\nUsername: ${username}\nPassword: ${password}`);
+                
+                alert(`Pegawai ${nama} berhasil dibuat.\n\nPERHATIAN: Sesi admin Anda telah berakhir dan sistem sekarang login sebagai pengguna baru. Harap logout dan login kembali dengan akun admin Anda untuk melanjutkan.`);
             }
             closeModal();
         } catch (error) {
             console.error("Error saving user: ", error);
-            alert("Gagal menyimpan data pegawai.");
+            const err = error as { message?: string };
+            alert(`Gagal menyimpan data pegawai. Pastikan email unik.\nError: ${err.message}`);
         } finally {
             setLoading(false);
         }
@@ -60,12 +77,25 @@ const UserModal: React.FC<UserModalProps> = ({ user, closeModal }) => {
                     </div>
                     <div className="mb-4">
                         <label className="block text-sm font-bold mb-2">Email</label>
-                        <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" required />
+                        <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" required disabled={!!user} />
+                         {user && <p className="text-xs text-gray-500 mt-1">Email tidak dapat diubah.</p>}
                     </div>
-                    <div className="mb-4">
+                     <div className="mb-4">
                         <label className="block text-sm font-bold mb-2">Nomor WhatsApp</label>
                         <input type="tel" value={noWhatsapp} onChange={e => setNoWhatsapp(e.target.value)} className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" required />
                     </div>
+                    {!user && (
+                        <>
+                            <div className="mb-4">
+                                <label className="block text-sm font-bold mb-2">Password</label>
+                                <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Minimal 6 karakter" className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" required />
+                            </div>
+                            <div className="mb-4">
+                                <label className="block text-sm font-bold mb-2">Konfirmasi Password</label>
+                                <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" required />
+                            </div>
+                        </>
+                    )}
                     <div className="mb-4">
                         <label className="block text-sm font-bold mb-2">Role</label>
                         <select value={role} onChange={e => setRole(e.target.value as UserRole)} className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">

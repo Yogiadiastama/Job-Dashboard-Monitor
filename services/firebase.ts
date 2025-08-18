@@ -1,16 +1,15 @@
-
 import { initializeApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
 import { getStorage, FirebaseStorage } from 'firebase/storage';
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyBme0QBJ2p57XROfLUF6L8cZgz5loE00Mo",
+  authDomain: "dashboard-app-final.firebaseapp.com",
+  projectId: "dashboard-app-final",
+  storageBucket: "dashboard-app-final.appspot.com",
+  messagingSenderId: "72857853228",
+  appId: "1:72857853228:web:7de9a0dceada37dc79a089"
 };
 
 let app: FirebaseApp;
@@ -18,7 +17,8 @@ let auth: Auth;
 let db: Firestore;
 let storage: FirebaseStorage;
 
-const isConfigured = firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY";
+// A simple check to see if the config is filled out.
+export const isConfigured = firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("YOUR_");
 
 if (isConfigured) {
   try {
@@ -31,4 +31,4 @@ if (isConfigured) {
   }
 }
 
-export { auth, db, storage, isConfigured };
+export { auth, db, storage };

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../services/firebase';
@@ -16,17 +15,17 @@ const LoginPage: React.FC = () => {
         setError('');
         setLoading(true);
 
-        let loginEmail = email;
-        if (!email.includes('@')) {
-            loginEmail = email.toLowerCase() === 'admin' 
-                ? 'admin@proapp.local' 
-                : `${email.toLowerCase()}@proapp.local`;
+        let finalEmail = email;
+        // Special handling for the 'admin' username for convenience.
+        // All other users must enter their full email address.
+        if (email.toLowerCase() === 'admin' && !email.includes('@')) {
+            finalEmail = 'admin@proapp.local';
         }
 
         try {
-            await signInWithEmailAndPassword(auth, loginEmail, password);
+            await signInWithEmailAndPassword(auth, finalEmail, password);
         } catch (err) {
-            setError('Login Gagal. Periksa kembali username dan password Anda.');
+            setError('Login Gagal. Periksa kembali email dan password Anda.');
             console.error(err);
         } finally {
             setLoading(false);
@@ -44,13 +43,13 @@ const LoginPage: React.FC = () => {
                     <form onSubmit={handleLogin}>
                         <div className="mb-4">
                             <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="username">
-                                Username
+                                Email atau Username 'admin'
                             </label>
                             <input
                                 className="shadow-inner appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 dark:text-gray-200 dark:bg-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 id="username"
                                 type="text"
-                                placeholder="e.g., admin atau yogi"
+                                placeholder="e.g., user@example.com atau admin"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required

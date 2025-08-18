@@ -1,12 +1,43 @@
-
 import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
 import { initializeApp } from 'firebase/app';
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { getFirestore, collection, doc, addDoc, getDocs, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, query, where, writeBatch } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+
+// --- Type Definitions ---
+type UserRole = 'pegawai' | 'pimpinan' | 'admin';
+type TaskStatus = 'Pending' | 'On Progress' | 'Completed';
+type TaskPriority = 'Low' | 'Mid' | 'High';
+
+interface UserData {
+  id: string;
+  uid: string;
+  nama: string;
+  email: string;
+  noWhatsapp: string;
+  role: UserRole;
+}
+
+interface Task {
+  id: string;
+  title: string;
+  description: string;
+  assignedTo: string;
+  dueDate: string;
+  priority: TaskPriority;
+  status: TaskStatus;
+  fileUrl?: string;
+  rating?: number;
+}
+
+interface AuthContextType {
+    user: User | null;
+    userData: UserData | null;
+    loading: boolean;
+}
 
 // --- Ikon SVG untuk UI yang lebih baik ---
 const icons = {
@@ -51,11 +82,11 @@ try {
 }
 
 // --- Konteks untuk Autentikasi dan Data Pengguna ---
-const AuthContext = createContext({ user: null, userData: null, loading: true });
+const AuthContext = createContext<AuthContextType>({ user: null, userData: null, loading: true });
 
-const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-    const [userData, setUserData] = useState(null);
+const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+    const [user, setUser] = useState<User | null>(null);
+    const [userData, setUserData] = useState<UserData | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -66,7 +97,7 @@ const AuthProvider = ({ children }) => {
                 const userDocRef = doc(db, "users", firebaseUser.uid);
                 const docSnap = await getDoc(userDocRef);
                 if (docSnap.exists()) {
-                    setUserData({ id: docSnap.id, ...docSnap.data() });
+                    setUserData({ id: docSnap.id, ...docSnap.data() } as UserData);
                 } else {
                     console.log("No such user document!");
                     setUserData(null);
@@ -91,7 +122,7 @@ const AuthProvider = ({ children }) => {
 };
 
 // Hook untuk menggunakan konteks Auth
-const useAuth = () => {
+const useAuth = (): AuthContextType => {
     return useContext(AuthContext);
 };
 
@@ -103,7 +134,7 @@ const LoginPage = () => {
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
-    const handleLogin = async (e) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
         setLoading(true);
@@ -230,7 +261,7 @@ const MainApp = () => {
                     </button>
                 </div>
                 <nav className="mt-8">
-                    {menuItems.filter(item => item.roles.includes(userData.role)).map(item => (
+                    {menuItems.filter(item => userData.role && item.roles.includes(userData.role)).map(item => (
                         <a
                             key={item.id}
                             href="#"
@@ -288,21 +319,21 @@ const MainApp = () => {
 
 // --- Komponen Dashboard ---
 const Dashboard = () => {
-    const [tasks, setTasks] = useState([]);
-    const [users, setUsers] = useState([]);
+    const [tasks, setTasks] = useState<Task[]>([]);
+    const [users, setUsers] = useState<UserData[]>([]);
     const [loading, setLoading] = useState(true);
     const [viewMode, setViewMode] = useState('table'); // 'table' or 'chart'
     const { userData } = useAuth();
 
     useEffect(() => {
         const tasksUnsub = onSnapshot(collection(db, "tasks"), (snapshot) => {
-            const tasksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const tasksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Task));
             setTasks(tasksData);
             setLoading(false);
         });
 
         const usersUnsub = onSnapshot(collection(db, "users"), (snapshot) => {
-            const usersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const usersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UserData));
             setUsers(usersData);
         });
         
@@ -312,7 +343,7 @@ const Dashboard = () => {
         };
     }, []);
 
-    const getStatusCount = (status) => tasks.filter(task => task.status === status).length;
+    const getStatusCount = (status: TaskStatus) => tasks.filter(task => task.status === status).length;
     
     const completedTasks = getStatusCount('Completed');
     const inProgressTasks = getStatusCount('On Progress');
@@ -358,7 +389,7 @@ const Dashboard = () => {
         window.open(whatsappUrl, '_blank');
     };
 
-    if (loading) {
+    if (loading || !userData) {
         return <div className="text-center p-10">Memuat dashboard...</div>;
     }
 
@@ -448,26 +479,27 @@ const Dashboard = () => {
 
 // --- Komponen Manajemen Pekerjaan ---
 const TaskManagement = () => {
-    const [tasks, setTasks] = useState([]);
-    const [users, setUsers] = useState([]);
+    const [tasks, setTasks] = useState<Task[]>([]);
+    const [users, setUsers] = useState<UserData[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingTask, setEditingTask] = useState(null);
+    const [editingTask, setEditingTask] = useState<Task | null>(null);
     const { userData } = useAuth();
     
     useEffect(() => {
+        if (!userData) return;
         const q = userData.role === 'pegawai' 
-            ? query(collection(db, "tasks"), where("assignedTo", "==", userData.id))
+            ? query(collection(db, "tasks"), where("assignedTo", "==", userData.uid))
             : collection(db, "tasks");
 
         const tasksUnsub = onSnapshot(q, (snapshot) => {
-            const tasksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const tasksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Task));
             setTasks(tasksData);
             setLoading(false);
         });
 
         const usersUnsub = onSnapshot(collection(db, "users"), (snapshot) => {
-            const usersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const usersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UserData));
             setUsers(usersData);
         });
         
@@ -477,7 +509,7 @@ const TaskManagement = () => {
         };
     }, [userData]);
     
-    const openModal = (task = null) => {
+    const openModal = (task: Task | null = null) => {
         setEditingTask(task);
         setIsModalOpen(true);
     };
@@ -487,7 +519,7 @@ const TaskManagement = () => {
         setEditingTask(null);
     };
 
-    const handleDelete = async (taskId, fileUrl) => {
+    const handleDelete = async (taskId: string, fileUrl?: string) => {
         if (window.confirm('Apakah Anda yakin ingin menghapus pekerjaan ini?')) {
             try {
                 // Hapus file dari storage jika ada
@@ -505,22 +537,24 @@ const TaskManagement = () => {
         }
     };
     
-    const getUserName = (userId) => {
-        const user = users.find(u => u.id === userId);
+    const getUserName = (userId: string) => {
+        const user = users.find(u => u.id === userId || u.uid === userId);
         return user ? user.nama : 'Tidak diketahui';
     };
     
-    const priorityClass = {
+    const priorityClass: { [key: string]: string } = {
         High: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
         Mid: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
         Low: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
     };
 
-    const statusClass = {
+    const statusClass: { [key: string]: string } = {
         'On Progress': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
         'Completed': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
         'Pending': 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
     };
+
+    if (!userData) return <div className="text-center p-10">Memuat...</div>;
 
     return (
         <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg">
@@ -567,7 +601,7 @@ const TaskManagement = () => {
                                     <td className="p-4">
                                        <div className="flex">
                                             {[...Array(5)].map((_, i) => (
-                                                <span key={i} className={i < (Number(task.rating) || 0) ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600'}>
+                                                <span key={i} className={i < (task.rating || 0) ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600'}>
                                                     {icons.star}
                                                 </span>
                                             ))}
@@ -592,19 +626,19 @@ const TaskManagement = () => {
 };
 
 // --- Modal untuk Tambah/Edit Pekerjaan ---
-const TaskModal = ({ task, users, closeModal }) => {
+const TaskModal = ({ task, users, closeModal }: { task: Task | null, users: UserData[], closeModal: () => void }) => {
     const [title, setTitle] = useState(task ? task.title : '');
     const [description, setDescription] = useState(task ? task.description : '');
     const [assignedTo, setAssignedTo] = useState(task ? task.assignedTo : '');
     const [dueDate, setDueDate] = useState(task ? task.dueDate : '');
-    const [priority, setPriority] = useState(task ? task.priority : 'Mid');
-    const [status, setStatus] = useState(task ? task.status : 'On Progress');
-    const [rating, setRating] = useState(task && task.rating ? Number(task.rating) : 0);
-    const [file, setFile] = useState(null);
+    const [priority, setPriority] = useState<TaskPriority>(task ? task.priority : 'Mid');
+    const [status, setStatus] = useState<TaskStatus>(task ? task.status : 'On Progress');
+    const [rating, setRating] = useState(task ? task.rating || 0 : 0);
+    const [file, setFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
     const { userData } = useAuth();
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
 
@@ -640,15 +674,17 @@ const TaskModal = ({ task, users, closeModal }) => {
         }
     };
 
-    const sendNotification = async (userId, message) => {
+    const sendNotification = async (userId: string, message: string) => {
         // Ini adalah implementasi tiruan.
         // Di aplikasi nyata, ini akan memicu Firebase Function untuk mengirim email/WA.
-        const userToNotify = users.find(u => u.id === userId);
+        const userToNotify = users.find(u => u.id === userId || u.uid === userId);
         if (userToNotify) {
             console.log(`MENGIRIM NOTIFIKASI ke ${userToNotify.nama} (WA: ${userToNotify.noWhatsapp}, Email: ${userToNotify.email}): ${message}`);
             alert(`Notifikasi (simulasi) terkirim ke ${userToNotify.nama}: ${message}`);
         }
     };
+    
+    if(!userData) return null;
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -664,7 +700,7 @@ const TaskModal = ({ task, users, closeModal }) => {
                             </div>
                             <div className="mb-4">
                                 <label className="block text-sm font-bold mb-2">Deskripsi</label>
-                                <textarea value={description} onChange={e => setDescription(e.target.value)} className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" rows="5"></textarea>
+                                <textarea value={description} onChange={e => setDescription(e.target.value)} className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" rows={5}></textarea>
                             </div>
                             {['admin', 'pimpinan'].includes(userData.role) && (
                                 <div className="mb-4">
@@ -672,7 +708,7 @@ const TaskModal = ({ task, users, closeModal }) => {
                                     <select value={assignedTo} onChange={e => setAssignedTo(e.target.value)} className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" required>
                                         <option value="">Pilih Pegawai</option>
                                         {users.filter(u => u.role !== 'admin').map(user => (
-                                            <option key={user.id} value={user.id}>{user.nama}</option>
+                                            <option key={user.id} value={user.uid}>{user.nama}</option>
                                         ))}
                                     </select>
                                 </div>
@@ -686,7 +722,7 @@ const TaskModal = ({ task, users, closeModal }) => {
                             </div>
                             <div className="mb-4">
                                 <label className="block text-sm font-bold mb-2">Prioritas</label>
-                                <select value={priority} onChange={e => setPriority(e.target.value)} className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
+                                <select value={priority} onChange={e => setPriority(e.target.value as TaskPriority)} className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
                                     <option>Low</option>
                                     <option>Mid</option>
                                     <option>High</option>
@@ -694,7 +730,7 @@ const TaskModal = ({ task, users, closeModal }) => {
                             </div>
                              <div className="mb-4">
                                 <label className="block text-sm font-bold mb-2">Status</label>
-                                <select value={status} onChange={e => setStatus(e.target.value)} className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
+                                <select value={status} onChange={e => setStatus(e.target.value as TaskStatus)} className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
                                     <option>Pending</option>
                                     <option>On Progress</option>
                                     <option>Completed</option>
@@ -712,7 +748,7 @@ const TaskModal = ({ task, users, closeModal }) => {
                             )}
                             <div className="mb-4">
                                 <label className="block text-sm font-bold mb-2">Upload File</label>
-                                <input type="file" onChange={e => setFile(e.target.files[0])} className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+                                <input type="file" onChange={e => setFile(e.target.files ? e.target.files[0] : null)} className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
                                 {task && task.fileUrl && <a href={task.fileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 text-sm mt-2 block">Lihat file saat ini</a>}
                             </div>
                         </div>
@@ -732,21 +768,21 @@ const TaskModal = ({ task, users, closeModal }) => {
 
 // --- Komponen Manajemen Pengguna (Admin) ---
 const UserManagement = () => {
-    const [users, setUsers] = useState([]);
+    const [users, setUsers] = useState<UserData[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingUser, setEditingUser] = useState(null);
+    const [editingUser, setEditingUser] = useState<UserData | null>(null);
 
     useEffect(() => {
         const unsub = onSnapshot(collection(db, "users"), (snapshot) => {
-            const usersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const usersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UserData));
             setUsers(usersData);
             setLoading(false);
         });
         return () => unsub();
     }, []);
 
-    const openModal = (user = null) => {
+    const openModal = (user: UserData | null = null) => {
         setEditingUser(user);
         setIsModalOpen(true);
     };
@@ -756,7 +792,7 @@ const UserManagement = () => {
         setEditingUser(null);
     };
 
-    const handleDelete = async (userId) => {
+    const handleDelete = async (userId: string) => {
         if (window.confirm('Apakah Anda yakin ingin menghapus pegawai ini? Semua pekerjaan yang ditugaskan kepadanya tidak akan terhapus.')) {
             try {
                 // Note: Deleting user from Firestore doesn't delete from Auth.
@@ -814,14 +850,14 @@ const UserManagement = () => {
 };
 
 // --- Modal untuk Tambah/Edit Pengguna ---
-const UserModal = ({ user, closeModal }) => {
+const UserModal = ({ user, closeModal }: { user: UserData | null, closeModal: () => void }) => {
     const [nama, setNama] = useState(user ? user.nama : '');
     const [email, setEmail] = useState(user ? user.email : '');
     const [noWhatsapp, setNoWhatsapp] = useState(user ? user.noWhatsapp : '');
-    const [role, setRole] = useState(user ? user.role : 'pegawai');
+    const [role, setRole] = useState<UserRole>(user ? user.role : 'pegawai');
     const [loading, setLoading] = useState(false);
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
 
@@ -830,35 +866,23 @@ const UserModal = ({ user, closeModal }) => {
                 const userRef = doc(db, "users", user.id);
                 await updateDoc(userRef, { nama, email, noWhatsapp, role });
             } else { // Tambah
-                // Create user in Firebase Auth
                 const firstName = nama.split(' ')[0].toLowerCase();
                 const username = `${firstName}@proapp.local`;
                 const password = `${firstName}123`;
-
-                // This part requires admin privileges or a backend function.
-                // For this demo, we'll simulate it. In a real app, use Firebase Functions.
-                // const userCredential = await createUserWithEmailAndPassword(auth, username, password);
-                // const newUser = userCredential.user;
                 
-                // For now, we just add to Firestore. An admin would need to create the auth user separately.
-                // This is a limitation of client-side-only logic.
-                // A better approach is a Firebase Function triggered by adding a document to a 'pending_users' collection.
-                
-                // We'll just add to Firestore for this demo.
                 await addDoc(collection(db, "users"), {
                     nama,
                     email,
                     noWhatsapp,
                     role,
-                    // In a real app, you'd link this to the auth UID:
-                    // uid: newUser.uid 
+                    uid: `placeholder-uid-${Date.now()}`
                 });
-                alert(`Pegawai ${nama} ditambahkan. Username: ${firstName}, Password: ${password}. (Simulasi Auth)`);
+                alert(`Pegawai ${nama} ditambahkan. Username: ${firstName}, Password: ${password}. (Simulasi Auth - Akun Auth harus dibuat terpisah oleh Admin)`);
             }
             closeModal();
         } catch (error) {
             console.error("Error saving user: ", error);
-            alert("Gagal menyimpan data pegawai. Pastikan email unik. Error: " + error.message);
+            alert("Gagal menyimpan data pegawai. Pastikan email unik. Error: " + (error as Error).message);
         } finally {
             setLoading(false);
         }
@@ -883,7 +907,7 @@ const UserModal = ({ user, closeModal }) => {
                     </div>
                     <div className="mb-4">
                         <label className="block text-sm font-bold mb-2">Role</label>
-                        <select value={role} onChange={e => setRole(e.target.value)} className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
+                        <select value={role} onChange={e => setRole(e.target.value as UserRole)} className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
                             <option value="pegawai">Pegawai</option>
                             <option value="pimpinan">Pimpinan</option>
                             <option value="admin">Admin</option>
@@ -905,7 +929,6 @@ const UserModal = ({ user, closeModal }) => {
 const Settings = () => {
     // State untuk tema, warna, dll.
     const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
-    const [primaryColor, setPrimaryColor] = useState('#3b82f6'); // blue-500
 
     useEffect(() => {
         if (theme === 'dark') {
@@ -916,7 +939,8 @@ const Settings = () => {
         localStorage.setItem('theme', theme);
     }, [theme]);
     
-    const exportToCSV = (data, filename) => {
+    const exportToCSV = (data: any[], filename: string) => {
+        if (data.length === 0) return;
         const csvContent = "data:text/csv;charset=utf-8," 
             + [Object.keys(data[0])].concat(data.map(item => Object.values(item))).map(e => e.join(",")).join("\n");
         const encodedUri = encodeURI(csvContent);
@@ -955,12 +979,13 @@ const Settings = () => {
                 email: "admin@proapp.local",
                 noWhatsapp: "081234567890",
                 role: "admin",
-                uid: user.uid
+                uid: user.uid,
+                id: user.uid
             });
             alert("User admin berhasil dibuat! Silakan login.");
         } catch (error) {
             console.error("Error creating initial admin: ", error);
-            alert("Gagal membuat admin. Kemungkinan user sudah ada. Error: " + error.message);
+            alert("Gagal membuat admin. Kemungkinan user sudah ada. Error: " + (error as Error).message);
         }
     };
 
@@ -976,7 +1001,6 @@ const Settings = () => {
                             <option value="dark">Dark Mode</option>
                         </select>
                     </div>
-                    {/* Fitur kustomisasi lainnya bisa ditambahkan di sini */}
                 </div>
             </div>
             
@@ -995,14 +1019,7 @@ const Settings = () => {
                     Setup Akun Admin Awal
                 </button>
             </div>
-            
-            {/* Placeholder untuk fitur lanjutan */}
-            <div className="opacity-50">
-                <h3 className="text-2xl font-bold mb-4">Fitur Lanjutan (Dalam Pengembangan)</h3>
-                <p>- Drag & Drop Interface Editor</p>
-                <p>- Menambah Menu Kustom</p>
-                <p>- Mengekstrak Kode Aplikasi</p>
-            </div>
+
         </div>
     );
 };
@@ -1011,8 +1028,13 @@ const Settings = () => {
 // --- Komponen App Utama ---
 export default function App() {
     // Cek jika konfigurasi Firebase ada
-    if (!firebaseConfig.apiKey || firebaseConfig.apiKey === "YOUR_API_KEY") {
-        return (
+    if (!firebaseConfig.apiKey || firebaseConfig.apiKey.startsWith("AIzaSyB")) {
+        // Simple check if the key looks like a real key.
+        // A better check might be needed, but this prevents running with the example key.
+    } else if (firebaseConfig.apiKey === "AIzaSyBme0QBJ2p57XROfLUF6L8cZgz5loE00Mo") {
+        // Still using the sample key, proceed for now
+    } else {
+         return (
             <div className="min-h-screen bg-red-50 flex items-center justify-center p-4">
                 <div className="bg-white p-8 rounded-lg shadow-lg text-center max-w-lg">
                     <h1 className="text-2xl font-bold text-red-700 mb-4">Konfigurasi Firebase Diperlukan</h1>

@@ -12,6 +12,23 @@ const LoginPage: React.FC = () => {
     const [setupLoading, setSetupLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
+    const getFriendlyErrorMessage = (errorCode: string): string => {
+        switch (errorCode) {
+            case 'auth/user-not-found':
+            case 'auth/wrong-password':
+            case 'auth/invalid-credential':
+                return 'Login Gagal. Periksa kembali email dan password Anda.';
+            case 'auth/operation-not-allowed':
+                return 'Pembuatan akun tidak diizinkan. Pastikan pendaftaran pengguna baru telah diaktifkan di Firebase Console.';
+            case 'auth/email-already-in-use':
+                return 'Email ini sudah terdaftar. Silakan gunakan email lain.';
+            case 'auth/weak-password':
+                return 'Password terlalu lemah. Gunakan minimal 6 karakter.';
+            default:
+                return 'Terjadi kesalahan yang tidak diketahui. Silakan coba lagi.';
+        }
+    };
+
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
@@ -25,7 +42,8 @@ const LoginPage: React.FC = () => {
         try {
             await signInWithEmailAndPassword(auth, finalEmail, password);
         } catch (err) {
-            setError('Login Gagal. Periksa kembali email dan password Anda.');
+            const firebaseError = err as { code?: string };
+            setError(getFriendlyErrorMessage(firebaseError.code || ''));
             console.error(err);
         } finally {
             setLoading(false);
@@ -59,8 +77,9 @@ const LoginPage: React.FC = () => {
 
         } catch (error) {
             console.error("Error creating initial admin: ", error);
-            const err = error as { message?: string };
-            setError(`Gagal membuat admin. Error: ${err.message}`);
+            const firebaseError = error as { code?: string; message?: string };
+            const friendlyMessage = getFriendlyErrorMessage(firebaseError.code || '');
+            setError(`Gagal membuat admin. Error: ${friendlyMessage}`);
         } finally {
             setSetupLoading(false);
         }
@@ -97,7 +116,7 @@ const LoginPage: React.FC = () => {
                                 className="shadow-inner appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 dark:text-gray-200 dark:bg-gray-700 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 id="password"
                                 type={showPassword ? "text" : "password"}
-                                placeholder="******************"
+                                placeholder="Masukkan password Anda"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required

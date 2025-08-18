@@ -1,0 +1,170 @@
+
+import React, { useState, useEffect } from 'react';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { db } from '../../services/firebase';
+import { useAuth } from '../../hooks/useAuth';
+import { Task, UserData } from '../../types';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { ICONS } from '../../constants';
+import LoadingSpinner from '../common/LoadingSpinner';
+
+const Dashboard: React.FC = () => {
+    const [tasks, setTasks] = useState<Task[]>([]);
+    const [users, setUsers] = useState<UserData[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [viewMode, setViewMode] = useState('table');
+    const { userData } = useAuth();
+
+    useEffect(() => {
+        const tasksUnsub = onSnapshot(collection(db, "tasks"), (snapshot) => {
+            const tasksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Task));
+            setTasks(tasksData);
+            setLoading(false);
+        });
+
+        const usersUnsub = onSnapshot(collection(db, "users"), (snapshot) => {
+            const usersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UserData));
+            setUsers(usersData);
+        });
+        
+        return () => {
+            tasksUnsub();
+            usersUnsub();
+        };
+    }, []);
+
+    const getStatusCount = (status: string) => tasks.filter(task => task.status === status).length;
+    
+    const completedTasks = getStatusCount('Completed');
+    const inProgressTasks = getStatusCount('On Progress');
+    const lateTasks = tasks.filter(task => new Date(task.dueDate) < new Date() && task.status !== 'Completed').length;
+
+    const employeeOfTheMonth = () => {
+        if (users.length === 0 || tasks.length === 0) return { nama: 'N/A', completed: 0 };
+        
+        const employeeStats = users.map(user => {
+            const completed = tasks.filter(task => task.assignedTo === user.id && task.status === 'Completed').length;
+            return { ...user, completed };
+        });
+
+        return employeeStats.sort((a, b) => b.completed - a.completed)[0];
+    };
+    
+    const bestEmployee = employeeOfTheMonth();
+
+    const stats = [
+        { title: 'Total Pekerjaan', value: tasks.length, color: 'blue' },
+        { title: 'Completed', value: completedTasks, color: 'green' },
+        { title: 'On Progress', value: inProgressTasks, color: 'yellow' },
+        { title: 'Late', value: lateTasks, color: 'red' },
+    ];
+    
+    const chartData = users
+      .filter(u => u.role !== 'admin')
+      .map(user => ({
+        name: user.nama.split(' ')[0],
+        'On Progress': tasks.filter(t => t.assignedTo === user.id && t.status === 'On Progress').length,
+        'Completed': tasks.filter(t => t.assignedTo === user.id && t.status === 'Completed').length,
+        'Late': tasks.filter(t => t.assignedTo === user.id && new Date(t.dueDate) < new Date() && t.status !== 'Completed').length,
+    }));
+
+    const handleWhatsAppExport = () => {
+        const message = `*Ringkasan Pekerjaan ProjectFlow Pro*:\n\n` +
+                        `- Total Pekerjaan: *${tasks.length}*\n` +
+                        `- Selesai: *${completedTasks}*\n` +
+                        `- Dalam Proses: *${inProgressTasks}*\n` +
+                        `- Terlambat: *${lateTasks}*\n\n` +
+                        `*Pegawai Terbaik Bulan Ini*: ${bestEmployee.nama} (${bestEmployee.completed} pekerjaan selesai)`;
+        const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, '_blank');
+    };
+
+    if (loading || !userData) {
+        return <div className="text-center p-10"><LoadingSpinner text="Memuat dashboard..." /></div>;
+    }
+
+    return (
+        <div>
+            {/* Stat Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                {stats.map(stat => (
+                    <div key={stat.title} className={`bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border-l-4 border-${stat.color}-500 transform transition-transform duration-300 hover:-translate-y-2`}>
+                        <h3 className="text-gray-500 dark:text-gray-400 font-medium">{stat.title}</h3>
+                        <p className="text-4xl font-bold mt-2">{stat.value}</p>
+                    </div>
+                ))}
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                 {/* Employee of the Month */}
+                <div className="lg:col-span-1 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg flex flex-col items-center justify-center text-center">
+                    <h3 className="text-xl font-bold mb-4">Pegawai Terbaik Bulan Ini</h3>
+                    <img className="h-24 w-24 rounded-full object-cover ring-4 ring-yellow-400 mb-4" src={`https://ui-avatars.com/api/?name=${bestEmployee.nama}&background=random`} alt="Best Employee" />
+                    <p className="text-2xl font-semibold">{bestEmployee.nama}</p>
+                    <p className="text-gray-500 dark:text-gray-400">{bestEmployee.completed} pekerjaan selesai</p>
+                </div>
+
+                {/* Overview */}
+                <div className="lg:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg">
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-xl font-bold">Overview Pekerjaan Pegawai</h3>
+                        <div className="flex items-center space-x-2">
+                            {userData.role === 'admin' && (
+                                <>
+                                    <button onClick={() => setViewMode('table')} className={`p-2 rounded-lg ${viewMode === 'table' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700'}`}>{ICONS.table}</button>
+                                    <button onClick={() => setViewMode('chart')} className={`p-2 rounded-lg ${viewMode === 'chart' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700'}`}>{ICONS.chart}</button>
+                                </>
+                            )}
+                            <button onClick={handleWhatsAppExport} className="flex items-center space-x-2 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">
+                                {ICONS.whatsapp}
+                                <span>Export</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    {viewMode === 'chart' && userData.role === 'admin' ? (
+                        <div style={{ width: '100%', height: 300 }}>
+                            <ResponsiveContainer>
+                                <BarChart data={chartData}>
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis dataKey="name" />
+                                    <YAxis />
+                                    <Tooltip contentStyle={{ backgroundColor: '#333', border: 'none' }} />
+                                    <Legend />
+                                    <Bar dataKey="On Progress" stackId="a" fill="#f59e0b" />
+                                    <Bar dataKey="Completed" stackId="a" fill="#10b981" />
+                                    <Bar dataKey="Late" stackId="a" fill="#ef4444" />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left">
+                                <thead>
+                                    <tr className="border-b dark:border-gray-700">
+                                        <th className="p-3">Nama Pegawai</th>
+                                        <th className="p-3 text-center">On Progress</th>
+                                        <th className="p-3 text-center">Completed</th>
+                                        <th className="p-3 text-center">Late</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {users.filter(u => u.role !== 'admin').map(user => (
+                                        <tr key={user.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                            <td className="p-3 font-medium">{user.nama}</td>
+                                            <td className="p-3 text-center">{tasks.filter(t => t.assignedTo === user.id && t.status === 'On Progress').length}</td>
+                                            <td className="p-3 text-center">{tasks.filter(t => t.assignedTo === user.id && t.status === 'Completed').length}</td>
+                                            <td className="p-3 text-center">{tasks.filter(t => t.assignedTo === user.id && new Date(t.dueDate) < new Date() && t.status !== 'Completed').length}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default Dashboard;

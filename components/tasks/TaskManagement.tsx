@@ -1,0 +1,158 @@
+
+import React, { useState, useEffect } from 'react';
+import { collection, query, where, onSnapshot, deleteDoc, doc } from 'firebase/firestore';
+import { ref, deleteObject } from 'firebase/storage';
+import { db, storage } from '../../services/firebase';
+import { useAuth } from '../../hooks/useAuth';
+import { Task, UserData } from '../../types';
+import { ICONS } from '../../constants';
+import TaskModal from './TaskModal';
+import LoadingSpinner from '../common/LoadingSpinner';
+
+const TaskManagement: React.FC = () => {
+    const [tasks, setTasks] = useState<Task[]>([]);
+    const [users, setUsers] = useState<UserData[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingTask, setEditingTask] = useState<Task | null>(null);
+    const { userData } = useAuth();
+    
+    useEffect(() => {
+        if (!userData) return;
+
+        const tasksQuery = userData.role === 'pegawai' 
+            ? query(collection(db, "tasks"), where("assignedTo", "==", userData.uid))
+            : collection(db, "tasks");
+
+        const tasksUnsub = onSnapshot(tasksQuery, (snapshot) => {
+            const tasksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Task));
+            setTasks(tasksData);
+            setLoading(false);
+        });
+
+        const usersUnsub = onSnapshot(collection(db, "users"), (snapshot) => {
+            const usersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UserData));
+            setUsers(usersData);
+        });
+        
+        return () => {
+            tasksUnsub();
+            usersUnsub();
+        };
+    }, [userData]);
+    
+    const openModal = (task: Task | null = null) => {
+        setEditingTask(task);
+        setIsModalOpen(true);
+    };
+
+    const closeModal = () => {
+        setIsModalOpen(false);
+        setEditingTask(null);
+    };
+
+    const handleDelete = async (taskId: string, fileUrl?: string) => {
+        if (window.confirm('Apakah Anda yakin ingin menghapus pekerjaan ini?')) {
+            try {
+                if (fileUrl) {
+                    const fileRef = ref(storage, fileUrl);
+                    await deleteObject(fileRef);
+                }
+                await deleteDoc(doc(db, "tasks", taskId));
+                alert("Pekerjaan berhasil dihapus!");
+            } catch (error) {
+                console.error("Error deleting task: ", error);
+                alert("Gagal menghapus pekerjaan.");
+            }
+        }
+    };
+    
+    const getUserName = (userId: string) => {
+        const user = users.find(u => u.uid === userId);
+        return user ? user.nama : 'Tidak diketahui';
+    };
+    
+    const priorityClass: { [key: string]: string } = {
+        High: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+        Mid: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+        Low: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+    };
+
+    const statusClass: { [key: string]: string } = {
+        'On Progress': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+        'Completed': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+        'Pending': 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
+    };
+
+    if (!userData) return <LoadingSpinner />;
+
+    return (
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg">
+            <div className="flex justify-between items-center mb-6">
+                <h3 className="text-2xl font-bold">Daftar Pekerjaan</h3>
+                {['admin', 'pimpinan'].includes(userData.role) && (
+                    <button onClick={() => openModal()} className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors transform hover:-translate-y-1 shadow-lg">
+                        {ICONS.add}
+                        <span>Tambah Pekerjaan</span>
+                    </button>
+                )}
+            </div>
+            
+            {loading ? <LoadingSpinner text="Memuat pekerjaan..."/> : (
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                        <thead>
+                            <tr className="border-b-2 dark:border-gray-700">
+                                <th className="p-4">Judul</th>
+                                {userData.role !== 'pegawai' && <th className="p-4">Ditugaskan Kepada</th>}
+                                <th className="p-4">Due Date</th>
+                                <th className="p-4">Prioritas</th>
+                                <th className="p-4">Status</th>
+                                <th className="p-4">Rating</th>
+                                <th className="p-4">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {tasks.map(task => (
+                                <tr key={task.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                    <td className="p-4 font-medium">{task.title}</td>
+                                    {userData.role !== 'pegawai' && <td className="p-4">{getUserName(task.assignedTo)}</td>}
+                                    <td className="p-4">{new Date(task.dueDate).toLocaleDateString('id-ID')}</td>
+                                    <td className="p-4">
+                                        <span className={`px-3 py-1 text-sm font-semibold rounded-full ${priorityClass[task.priority]}`}>
+                                            {task.priority}
+                                        </span>
+                                    </td>
+                                    <td className="p-4">
+                                        <span className={`px-3 py-1 text-sm font-semibold rounded-full ${statusClass[task.status]}`}>
+                                            {task.status}
+                                        </span>
+                                    </td>
+                                    <td className="p-4">
+                                       <div className="flex">
+                                            {[...Array(5)].map((_, i) => (
+                                                <span key={i} className={i < (task.rating || 0) ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600'}>
+                                                    {ICONS.star}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </td>
+                                    <td className="p-4 flex items-center space-x-2">
+                                        <button onClick={() => openModal(task)} className="p-2 rounded-full hover:bg-yellow-200 dark:hover:bg-yellow-800 text-yellow-600 dark:text-yellow-300 transition-colors">{ICONS.edit}</button>
+                                        {['admin', 'pimpinan'].includes(userData.role) && (
+                                            <button onClick={() => handleDelete(task.id, task.fileUrl)} className="p-2 rounded-full hover:bg-red-200 dark:hover:bg-red-800 text-red-600 dark:text-red-300 transition-colors">{ICONS.delete}</button>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+
+            {isModalOpen && <TaskModal task={editingTask} users={users} closeModal={closeModal} />}
+        </div>
+    );
+};
+
+export default TaskManagement;

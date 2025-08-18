@@ -1,8 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
-import { getDocs, collection, setDoc, doc } from 'firebase/firestore';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { db, auth } from '../../services/firebase';
+import { getDocs, collection } from 'firebase/firestore';
+import { db } from '../../services/firebase';
 import { ICONS } from '../../constants';
 
 const Settings: React.FC = () => {
@@ -54,27 +52,6 @@ const Settings: React.FC = () => {
             alert("Gagal mengekspor data.");
         }
     };
-    
-    const setupInitialAdmin = async () => {
-        if (!window.confirm("Ini akan membuat user admin awal di Firebase Authentication dan Firestore. Hanya jalankan jika ini adalah setup pertama kali. Lanjutkan?")) return;
-        
-        try {
-            const userCredential = await createUserWithEmailAndPassword(auth, 'admin@proapp.local', 'Admin123');
-            const user = userCredential.user;
-            
-            await setDoc(doc(db, "users", user.uid), {
-                nama: "Admin Utama",
-                email: "admin@proapp.local",
-                noWhatsapp: "081234567890",
-                role: "admin",
-                uid: user.uid
-            });
-            alert("User admin berhasil dibuat! Silakan login.");
-        } catch (error) {
-            console.error("Error creating initial admin: ", error);
-            alert("Gagal membuat admin. Kemungkinan user sudah ada.");
-        }
-    };
 
     return (
         <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg space-y-8">
@@ -96,14 +73,6 @@ const Settings: React.FC = () => {
                 <button onClick={handleExportAllData} className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
                     {ICONS.download}
                     <span>Export Semua Data (CSV)</span>
-                </button>
-            </div>
-            
-            <div>
-                <h3 className="text-2xl font-bold mb-4">Tindakan Berbahaya</h3>
-                <p className="text-sm text-gray-500 mb-2">Gunakan tombol ini hanya untuk setup awal aplikasi.</p>
-                <button onClick={setupInitialAdmin} className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
-                    Setup Akun Admin Awal
                 </button>
             </div>
         </div>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../../services/firebase';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { collection, getDocs, setDoc, doc } from 'firebase/firestore';
+import { auth, db } from '../../services/firebase';
 import { ICONS } from '../../constants';
 
 const LoginPage: React.FC = () => {
@@ -8,6 +9,7 @@ const LoginPage: React.FC = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [setupLoading, setSetupLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
     const handleLogin = async (e: React.FormEvent) => {
@@ -16,8 +18,6 @@ const LoginPage: React.FC = () => {
         setLoading(true);
 
         let finalEmail = email;
-        // Special handling for the 'admin' username for convenience.
-        // All other users must enter their full email address.
         if (email.toLowerCase() === 'admin' && !email.includes('@')) {
             finalEmail = 'admin@proapp.local';
         }
@@ -29,6 +29,40 @@ const LoginPage: React.FC = () => {
             console.error(err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleInitialAdminSetup = async () => {
+        setSetupLoading(true);
+        setError('');
+        try {
+            const usersCollection = collection(db, 'users');
+            const usersSnapshot = await getDocs(usersCollection);
+
+            if (!usersSnapshot.empty) {
+                alert('Setup sudah selesai. Akun admin sudah ada.');
+                setSetupLoading(false);
+                return;
+            }
+
+            const userCredential = await createUserWithEmailAndPassword(auth, 'admin@proapp.local', 'Admin123');
+            const user = userCredential.user;
+
+            await setDoc(doc(db, "users", user.uid), {
+                nama: "Admin Utama",
+                email: "admin@proapp.local",
+                noWhatsapp: "081234567890",
+                role: "admin",
+                uid: user.uid
+            });
+            alert("Akun admin berhasil dibuat! Anda sekarang bisa login dengan email 'admin@proapp.local' atau username 'admin' dan password 'Admin123'.");
+
+        } catch (error) {
+            console.error("Error creating initial admin: ", error);
+            const err = error as { message?: string };
+            setError(`Gagal membuat admin. Error: ${err.message}`);
+        } finally {
+            setSetupLoading(false);
         }
     };
     
@@ -83,6 +117,15 @@ const LoginPage: React.FC = () => {
                             </button>
                         </div>
                     </form>
+                    <div className="text-center mt-6">
+                         <button
+                            onClick={handleInitialAdminSetup}
+                            disabled={setupLoading}
+                            className="text-sm text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 disabled:opacity-50"
+                        >
+                            {setupLoading ? 'Membuat admin...' : 'Setup Akun Admin Awal (Hanya untuk pertama kali)'}
+                        </button>
+                    </div>
                 </div>
                 <p className="text-center text-gray-500 text-xs mt-6">
                     &copy;2025 Your Company. All rights reserved.

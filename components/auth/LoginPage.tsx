@@ -19,13 +19,13 @@ const LoginPage: React.FC = () => {
             case 'auth/invalid-credential':
                 return 'Login Gagal. Periksa kembali email dan password Anda.';
             case 'auth/operation-not-allowed':
-                return 'Pembuatan akun tidak diizinkan. Pastikan pendaftaran pengguna baru telah diaktifkan di Firebase Console.';
+                return 'Operasi ini tidak diizinkan oleh Firebase. Periksa pengaturan API key dan otorisasi domain di Google Cloud & Firebase Console.';
             case 'auth/email-already-in-use':
                 return 'Email ini sudah terdaftar. Silakan gunakan email lain.';
             case 'auth/weak-password':
                 return 'Password terlalu lemah. Gunakan minimal 6 karakter.';
             default:
-                return 'Terjadi kesalahan yang tidak diketahui. Silakan coba lagi.';
+                return `Terjadi kesalahan yang tidak diketahui (${errorCode}). Silakan coba lagi.`;
         }
     };
 
@@ -43,7 +43,7 @@ const LoginPage: React.FC = () => {
             await signInWithEmailAndPassword(auth, finalEmail, password);
         } catch (err) {
             const firebaseError = err as { code?: string };
-            setError(getFriendlyErrorMessage(firebaseError.code || ''));
+            setError(getFriendlyErrorMessage(firebaseError.code || 'unknown'));
             console.error(err);
         } finally {
             setLoading(false);
@@ -78,7 +78,7 @@ const LoginPage: React.FC = () => {
         } catch (error) {
             console.error("Error creating initial admin: ", error);
             const firebaseError = error as { code?: string; message?: string };
-            const friendlyMessage = getFriendlyErrorMessage(firebaseError.code || '');
+            const friendlyMessage = getFriendlyErrorMessage(firebaseError.code || 'unknown');
             setError(`Gagal membuat admin. Error: ${friendlyMessage}`);
         } finally {
             setSetupLoading(false);

@@ -13,6 +13,9 @@ const LoginPage: React.FC = () => {
     const [showPassword, setShowPassword] = useState(false);
 
     const getFriendlyErrorMessage = (errorCode: string): string => {
+        if (errorCode.includes('requests-from-referer')) {
+            return 'Domain aplikasi ini belum diotorisasi. Silakan tambahkan domain ini ke daftar "Authorized Domains" di pengaturan Firebase Authentication Anda.';
+        }
         switch (errorCode) {
             case 'auth/user-not-found':
             case 'auth/wrong-password':

@@ -1,7 +1,8 @@
-import { initializeApp, FirebaseApp } from 'firebase/app';
-import { getAuth, Auth } from 'firebase/auth';
-import { getFirestore, Firestore } from 'firebase/firestore';
-import { getStorage, FirebaseStorage } from 'firebase/storage';
+
+import { initializeApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
   apiKey: "AIzaSyBme0QBJ2p57XROfLUF6L8cZgz5loE00Mo",
@@ -12,23 +13,15 @@ const firebaseConfig = {
   appId: "1:72857853228:web:7de9a0dceada37dc79a089"
 };
 
-let app: FirebaseApp;
-let auth: Auth;
-let db: Firestore;
-let storage: FirebaseStorage;
-
-// A simple check to see if the config is filled out.
+// A simple check to see if the config is filled out. This is used by App.tsx to show a helpful warning.
 export const isConfigured = firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("YOUR_");
 
-if (isConfigured) {
-  try {
-    app = initializeApp(firebaseConfig);
-    auth = getAuth(app);
-    db = getFirestore(app);
-    storage = getStorage(app);
-  } catch (error) {
-    console.error("Firebase initialization error.", error);
-  }
-}
+// Initialize Firebase directly.
+// This approach is more robust. If the configuration is invalid,
+// it will throw a clear error on application load instead of failing later.
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
 
 export { auth, db, storage };

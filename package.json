@@ -1,5 +1,5 @@
 {
-  "name": "projectflow-pro",
+  "name": "job-dashboard-monitor",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -12,7 +12,9 @@
     "react": "^19.1.1",
     "recharts": "^3.1.2",
     "react-dom": "^19.1.1",
-    "firebase": "^12.1.0"
+    "firebase": "^12.1.0",
+    "react-dnd": "^16.0.1",
+    "react-dnd-html5-backend": "^16.0.1"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

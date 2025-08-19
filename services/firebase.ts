@@ -1,11 +1,10 @@
-
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore, enableIndexedDbPersistence, CACHE_SIZE_UNLIMITED } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 export const firebaseConfig = {
-  apiKey: process.env.API_KEY,
+  apiKey: "YOUR_API_KEY_HERE",
   authDomain: "dashboard-app-final.firebaseapp.com",
   projectId: "dashboard-app-final",
   storageBucket: "dashboard-app-final.appspot.com",
@@ -14,7 +13,7 @@ export const firebaseConfig = {
 };
 
 // A simple check to see if the config is filled out. This is used by App.tsx to show a helpful warning.
-export const isConfigured = process.env.API_KEY && !process.env.API_KEY.startsWith("YOUR_");
+export const isConfigured = firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("YOUR_");
 
 // Initialize Firebase directly.
 // This approach is more robust. If the configuration is invalid,

@@ -7,6 +7,7 @@ import { Task, UserData } from '../../types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { ICONS } from '../../constants';
 import LoadingSpinner from '../common/LoadingSpinner';
+import DashboardTaskModal from './DashboardTaskModal';
 
 const Dashboard: React.FC = () => {
     const [tasks, setTasks] = useState<Task[]>([]);
@@ -14,6 +15,9 @@ const Dashboard: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [viewMode, setViewMode] = useState('table');
     const { userData } = useAuth();
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [modalTasks, setModalTasks] = useState<Task[]>([]);
+    const [modalTitle, setModalTitle] = useState('');
 
     useEffect(() => {
         if (!userData) return;
@@ -61,10 +65,10 @@ const Dashboard: React.FC = () => {
     const bestEmployee = employeeOfTheMonth();
 
     const stats = [
-        { title: 'Total Pekerjaan', value: tasks.length, color: 'blue' },
-        { title: 'Completed', value: completedTasks, color: 'green' },
-        { title: 'On Progress', value: inProgressTasks, color: 'yellow' },
-        { title: 'Late', value: lateTasks, color: 'red' },
+        { title: 'Total Pekerjaan', value: tasks.length, color: 'blue', filter: 'All' },
+        { title: 'Completed', value: completedTasks, color: 'green', filter: 'Completed' },
+        { title: 'On Progress', value: inProgressTasks, color: 'yellow', filter: 'On Progress' },
+        { title: 'Late', value: lateTasks, color: 'red', filter: 'Late' },
     ];
     
     const chartData = users
@@ -91,6 +95,24 @@ const Dashboard: React.FC = () => {
         window.open(whatsappUrl, '_blank');
     };
 
+    const handleStatCardClick = (filter: string, title: string) => {
+        let filteredTasks: Task[] = [];
+        switch (filter) {
+            case 'All':
+                filteredTasks = tasks;
+                break;
+            case 'Late':
+                filteredTasks = tasks.filter(task => new Date(task.dueDate) < new Date() && task.status !== 'Completed');
+                break;
+            default:
+                filteredTasks = tasks.filter(task => task.status === filter);
+                break;
+        }
+        setModalTasks(filteredTasks);
+        setModalTitle(`Daftar Pekerjaan: ${title}`);
+        setIsModalOpen(true);
+    };
+
     if (loading || !userData) {
         return <div className="text-center p-10"><LoadingSpinner text="Memuat dashboard..." /></div>;
     }
@@ -100,7 +122,11 @@ const Dashboard: React.FC = () => {
             {/* Stat Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 {stats.map(stat => (
-                    <div key={stat.title} className={`bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border-l-4 border-${stat.color}-500 transform transition-transform duration-300 hover:-translate-y-2`}>
+                    <div 
+                        key={stat.title} 
+                        className={`bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border-l-4 border-${stat.color}-500 transform transition-transform duration-300 hover:-translate-y-2 hover:shadow-xl cursor-pointer`}
+                        onClick={() => handleStatCardClick(stat.filter, stat.title)}
+                    >
                         <h3 className="text-gray-500 dark:text-gray-400 font-medium">{stat.title}</h3>
                         <p className="text-4xl font-bold mt-2">{stat.value}</p>
                     </div>
@@ -174,6 +200,13 @@ const Dashboard: React.FC = () => {
                     </div>
                 </div>
             )}
+            <DashboardTaskModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                title={modalTitle}
+                tasks={modalTasks}
+                users={users}
+            />
         </div>
     );
 };

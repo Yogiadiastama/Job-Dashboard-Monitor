@@ -1,7 +1,11 @@
-import type { User } from 'firebase/auth';
-
 // --- MOCK DATA ---
 // Data awal untuk mensimulasikan database yang sudah ada.
+
+export type User = {
+    uid: string;
+    email: string | null;
+};
+
 let USERS = [
   { id: 'admin_uid', uid: 'admin_uid', nama: 'Admin Utama', email: 'admin@proapp.local', noWhatsapp: '081234567890', role: 'admin', photoURL: 'https://i.pravatar.cc/150?u=admin' },
   { id: 'pimpinan_uid', uid: 'pimpinan_uid', nama: 'Budi Pimpinan', email: 'budi@example.com', noWhatsapp: '081234567891', role: 'pimpinan', photoURL: 'https://i.pravatar.cc/150?u=pimpinan' },
@@ -260,6 +264,8 @@ export const storage = getStorage();
 
 // Other exports for compatibility
 export const initializeApp = (config: any, name?: string) => ({ name: name || '[MOCK_APP]' });
+export const deleteApp = async (app: any) => {
+    console.log(`(MOCK) App ${app.name || 'instance'} has been deleted.`);
+};
 export const enableIndexedDbPersistence = async () => {};
 export const CACHE_SIZE_UNLIMITED = -1;
-export type { User };

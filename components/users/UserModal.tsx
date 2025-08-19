@@ -1,7 +1,7 @@
+
 import React, { useState } from 'react';
-import { initializeApp, deleteApp } from 'firebase/app';
 import { 
-    db, storage, firebaseConfig,
+    db, storage, firebaseConfig, initializeApp, deleteApp,
     doc, updateDoc, setDoc, 
     createUserWithEmailAndPassword, sendPasswordResetEmail, getAuth,
     ref, uploadBytes, getDownloadURL, deleteObject
@@ -103,7 +103,7 @@ const UserModal: React.FC<UserModalProps> = ({ user, closeModal }) => {
 
                 const tempAppName = `temp-app-${Date.now()}`;
                 const tempApp = initializeApp(firebaseConfig, tempAppName);
-                const tempAuth = getAuth(tempApp);
+                const tempAuth = getAuth();
 
                 try {
                     const userCredential = await createUserWithEmailAndPassword(tempAuth, email, password);

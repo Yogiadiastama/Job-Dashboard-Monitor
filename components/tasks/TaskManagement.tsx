@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, onSnapshot, deleteDoc, doc, addDoc } from 'firebase/firestore';
-import { ref, deleteObject } from 'firebase/storage';
-import { db, storage } from '../../services/firebase';
+import { db, storage, collection, onSnapshot, deleteDoc, doc, ref, deleteObject } from '../../services/firebase';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotification } from '../../hooks/useNotification';
 import { Task, UserData } from '../../types';
@@ -28,11 +26,6 @@ const TaskManagement: React.FC = () => {
                 const tasksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Task));
                 setTasks(tasksData);
                 setLoading(false);
-            },
-            (error) => {
-                console.error("TaskManagement: Error fetching tasks:", error);
-                showNotification(offlineMessage, "warning");
-                setLoading(false);
             }
         );
 
@@ -40,10 +33,6 @@ const TaskManagement: React.FC = () => {
             (snapshot) => {
                 const usersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UserData));
                 setUsers(usersData);
-            },
-            (error) => {
-                console.error("TaskManagement: Error fetching users:", error);
-                showNotification(offlineMessage, "warning");
             }
         );
         
@@ -96,29 +85,6 @@ const TaskManagement: React.FC = () => {
 
         const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
         window.open(whatsappUrl, '_blank');
-    };
-
-    const handleAddTaskToCalendar = async (task: Task) => {
-        if (!userData) {
-            showNotification('Anda harus login untuk melakukan aksi ini.', 'warning');
-            return;
-        }
-
-        if (window.confirm(`Tambahkan pekerjaan "${task.title}" ke kalender pada tanggal ${new Date(task.dueDate).toLocaleDateString('id-ID')}?`)) {
-            try {
-                const eventData = {
-                    title: `Pekerjaan: ${task.title}`,
-                    date: task.dueDate,
-                    description: `Batas waktu untuk pekerjaan: "${task.title}". Ditugaskan kepada: ${getUserName(task.assignedTo)}.`,
-                    createdBy: userData.uid,
-                };
-                await addDoc(collection(db, "events"), eventData);
-                showNotification(`Pekerjaan "${task.title}" berhasil ditambahkan ke kalender.`, 'success');
-            } catch (error) {
-                console.error("Error adding task to calendar: ", error);
-                showNotification("Gagal menambahkan pekerjaan ke kalender.", 'error');
-            }
-        }
     };
 
     const getUserName = (userId: string) => {
@@ -193,9 +159,6 @@ const TaskManagement: React.FC = () => {
                                     </td>
                                     <td className="p-4 flex items-center space-x-2">
                                         <button onClick={() => openModal(task)} className="p-2 rounded-full hover:bg-yellow-200 dark:hover:bg-yellow-800 text-yellow-600 dark:text-yellow-300 transition-colors" title="Edit Pekerjaan">{ICONS.edit}</button>
-                                        <button onClick={() => handleAddTaskToCalendar(task)} className="p-2 rounded-full hover:bg-indigo-200 dark:hover:bg-indigo-800 text-indigo-600 dark:text-indigo-300 transition-colors" title="Tambah ke Kalender">
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                                        </button>
                                         <button onClick={() => handleWhatsAppExport(task)} className="p-2 rounded-full hover:bg-green-200 dark:hover:bg-green-800 text-green-600 dark:text-green-300 transition-colors" title="Export Detail ke WhatsApp">
                                             {ICONS.whatsapp}
                                         </button>

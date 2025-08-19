@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
-import { collection, getDocs, setDoc, doc } from 'firebase/firestore';
-import { auth, db } from '../../services/firebase';
+import { auth, db, signInWithEmailAndPassword, createUserWithEmailAndPassword, collection, getDocs, setDoc, doc } from '../../services/firebase';
 import { ICONS } from '../../constants';
 import { useTheme } from '../../hooks/useTheme';
 import { useNotification } from '../../hooks/useNotification';

@@ -1,6 +1,5 @@
 import React, { useState, useEffect, createContext, useContext, ReactNode } from 'react';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { db } from '../services/firebase';
+import { db, doc, onSnapshot } from '../services/firebase';
 import { ThemeSettings } from '../types';
 import { useNotification } from './useNotification';
 
@@ -34,12 +33,6 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 } else {
                     setThemeSettings(defaultTheme);
                 }
-                setLoading(false);
-            },
-            (error) => {
-                console.error("Error fetching theme settings (might be offline):", error);
-                showNotification("Gagal memuat tema kustom. Kembali ke tema default.", "warning");
-                setThemeSettings(defaultTheme);
                 setLoading(false);
             }
         );

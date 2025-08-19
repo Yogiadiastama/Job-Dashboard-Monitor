@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { collection, doc, updateDoc, setDoc } from 'firebase/firestore';
-import { createUserWithEmailAndPassword, sendPasswordResetEmail, getAuth } from 'firebase/auth';
 import { initializeApp, deleteApp } from 'firebase/app';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { db, auth as mainAuth, firebaseConfig, storage } from '../../services/firebase';
+import { 
+    db, storage, firebaseConfig,
+    doc, updateDoc, setDoc, 
+    createUserWithEmailAndPassword, sendPasswordResetEmail, getAuth,
+    ref, uploadBytes, getDownloadURL, deleteObject
+} from '../../services/firebase';
 import { useNotification } from '../../hooks/useNotification';
 import { UserData, UserRole } from '../../types';
 
@@ -33,7 +35,7 @@ const UserModal: React.FC<UserModalProps> = ({ user, closeModal }) => {
         if (window.confirm(`Apakah Anda yakin ingin mengirim email reset password ke ${user.email}?`)) {
             setIsResetting(true);
             try {
-                await sendPasswordResetEmail(mainAuth, user.email);
+                await sendPasswordResetEmail(user.email);
                 showNotification(`Email reset password telah dikirim ke ${user.email}.`, 'success');
             } catch (error) {
                 console.error("Error sending password reset email: ", error);
@@ -126,7 +128,11 @@ const UserModal: React.FC<UserModalProps> = ({ user, closeModal }) => {
                     showNotification(`Pegawai ${nama} berhasil dibuat.`, 'success');
                     closeModal();
                 } finally {
-                    await deleteApp(tempApp);
+                    // In a real app, you might not need to deleteApp, but in this mock, it prevents potential issues.
+                    // In the mock implementation this does nothing, but good practice to keep.
+                    if (typeof deleteApp === 'function') {
+                        await deleteApp(tempApp);
+                    }
                 }
             }
         } catch (error) {
@@ -134,7 +140,7 @@ const UserModal: React.FC<UserModalProps> = ({ user, closeModal }) => {
             const err = error as { code?: string, message?: string };
             const errorMessage = err.code === 'auth/email-already-in-use' 
                 ? 'Email ini sudah terdaftar. Silakan gunakan email lain.'
-                : `Gagal menyimpan data pegawai. Error: ${err.message}`;
+                : `Gagal menyimpan data pegawai. Error: ${err.message || 'Unknown error'}`;
             showNotification(errorMessage, 'error');
         } finally {
             setLoading(false);

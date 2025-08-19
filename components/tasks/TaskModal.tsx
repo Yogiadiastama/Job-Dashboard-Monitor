@@ -1,8 +1,5 @@
-
 import React, { useState } from 'react';
-import { addDoc, collection, doc, updateDoc } from 'firebase/firestore';
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
-import { db, storage } from '../../services/firebase';
+import { db, storage, addDoc, collection, doc, updateDoc, getDownloadURL, ref, uploadBytes } from '../../services/firebase';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotification } from '../../hooks/useNotification';
 import { Task, TaskPriority, TaskStatus, UserData } from '../../types';
@@ -23,7 +20,6 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, users, closeModal }) => {
     const [rating, setRating] = useState(task ? task.rating || 0 : 0);
     const [file, setFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
-    const [addToCalendar, setAddToCalendar] = useState(false);
     const { userData } = useAuth();
     const { showNotification } = useNotification();
 
@@ -48,16 +44,6 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, users, closeModal }) => {
             } else {
                 await addDoc(collection(db, "tasks"), taskData);
                 showNotification(`Pekerjaan baru "${title}" telah dibuat.`, 'success');
-
-                if (addToCalendar && dueDate) {
-                    const eventData = {
-                        title: `Pekerjaan: ${title}`,
-                        date: dueDate,
-                        description: `Batas waktu untuk pekerjaan: "${title}".`,
-                        createdBy: userData.uid,
-                    };
-                    await addDoc(collection(db, "events"), eventData);
-                }
             }
             
             closeModal();
@@ -136,20 +122,6 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, users, closeModal }) => {
                             </div>
                         </div>
                     </div>
-
-                    {!task && (
-                        <div className="mt-6 border-t dark:border-gray-700 pt-6">
-                            <label className="flex items-center space-x-3 cursor-pointer">
-                                <input 
-                                    type="checkbox" 
-                                    checked={addToCalendar} 
-                                    onChange={e => setAddToCalendar(e.target.checked)} 
-                                    className="h-5 w-5 rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500"
-                                />
-                                <span className="text-gray-700 dark:text-gray-300 font-medium">Tambahkan batas waktu ke kalender</span>
-                            </label>
-                        </div>
-                    )}
                     
                     <div className="flex justify-end space-x-4 mt-8">
                         <button type="button" onClick={closeModal} className="px-6 py-2 rounded-lg bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors">Batal</button>

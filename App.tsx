@@ -7,6 +7,8 @@ import { NotificationProvider } from './hooks/useNotification';
 import LoginPage from './components/auth/LoginPage';
 import MainLayout from './components/layout/MainLayout';
 import LoadingSpinner from './components/common/LoadingSpinner';
+import { isConfigured } from './services/firebase';
+import FirebaseConfigWarning from './components/common/FirebaseConfigWarning';
 
 // Component to handle the main application logic: show login or main app.
 const AppContent = () => {
@@ -32,7 +34,12 @@ const AppContent = () => {
 
 // The main App component that wraps everything.
 export default function App() {
-    // Provide the authentication context to the rest of the app.
+    // First, check if Firebase is configured. If not, show a warning and stop.
+    if (!isConfigured) {
+        return <FirebaseConfigWarning />;
+    }
+
+    // If configured, provide the authentication context to the rest of the app.
     return (
         <AuthProvider>
             <NotificationProvider>

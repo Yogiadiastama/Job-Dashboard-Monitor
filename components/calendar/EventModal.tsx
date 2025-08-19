@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
-import { addDoc, collection, doc, updateDoc } from 'firebase/firestore';
-import { db } from '../../services/firebase';
+import { db, addDoc, collection, doc, updateDoc } from '../../services/firebase';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotification } from '../../hooks/useNotification';
 import { CalendarEvent } from '../../types';

@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { collection, onSnapshot, doc, deleteDoc } from 'firebase/firestore';
-import { db } from '../../services/firebase';
+import { db, collection, onSnapshot, doc, deleteDoc } from '../../services/firebase';
 import { CalendarEvent } from '../../types';
 import { ICONS } from '../../constants';
 import LoadingSpinner from '../common/LoadingSpinner';
@@ -21,11 +20,6 @@ const Calendar: React.FC = () => {
             (snapshot) => {
                 const eventsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CalendarEvent));
                 setEvents(eventsData);
-                setLoading(false);
-            },
-            (error) => {
-                console.error("Calendar: Error fetching events:", error);
-                showNotification("Anda sepertinya offline. Data yang ditampilkan mungkin sudah usang.", "warning");
                 setLoading(false);
             }
         );

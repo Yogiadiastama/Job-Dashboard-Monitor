@@ -78,7 +78,7 @@ const TaskManagement: React.FC = () => {
         Low: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
     };
 
-    const statusClass: { [key: string]: string } = {
+    const statusClass: { [key:string]: string } = {
         'On Progress': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
         'Completed': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
         'Pending': 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
@@ -87,11 +87,11 @@ const TaskManagement: React.FC = () => {
     if (!userData) return <LoadingSpinner />;
 
     return (
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg">
-            <div className="flex justify-between items-center mb-6">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg animate-fade-in-up">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
                 <h3 className="text-2xl font-bold">Daftar Pekerjaan</h3>
                 {['admin', 'pimpinan'].includes(userData.role) && (
-                    <button onClick={() => openModal()} className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors transform hover:-translate-y-1 shadow-lg">
+                    <button onClick={() => openModal()} className="flex items-center justify-center sm:justify-start space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors transform hover:-translate-y-1 shadow-lg w-full sm:w-auto">
                         {ICONS.add}
                         <span>Tambah Pekerjaan</span>
                     </button>
@@ -100,7 +100,7 @@ const TaskManagement: React.FC = () => {
             
             {loading ? <LoadingSpinner text="Memuat pekerjaan..."/> : (
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left">
+                    <table className="w-full text-left min-w-[640px]">
                         <thead>
                             <tr className="border-b-2 dark:border-gray-700">
                                 <th className="p-4">Judul</th>

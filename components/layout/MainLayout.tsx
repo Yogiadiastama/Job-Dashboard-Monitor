@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../services/firebase';
 import { useAuth } from '../../hooks/useAuth';
@@ -13,7 +13,14 @@ import LoadingSpinner from '../common/LoadingSpinner';
 const MainLayout: React.FC = () => {
     const { userData } = useAuth();
     const [activeMenu, setActiveMenu] = useState('dashboard');
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [isSidebarVisible, setSidebarVisible] = useState(false);
+
+    useEffect(() => {
+        // Show sidebar by default on larger screens
+        if (window.innerWidth >= 768) {
+            setSidebarVisible(true);
+        }
+    }, []);
 
     const handleLogout = async () => {
         await signOut(auth);
@@ -40,14 +47,29 @@ const MainLayout: React.FC = () => {
       return <div className="flex items-center justify-center h-screen bg-gray-100 dark:bg-gray-900"><LoadingSpinner text="Memuat data pengguna..."/></div>;
     }
 
+    const UserAvatar = () => {
+        const initials = userData.nama.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        return (
+            <div className="w-10 h-10 rounded-full bg-blue-200 dark:bg-blue-800 flex items-center justify-center font-bold text-blue-600 dark:text-blue-300 flex-shrink-0">
+                {initials}
+            </div>
+        );
+    };
+
     return (
         <div className="flex h-screen bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+            {/* Overlay for mobile nav */}
+            <div 
+                className={`fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden transition-opacity duration-300 ${isSidebarVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                onClick={() => setSidebarVisible(false)}
+            ></div>
+
             {/* Sidebar */}
-            <aside className={`bg-white dark:bg-gray-800 shadow-xl transition-all duration-300 ${isSidebarOpen ? 'w-64' : 'w-20'}`}>
+            <aside className={`bg-white dark:bg-gray-800 shadow-xl transition-transform duration-300 w-64 fixed md:relative h-full z-30 transform ${isSidebarVisible ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
                 <div className="p-4 flex items-center justify-between">
-                    <h1 className={`text-2xl font-bold text-blue-600 dark:text-blue-400 transition-opacity duration-300 ${isSidebarOpen ? 'opacity-100' : 'opacity-0'}`}>ProFlow</h1>
-                    <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700">
-                        {ICONS.drag}
+                    <h1 className="text-2xl font-bold text-blue-600 dark:text-blue-400">ProFlow</h1>
+                    <button onClick={() => setSidebarVisible(false)} className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 md:hidden">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                 </div>
                 <nav className="mt-8">
@@ -55,11 +77,17 @@ const MainLayout: React.FC = () => {
                         <a
                             key={item.id}
                             href="#"
-                            onClick={(e) => { e.preventDefault(); setActiveMenu(item.id); }}
+                            onClick={(e) => { 
+                                e.preventDefault(); 
+                                setActiveMenu(item.id); 
+                                if (window.innerWidth < 768) {
+                                    setSidebarVisible(false);
+                                }
+                            }}
                             className={`flex items-center py-3 px-6 my-1 transition-colors duration-200 ${activeMenu === item.id ? 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 border-r-4 border-blue-500' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}`}
                         >
                             {item.icon}
-                            <span className={`mx-4 font-medium transition-opacity duration-300 ${isSidebarOpen ? 'opacity-100 whitespace-nowrap' : 'opacity-0'}`}>{item.label}</span>
+                            <span className="mx-4 font-medium whitespace-nowrap">{item.label}</span>
                         </a>
                     ))}
                 </nav>
@@ -67,30 +95,35 @@ const MainLayout: React.FC = () => {
                      <a
                         href="#"
                         onClick={(e) => { e.preventDefault(); handleLogout(); }}
-                        className={`flex items-center py-3 px-6 my-1 transition-colors duration-200 hover:bg-red-100 dark:hover:bg-red-900 text-red-500`}
+                        className="flex items-center py-3 px-6 my-1 transition-colors duration-200 hover:bg-red-100 dark:hover:bg-red-900 text-red-500"
                     >
                         {ICONS.logout}
-                        <span className={`mx-4 font-medium transition-opacity duration-300 ${isSidebarOpen ? 'opacity-100 whitespace-nowrap' : 'opacity-0'}`}>Logout</span>
+                        <span className="mx-4 font-medium whitespace-nowrap">Logout</span>
                     </a>
                 </div>
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 p-6 md:p-10 overflow-y-auto">
-                <header className="flex justify-between items-center mb-8">
-                    <div>
-                        <h2 className="text-3xl font-bold">Halo, {userData.nama.split(' ')[0]}!</h2>
-                        <p className="text-gray-500 dark:text-gray-400">Selamat datang kembali. Ini ringkasan Anda hari ini.</p>
+            <main className="flex-1 flex flex-col overflow-y-auto">
+                 <header className="flex flex-col sm:flex-row justify-between sm:items-center p-4 sm:p-6 md:p-10 gap-4 sticky top-0 bg-gray-100/80 dark:bg-gray-900/80 backdrop-blur-sm z-10 border-b border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center">
+                        <button onClick={() => setSidebarVisible(true)} className="md:hidden p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 mr-4">
+                            {ICONS.drag}
+                        </button>
+                        <div>
+                            <h2 className="text-2xl md:text-3xl font-bold">Halo, {userData.nama.split(' ')[0]}!</h2>
+                            <p className="text-gray-500 dark:text-gray-400">Selamat datang kembali.</p>
+                        </div>
                     </div>
-                    <div className="flex items-center space-x-4">
-                       <img className="h-10 w-10 rounded-full object-cover" src={`https://ui-avatars.com/api/?name=${userData.nama}&background=random`} alt="User Avatar" />
+                    <div className="flex items-center space-x-4 self-end sm:self-center">
+                       <UserAvatar />
                        <div>
                            <p className="font-semibold">{userData.nama}</p>
                            <p className="text-sm text-gray-500 capitalize">{userData.role}</p>
                        </div>
                     </div>
                 </header>
-                <div className="transition-opacity duration-500">
+                <div className="flex-1 p-4 sm:p-6 md:p-10">
                     {renderContent()}
                 </div>
             </main>

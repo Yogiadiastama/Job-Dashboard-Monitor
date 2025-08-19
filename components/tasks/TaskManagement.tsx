@@ -20,11 +20,8 @@ const TaskManagement: React.FC = () => {
     useEffect(() => {
         if (!userData) return;
 
-        const tasksQuery = userData.role === 'pegawai' 
-            ? query(collection(db, "tasks"), where("assignedTo", "==", userData.uid))
-            : collection(db, "tasks");
-
-        const tasksUnsub = onSnapshot(tasksQuery, (snapshot) => {
+        // Semua role kini dapat melihat semua pekerjaan
+        const tasksUnsub = onSnapshot(collection(db, "tasks"), (snapshot) => {
             const tasksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Task));
             setTasks(tasksData);
             setLoading(false);
@@ -90,7 +87,7 @@ const TaskManagement: React.FC = () => {
         <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg animate-fade-in-up">
             <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
                 <h3 className="text-2xl font-bold">Daftar Pekerjaan</h3>
-                {['admin', 'pimpinan'].includes(userData.role) && (
+                {['admin', 'pimpinan', 'pegawai'].includes(userData.role) && (
                     <button onClick={() => openModal()} className="flex items-center justify-center sm:justify-start space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors transform hover:-translate-y-1 shadow-lg w-full sm:w-auto">
                         {ICONS.add}
                         <span>Tambah Pekerjaan</span>
@@ -104,7 +101,7 @@ const TaskManagement: React.FC = () => {
                         <thead>
                             <tr className="border-b-2 dark:border-gray-700">
                                 <th className="p-4">Judul</th>
-                                {userData.role !== 'pegawai' && <th className="p-4">Ditugaskan Kepada</th>}
+                                <th className="p-4">Ditugaskan Kepada</th>
                                 <th className="p-4">Due Date</th>
                                 <th className="p-4">Prioritas</th>
                                 <th className="p-4">Status</th>
@@ -116,7 +113,7 @@ const TaskManagement: React.FC = () => {
                             {tasks.map(task => (
                                 <tr key={task.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                                     <td className="p-4 font-medium">{task.title}</td>
-                                    {userData.role !== 'pegawai' && <td className="p-4">{getUserName(task.assignedTo)}</td>}
+                                    <td className="p-4">{getUserName(task.assignedTo)}</td>
                                     <td className="p-4">{new Date(task.dueDate).toLocaleDateString('id-ID')}</td>
                                     <td className="p-4">
                                         <span className={`px-3 py-1 text-sm font-semibold rounded-full ${priorityClass[task.priority]}`}>
@@ -139,7 +136,7 @@ const TaskManagement: React.FC = () => {
                                     </td>
                                     <td className="p-4 flex items-center space-x-2">
                                         <button onClick={() => openModal(task)} className="p-2 rounded-full hover:bg-yellow-200 dark:hover:bg-yellow-800 text-yellow-600 dark:text-yellow-300 transition-colors">{ICONS.edit}</button>
-                                        {['admin', 'pimpinan'].includes(userData.role) && (
+                                        {['admin', 'pimpinan', 'pegawai'].includes(userData.role) && (
                                             <button onClick={() => handleDelete(task.id, task.fileUrl)} className="p-2 rounded-full hover:bg-red-200 dark:hover:bg-red-800 text-red-600 dark:text-red-300 transition-colors">{ICONS.delete}</button>
                                         )}
                                     </td>

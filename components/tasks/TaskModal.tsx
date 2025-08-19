@@ -84,7 +84,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, users, closeModal }) => {
                                 <label className="block text-sm font-bold mb-2">Deskripsi</label>
                                 <textarea value={description} onChange={e => setDescription(e.target.value)} className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" rows={5}></textarea>
                             </div>
-                            {['admin', 'pimpinan'].includes(userData.role) && (
+                            {['admin', 'pimpinan', 'pegawai'].includes(userData.role) && (
                                 <div className="mb-4">
                                     <label className="block text-sm font-bold mb-2">Tugaskan Kepada</label>
                                     <select value={assignedTo} onChange={e => setAssignedTo(e.target.value)} className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" required>
@@ -117,7 +117,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, users, closeModal }) => {
                                     <option>Completed</option>
                                 </select>
                             </div>
-                            {userData.role === 'pimpinan' && task && (
+                            {(['pimpinan', 'pegawai'].includes(userData.role)) && task && (
                                 <div className="mb-4">
                                     <label className="block text-sm font-bold mb-2">Rating (1-5)</label>
                                     <div className="flex space-x-1">

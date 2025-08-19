@@ -18,20 +18,16 @@ const Dashboard: React.FC = () => {
     useEffect(() => {
         if (!userData) return;
 
-        // Query tasks based on user role
-        const tasksQuery = userData.role === 'pegawai'
-            ? query(collection(db, "tasks"), where("assignedTo", "==", userData.uid))
-            : collection(db, "tasks");
-
-        const tasksUnsub = onSnapshot(tasksQuery, (snapshot) => {
+        // Semua role dengan akses dashboard kini dapat melihat semua pekerjaan
+        const tasksUnsub = onSnapshot(collection(db, "tasks"), (snapshot) => {
             const tasksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Task));
             setTasks(tasksData);
             setLoading(false);
         });
 
-        // Only fetch all users if user is admin or pimpinan
+        // Ambil semua data pengguna untuk admin, pimpinan, dan sekarang pegawai
         let usersUnsub = () => {};
-        if (['admin', 'pimpinan'].includes(userData.role)) {
+        if (['admin', 'pimpinan', 'pegawai'].includes(userData.role)) {
             usersUnsub = onSnapshot(collection(db, "users"), (snapshot) => {
                 const usersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UserData));
                 setUsers(usersData);
@@ -87,7 +83,7 @@ const Dashboard: React.FC = () => {
                         `- Dalam Proses: *${inProgressTasks}*\n` +
                         `- Terlambat: *${lateTasks}*`;
         
-        if (userData?.role !== 'pegawai') {
+        if (bestEmployee.nama !== 'N/A') {
             message += `\n\n*Pegawai Terbaik Bulan Ini*: ${bestEmployee.nama} (${bestEmployee.completed} pekerjaan selesai)`;
         }
         
@@ -111,8 +107,8 @@ const Dashboard: React.FC = () => {
                 ))}
             </div>
 
-            {/* Admin & Pimpinan View */}
-            {['admin', 'pimpinan'].includes(userData.role) && (
+            {/* Admin, Pimpinan & Pegawai View */}
+            {['admin', 'pimpinan', 'pegawai'].includes(userData.role) && (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                     {/* Employee of the Month */}
                     <div className="lg:col-span-1 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg flex flex-col items-center justify-center text-center">

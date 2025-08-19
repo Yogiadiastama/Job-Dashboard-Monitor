@@ -9,6 +9,17 @@ import { ICONS } from '../../constants';
 import LoadingSpinner from '../common/LoadingSpinner';
 import DashboardTaskModal from './DashboardTaskModal';
 
+const isTaskLate = (task: Task): boolean => {
+    if (!task.dueDate) return false;
+    // Pekerjaan dianggap terlambat jika batas waktunya adalah SEBELUM hari ini.
+    // Pekerjaan yang batas waktunya hari ini belum dianggap terlambat.
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Atur ke awal hari ini
+    // Input tanggal (dueDate) menghasilkan format 'YYYY-MM-DD', new Date() akan menginterpretasikannya sebagai waktu lokal tengah malam.
+    // Perbandingan ini akan akurat untuk menentukan apakah batas waktu sudah lewat.
+    return new Date(task.dueDate) < today && task.status !== 'Completed';
+};
+
 const Dashboard: React.FC = () => {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [users, setUsers] = useState<UserData[]>([]);
@@ -48,7 +59,7 @@ const Dashboard: React.FC = () => {
     
     const completedTasks = getStatusCount('Completed');
     const inProgressTasks = getStatusCount('On Progress');
-    const lateTasks = tasks.filter(task => new Date(task.dueDate) < new Date() && task.status !== 'Completed').length;
+    const lateTasks = tasks.filter(isTaskLate).length;
 
     const employeeOfTheMonth = () => {
         if (users.length === 0 || tasks.length === 0) return { nama: 'N/A', completed: 0 };
@@ -77,7 +88,7 @@ const Dashboard: React.FC = () => {
         name: user.nama.split(' ')[0],
         'On Progress': tasks.filter(t => t.assignedTo === user.uid && t.status === 'On Progress').length,
         'Completed': tasks.filter(t => t.assignedTo === user.uid && t.status === 'Completed').length,
-        'Late': tasks.filter(t => t.assignedTo === user.uid && new Date(t.dueDate) < new Date() && t.status !== 'Completed').length,
+        'Late': tasks.filter(t => t.assignedTo === user.uid && isTaskLate(t)).length,
     }));
 
     const handleWhatsAppExport = () => {
@@ -102,7 +113,7 @@ const Dashboard: React.FC = () => {
                 filteredTasks = tasks;
                 break;
             case 'Late':
-                filteredTasks = tasks.filter(task => new Date(task.dueDate) < new Date() && task.status !== 'Completed');
+                filteredTasks = tasks.filter(isTaskLate);
                 break;
             default:
                 filteredTasks = tasks.filter(task => task.status === filter);
@@ -190,7 +201,7 @@ const Dashboard: React.FC = () => {
                                                 <td className="p-3 font-medium">{user.nama}</td>
                                                 <td className="p-3 text-center">{tasks.filter(t => t.assignedTo === user.uid && t.status === 'On Progress').length}</td>
                                                 <td className="p-3 text-center">{tasks.filter(t => t.assignedTo === user.uid && t.status === 'Completed').length}</td>
-                                                <td className="p-3 text-center">{tasks.filter(t => t.assignedTo === user.uid && new Date(t.dueDate) < new Date() && t.status !== 'Completed').length}</td>
+                                                <td className="p-3 text-center">{tasks.filter(t => t.assignedTo === user.uid && isTaskLate(t)).length}</td>
                                             </tr>
                                         ))}
                                     </tbody>

@@ -1,7 +1,9 @@
+
 import React, { useState } from 'react';
-import { db, storage, addDoc, collection, doc, updateDoc, getDownloadURL, ref, uploadBytes } from '../../services/firebase';
+import { addDoc, collection, doc, updateDoc } from 'firebase/firestore';
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import { db, storage } from '../../services/firebase';
 import { useAuth } from '../../hooks/useAuth';
-import { useNotification } from '../../hooks/useNotification';
 import { Task, TaskPriority, TaskStatus, UserData } from '../../types';
 
 interface TaskModalProps {
@@ -21,7 +23,6 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, users, closeModal }) => {
     const [file, setFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
     const { userData } = useAuth();
-    const { showNotification } = useNotification();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -40,21 +41,32 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, users, closeModal }) => {
             
             if (task) {
                 await updateDoc(doc(db, "tasks", task.id), taskData);
-                showNotification(`Pekerjaan "${title}" telah diperbarui.`, 'success');
+                // NOTIFIKASI
+                sendNotification(task.assignedTo, `Pekerjaan "${title}" telah diperbarui.`);
             } else {
                 await addDoc(collection(db, "tasks"), taskData);
-                showNotification(`Pekerjaan baru "${title}" telah dibuat.`, 'success');
+                // NOTIFIKASI
+                sendNotification(assignedTo, `Anda mendapat pekerjaan baru: "${title}".`);
             }
             
             closeModal();
         } catch (error) {
             console.error("Error saving task: ", error);
-            showNotification("Gagal menyimpan pekerjaan.", "error");
+            alert("Gagal menyimpan pekerjaan.");
         } finally {
             setLoading(false);
         }
     };
     
+    // Simple notification simulation
+    const sendNotification = (userId: string, message: string) => {
+        const userToNotify = users.find(u => u.uid === userId);
+        if (userToNotify) {
+            console.log(`MENGIRIM NOTIFIKASI ke ${userToNotify.nama}: ${message}`);
+            alert(`Notifikasi (simulasi) terkirim ke ${userToNotify.nama}: ${message}`);
+        }
+    };
+
     if (!userData) return null;
 
     return (
@@ -126,7 +138,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, users, closeModal }) => {
                     <div className="flex justify-end space-x-4 mt-8">
                         <button type="button" onClick={closeModal} className="px-6 py-2 rounded-lg bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors">Batal</button>
                         <button type="submit" disabled={loading} className="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-50">
-                            {loading ? 'Menyimpan...' : (task ? 'Simpan Perubahan' : 'Tambah Pekerjaan')}
+                            {loading ? 'Menyimpan...' : 'Simpan'}
                         </button>
                     </div>
                 </form>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { db, collection, onSnapshot, doc, deleteDoc } from '../../services/firebase';
+import { collection, onSnapshot, doc, deleteDoc } from 'firebase/firestore';
+import { db } from '../../services/firebase';
 import { CalendarEvent } from '../../types';
 import { ICONS } from '../../constants';
 import LoadingSpinner from '../common/LoadingSpinner';
@@ -21,6 +22,11 @@ const Calendar: React.FC = () => {
                 const eventsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CalendarEvent));
                 setEvents(eventsData);
                 setLoading(false);
+            },
+            (error) => {
+                console.error("Calendar: Error fetching events:", error);
+                showNotification("Anda sepertinya offline. Data yang ditampilkan mungkin sudah usang.", "warning");
+                setLoading(false);
             }
         );
         return () => unsub();
@@ -40,11 +46,10 @@ const Calendar: React.FC = () => {
         if (window.confirm('Apakah Anda yakin ingin menghapus event ini?')) {
             try {
                 await deleteDoc(doc(db, 'events', eventId));
-                showNotification("Event berhasil dihapus.", "success");
                 closeModal();
             } catch (error) {
                 console.error("Error deleting event: ", error);
-                showNotification("Gagal menghapus event.", "error");
+                alert("Gagal menghapus event.");
             }
         }
     };

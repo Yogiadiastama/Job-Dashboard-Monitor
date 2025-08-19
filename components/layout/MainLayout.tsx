@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { signOut } from '../../services/firebase';
+import { signOut } from 'firebase/auth';
+import { auth } from '../../services/firebase';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
 import { ICONS } from '../../constants';
@@ -32,7 +33,7 @@ const MainLayout: React.FC = () => {
     }, [themeSettings.accentColor]);
 
     const handleLogout = async () => {
-        await signOut();
+        await signOut(auth);
     };
     
     const menuItems = [
@@ -67,7 +68,7 @@ const MainLayout: React.FC = () => {
                     Silakan periksa koneksi Anda dan muat ulang halaman, atau coba lagi nanti.
                 </p>
                 <button
-                    onClick={handleLogout}
+                    onClick={() => signOut(auth)}
                     className="bg-red-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-red-600 transition-colors"
                 >
                     Logout

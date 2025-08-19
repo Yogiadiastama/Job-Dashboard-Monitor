@@ -1,6 +1,8 @@
+
 import React, { useState, useEffect, createContext, useContext, ReactNode } from 'react';
-import { User, onAuthStateChanged, doc, getDoc } from '../services/firebase';
-import { db } from '../services/firebase';
+import { User, onAuthStateChanged } from 'firebase/auth';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { auth, db } from '../services/firebase';
 import { UserData } from '../types';
 
 interface AuthContextType {
@@ -21,30 +23,42 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(async (firebaseUser) => {
+        let userDocUnsubscribe: () => void = () => {};
+
+        const authUnsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+            userDocUnsubscribe(); // Unsubscribe from any previous user doc listener
+
             if (firebaseUser) {
                 setUser(firebaseUser);
-                try {
-                    const userDocRef = doc(db, "users", firebaseUser.uid);
-                    const docSnap = await getDoc(userDocRef);
-                    if (docSnap.exists()) {
-                        setUserData({ id: docSnap.id, ...docSnap.data() } as UserData);
-                    } else {
-                        console.log("No such user document!");
-                        setUserData(null);
+                const userDocRef = doc(db, "users", firebaseUser.uid);
+                
+                userDocUnsubscribe = onSnapshot(userDocRef, 
+                    (docSnap) => {
+                        if (docSnap.exists()) {
+                            setUserData({ id: docSnap.id, ...docSnap.data() } as UserData);
+                        } else {
+                            console.log("No such user document!");
+                            setUserData(null);
+                        }
+                        setLoading(false);
+                    },
+                    (error) => {
+                        console.error("Error fetching user data (might be offline):", error);
+                        // Don't nullify data on network errors, allowing cached data to be used.
+                        setLoading(false);
                     }
-                } catch (error) {
-                    console.error("Error fetching user data (might be offline):", error);
-                    setUserData(null);
-                }
+                );
             } else {
                 setUser(null);
                 setUserData(null);
+                setLoading(false);
             }
-            setLoading(false);
         });
 
-        return () => unsubscribe();
+        return () => {
+            authUnsubscribe();
+            userDocUnsubscribe();
+        };
     }, []);
 
     const value = { user, userData, loading };

@@ -1,12 +1,9 @@
-
 import React, { useState } from 'react';
-import { 
-    db, storage, firebaseConfig, initializeApp, deleteApp,
-    doc, updateDoc, setDoc, 
-    createUserWithEmailAndPassword, sendPasswordResetEmail, getAuth,
-    ref, uploadBytes, getDownloadURL, deleteObject
-} from '../../services/firebase';
-import { useNotification } from '../../hooks/useNotification';
+import { collection, doc, updateDoc, setDoc } from 'firebase/firestore';
+import { createUserWithEmailAndPassword, sendPasswordResetEmail, getAuth } from 'firebase/auth';
+import { initializeApp, deleteApp } from '@firebase/app';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { db, auth as mainAuth, firebaseConfig, storage } from '../../services/firebase';
 import { UserData, UserRole } from '../../types';
 
 interface UserModalProps {
@@ -23,7 +20,6 @@ const UserModal: React.FC<UserModalProps> = ({ user, closeModal }) => {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [isResetting, setIsResetting] = useState(false);
-    const { showNotification } = useNotification();
     
     // State for photo management
     const [profilePicFile, setProfilePicFile] = useState<File | null>(null);
@@ -35,12 +31,12 @@ const UserModal: React.FC<UserModalProps> = ({ user, closeModal }) => {
         if (window.confirm(`Apakah Anda yakin ingin mengirim email reset password ke ${user.email}?`)) {
             setIsResetting(true);
             try {
-                await sendPasswordResetEmail(user.email);
-                showNotification(`Email reset password telah dikirim ke ${user.email}.`, 'success');
+                await sendPasswordResetEmail(mainAuth, user.email);
+                alert(`Email untuk mereset password telah berhasil dikirim ke ${user.email}.`);
             } catch (error) {
                 console.error("Error sending password reset email: ", error);
                 const err = error as { message?: string };
-                showNotification(`Gagal mengirim email. Error: ${err.message}`, 'error');
+                alert(`Gagal mengirim email. Error: ${err.message}`);
             } finally {
                 setIsResetting(false);
             }
@@ -86,24 +82,24 @@ const UserModal: React.FC<UserModalProps> = ({ user, closeModal }) => {
 
                 const userRef = doc(db, "users", user.id);
                 await updateDoc(userRef, { nama, noWhatsapp, role, photoURL: updatedPhotoURL });
-                showNotification('Data pegawai berhasil diperbarui.', 'success');
+                alert('Data pegawai berhasil diperbarui.');
                 closeModal();
 
             } else { // Add new user
                 if (password !== confirmPassword) {
-                    showNotification("Password tidak cocok.", 'error');
+                    alert("Password tidak cocok.");
                     setLoading(false);
                     return;
                 }
                 if (password.length < 6) {
-                    showNotification("Password minimal harus 6 karakter.", 'error');
+                    alert("Password minimal harus 6 karakter.");
                     setLoading(false);
                     return;
                 }
 
                 const tempAppName = `temp-app-${Date.now()}`;
                 const tempApp = initializeApp(firebaseConfig, tempAppName);
-                const tempAuth = getAuth();
+                const tempAuth = getAuth(tempApp);
 
                 try {
                     const userCredential = await createUserWithEmailAndPassword(tempAuth, email, password);
@@ -125,14 +121,10 @@ const UserModal: React.FC<UserModalProps> = ({ user, closeModal }) => {
                         photoURL,
                     });
                     
-                    showNotification(`Pegawai ${nama} berhasil dibuat.`, 'success');
+                    alert(`Pegawai ${nama} berhasil dibuat.`);
                     closeModal();
                 } finally {
-                    // In a real app, you might not need to deleteApp, but in this mock, it prevents potential issues.
-                    // In the mock implementation this does nothing, but good practice to keep.
-                    if (typeof deleteApp === 'function') {
-                        await deleteApp(tempApp);
-                    }
+                    await deleteApp(tempApp);
                 }
             }
         } catch (error) {
@@ -140,8 +132,8 @@ const UserModal: React.FC<UserModalProps> = ({ user, closeModal }) => {
             const err = error as { code?: string, message?: string };
             const errorMessage = err.code === 'auth/email-already-in-use' 
                 ? 'Email ini sudah terdaftar. Silakan gunakan email lain.'
-                : `Gagal menyimpan data pegawai. Error: ${err.message || 'Unknown error'}`;
-            showNotification(errorMessage, 'error');
+                : `Gagal menyimpan data pegawai. Error: ${err.message}`;
+            alert(errorMessage);
         } finally {
             setLoading(false);
         }

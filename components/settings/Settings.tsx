@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { db, storage, getDocs, collection, doc, setDoc, updateDoc, ref, uploadBytes, getDownloadURL } from '../../services/firebase';
+import { getDocs, collection, doc, setDoc, updateDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, storage } from '../../services/firebase';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
-import { useNotification } from '../../hooks/useNotification';
 import { ICONS } from '../../constants';
 import LoadingSpinner from '../common/LoadingSpinner';
 
 const Settings: React.FC = () => {
     const { userData } = useAuth();
     const { themeSettings, loading: themeLoading } = useTheme();
-    const { showNotification } = useNotification();
 
     // Local theme state for UI
     const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
@@ -51,10 +51,10 @@ const Settings: React.FC = () => {
             const newThemeSettings = { headerTitle, accentColor, loginBgUrl };
             await setDoc(doc(db, "settings", "theme"), newThemeSettings, { merge: true });
             
-            showNotification("Pengaturan tampilan berhasil disimpan!", "success");
+            alert("Pengaturan tampilan berhasil disimpan!");
         } catch (error) {
             console.error("Error saving theme settings: ", error);
-            showNotification("Gagal menyimpan pengaturan tampilan.", "error");
+            alert("Gagal menyimpan pengaturan tampilan.");
         } finally {
             setIsSavingTheme(false);
         }
@@ -69,10 +69,10 @@ const Settings: React.FC = () => {
             const photoURL = await getDownloadURL(storageRef);
             
             await updateDoc(doc(db, "users", userData.uid), { photoURL });
-            showNotification("Foto profil berhasil diperbarui!", "success");
+            alert("Foto profil berhasil diperbarui!");
         } catch (error) {
             console.error("Error saving profile picture: ", error);
-            showNotification("Gagal menyimpan foto profil.", "error");
+            alert("Gagal menyimpan foto profil.");
         } finally {
             setIsSavingProfilePic(false);
         }

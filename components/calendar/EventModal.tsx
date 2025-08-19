@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
-import { db, addDoc, collection, doc, updateDoc } from '../../services/firebase';
+import { addDoc, collection, doc, updateDoc } from 'firebase/firestore';
+import { db } from '../../services/firebase';
 import { useAuth } from '../../hooks/useAuth';
-import { useNotification } from '../../hooks/useNotification';
 import { CalendarEvent } from '../../types';
 import { ICONS } from '../../constants';
 
@@ -18,12 +18,11 @@ const EventModal: React.FC<EventModalProps> = ({ event, closeModal, handleDelete
     const [description, setDescription] = useState(event ? event.description : '');
     const [loading, setLoading] = useState(false);
     const { userData } = useAuth();
-    const { showNotification } = useNotification();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!userData) {
-            showNotification('Anda harus login untuk melakukan aksi ini.', 'warning');
+            alert('Anda harus login untuk melakukan aksi ini.');
             return;
         }
         setLoading(true);
@@ -38,15 +37,13 @@ const EventModal: React.FC<EventModalProps> = ({ event, closeModal, handleDelete
         try {
             if (event) {
                 await updateDoc(doc(db, 'events', event.id), eventData);
-                showNotification("Event berhasil diperbarui.", "success");
             } else {
                 await addDoc(collection(db, 'events'), eventData);
-                showNotification("Event baru berhasil ditambahkan.", "success");
             }
             closeModal();
         } catch (error) {
             console.error("Error saving event: ", error);
-            showNotification("Gagal menyimpan event.", "error");
+            alert("Gagal menyimpan event.");
         } finally {
             setLoading(false);
         }

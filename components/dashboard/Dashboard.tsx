@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, onSnapshot } from '../../services/firebase';
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '../../services/firebase';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotification } from '../../hooks/useNotification';
@@ -41,6 +41,11 @@ const Dashboard: React.FC = () => {
                 const tasksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Task));
                 setTasks(tasksData);
                 setLoading(false);
+            },
+            (error) => {
+                console.error("Dashboard: Error fetching tasks:", error);
+                showNotification(offlineMessage, "warning");
+                setLoading(false);
             }
         );
 
@@ -51,6 +56,10 @@ const Dashboard: React.FC = () => {
                 (snapshot) => {
                     const usersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UserData));
                     setUsers(usersData);
+                },
+                (error) => {
+                     console.error("Dashboard: Error fetching users:", error);
+                     showNotification(offlineMessage, "warning");
                 }
             );
         }

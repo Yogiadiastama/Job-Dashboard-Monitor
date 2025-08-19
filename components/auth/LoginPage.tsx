@@ -1,8 +1,10 @@
+
 import React, { useState } from 'react';
-import { auth, db, signInWithEmailAndPassword, createUserWithEmailAndPassword, collection, getDocs, setDoc, doc } from '../../services/firebase';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { collection, getDocs, setDoc, doc } from 'firebase/firestore';
+import { auth, db } from '../../services/firebase';
 import { ICONS } from '../../constants';
 import { useTheme } from '../../hooks/useTheme';
-import { useNotification } from '../../hooks/useNotification';
 
 const LoginPage: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -12,11 +14,14 @@ const LoginPage: React.FC = () => {
     const [setupLoading, setSetupLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const { themeSettings } = useTheme();
-    const { showNotification } = useNotification();
 
-    const getFriendlyErrorMessage = (errorCode: string): string => {
-        if (errorCode.includes('requests-from-referer')) {
-            return 'Domain aplikasi ini belum diotorisasi. Silakan tambahkan domain ini ke daftar "Authorized Domains" di pengaturan Firebase Authentication Anda.';
+    const getFriendlyErrorMessage = (err: { code?: string, message?: string }): string => {
+        const errorCode = err.code || '';
+        const errorMessage = err.message || '';
+        
+        if (errorMessage.includes('requests-from-referer') || errorCode === 'auth/unauthorized-domain') {
+            const hostname = window.location.hostname;
+            return `Domain aplikasi (${hostname}) tidak diotorisasi. Untuk memperbaikinya, buka Firebase Console > Authentication > Settings > Authorized domains, lalu tambahkan domain ini.`;
         }
         switch (errorCode) {
             case 'auth/user-not-found':
@@ -47,8 +52,8 @@ const LoginPage: React.FC = () => {
         try {
             await signInWithEmailAndPassword(auth, finalEmail, password);
         } catch (err) {
-            const firebaseError = err as { code?: string };
-            setError(getFriendlyErrorMessage(firebaseError.code || 'unknown'));
+            const firebaseError = err as { code?: string, message?: string };
+            setError(getFriendlyErrorMessage(firebaseError));
             console.error(err);
         } finally {
             setLoading(false);
@@ -63,7 +68,7 @@ const LoginPage: React.FC = () => {
             const usersSnapshot = await getDocs(usersCollection);
 
             if (!usersSnapshot.empty) {
-                showNotification('Setup sudah selesai. Akun admin sudah ada.', 'info');
+                alert('Setup sudah selesai. Akun admin sudah ada.');
                 setSetupLoading(false);
                 return;
             }
@@ -78,12 +83,12 @@ const LoginPage: React.FC = () => {
                 role: "admin",
                 uid: user.uid
             });
-            showNotification("Akun admin berhasil dibuat! Login dengan 'admin' dan 'Admin123'.", 'success');
+            alert("Akun admin berhasil dibuat! Anda sekarang bisa login dengan email 'admin@proapp.local' atau username 'admin' dan password 'Admin123'.");
 
         } catch (error) {
             console.error("Error creating initial admin: ", error);
             const firebaseError = error as { code?: string; message?: string };
-            const friendlyMessage = getFriendlyErrorMessage(firebaseError.code || 'unknown');
+            const friendlyMessage = getFriendlyErrorMessage(firebaseError);
             setError(`Gagal membuat admin. Error: ${friendlyMessage}`);
         } finally {
             setSetupLoading(false);

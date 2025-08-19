@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { db, storage, collection, onSnapshot, doc, deleteDoc, ref, deleteObject } from '../../services/firebase';
+import { collection, onSnapshot, doc, deleteDoc } from 'firebase/firestore';
+import { ref, deleteObject } from 'firebase/storage';
+import { db, storage } from '../../services/firebase';
 import { UserData } from '../../types';
 import { ICONS } from '../../constants';
 import UserModal from './UserModal';
@@ -18,6 +20,11 @@ const UserManagement: React.FC = () => {
             (snapshot) => {
                 const usersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UserData));
                 setUsers(usersData);
+                setLoading(false);
+            },
+            (error) => {
+                console.error("UserManagement: Error fetching users:", error);
+                showNotification("Anda sepertinya offline. Data yang ditampilkan mungkin sudah usang.", "warning");
                 setLoading(false);
             }
         );
@@ -50,10 +57,10 @@ const UserManagement: React.FC = () => {
                 
                 // Delete user document from Firestore
                 await deleteDoc(doc(db, "users", user.id));
-                showNotification("Pegawai berhasil dihapus.", "success");
+                alert("Pegawai berhasil dihapus.");
             } catch (error) {
                 console.error("Error deleting user: ", error);
-                showNotification("Gagal menghapus pegawai.", "error");
+                alert("Gagal menghapus pegawai.");
             }
         }
     };

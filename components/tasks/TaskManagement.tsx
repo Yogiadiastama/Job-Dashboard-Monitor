@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { db, storage, collection, onSnapshot, deleteDoc, doc, ref, deleteObject } from '../../services/firebase';
+import { collection, query, where, onSnapshot, deleteDoc, doc } from 'firebase/firestore';
+import { ref, deleteObject } from 'firebase/storage';
+import { db, storage } from '../../services/firebase';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotification } from '../../hooks/useNotification';
 import { Task, UserData } from '../../types';
@@ -26,6 +28,11 @@ const TaskManagement: React.FC = () => {
                 const tasksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Task));
                 setTasks(tasksData);
                 setLoading(false);
+            },
+            (error) => {
+                console.error("TaskManagement: Error fetching tasks:", error);
+                showNotification(offlineMessage, "warning");
+                setLoading(false);
             }
         );
 
@@ -33,6 +40,10 @@ const TaskManagement: React.FC = () => {
             (snapshot) => {
                 const usersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UserData));
                 setUsers(usersData);
+            },
+            (error) => {
+                console.error("TaskManagement: Error fetching users:", error);
+                showNotification(offlineMessage, "warning");
             }
         );
         
@@ -60,10 +71,10 @@ const TaskManagement: React.FC = () => {
                     await deleteObject(fileRef);
                 }
                 await deleteDoc(doc(db, "tasks", taskId));
-                showNotification("Pekerjaan berhasil dihapus!", "success");
+                alert("Pekerjaan berhasil dihapus!");
             } catch (error) {
                 console.error("Error deleting task: ", error);
-                showNotification("Gagal menghapus pekerjaan.", "error");
+                alert("Gagal menghapus pekerjaan.");
             }
         }
     };

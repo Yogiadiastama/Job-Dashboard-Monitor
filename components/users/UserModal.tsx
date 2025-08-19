@@ -1,7 +1,9 @@
+
 import React, { useState } from 'react';
 import { collection, doc, updateDoc, setDoc } from 'firebase/firestore';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { db, auth } from '../../services/firebase';
+import { createUserWithEmailAndPassword, sendPasswordResetEmail, getAuth } from 'firebase/auth';
+import { initializeApp, deleteApp } from 'firebase/app';
+import { db, auth as mainAuth, firebaseConfig } from '../../services/firebase';
 import { UserData, UserRole } from '../../types';
 
 interface UserModalProps {
@@ -17,6 +19,24 @@ const UserModal: React.FC<UserModalProps> = ({ user, closeModal }) => {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
+    const [isResetting, setIsResetting] = useState(false);
+
+    const handlePasswordReset = async () => {
+        if (!user) return;
+        if (window.confirm(`Apakah Anda yakin ingin mengirim email reset password ke ${user.email}?`)) {
+            setIsResetting(true);
+            try {
+                await sendPasswordResetEmail(mainAuth, user.email);
+                alert(`Email untuk mereset password telah berhasil dikirim ke ${user.email}.`);
+            } catch (error) {
+                console.error("Error sending password reset email: ", error);
+                const err = error as { message?: string };
+                alert(`Gagal mengirim email. Error: ${err.message}`);
+            } finally {
+                setIsResetting(false);
+            }
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -25,8 +45,9 @@ const UserModal: React.FC<UserModalProps> = ({ user, closeModal }) => {
         try {
             if (user) { // Edit existing user
                 const userRef = doc(db, "users", user.id);
-                await updateDoc(userRef, { nama, email, noWhatsapp, role });
+                await updateDoc(userRef, { nama, noWhatsapp, role });
                 alert('Data pegawai berhasil diperbarui.');
+                closeModal();
             } else { // Add new user
                 if (password !== confirmPassword) {
                     alert("Password tidak cocok.");
@@ -38,29 +59,37 @@ const UserModal: React.FC<UserModalProps> = ({ user, closeModal }) => {
                     setLoading(false);
                     return;
                 }
-                
-                // This creates the user in Firebase Authentication.
-                // NOTE: This will sign out the admin and sign in the new user due to Firebase SDK limitations.
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                const newUser = userCredential.user;
 
-                // Create the user document in Firestore, using the UID from Auth as the document ID.
-                // This is crucial for linking Auth and Firestore data.
-                await setDoc(doc(db, "users", newUser.uid), {
-                    uid: newUser.uid,
-                    nama,
-                    email,
-                    noWhatsapp,
-                    role,
-                });
-                
-                alert(`Pegawai ${nama} berhasil dibuat.\n\nPERHATIAN: Sesi admin Anda telah berakhir dan sistem sekarang login sebagai pengguna baru. Harap logout dan login kembali dengan akun admin Anda untuk melanjutkan.`);
+                // Create user in a temporary auth instance to prevent admin from being logged out.
+                const tempAppName = `temp-app-${Date.now()}`;
+                const tempApp = initializeApp(firebaseConfig, tempAppName);
+                const tempAuth = getAuth(tempApp);
+
+                try {
+                    const userCredential = await createUserWithEmailAndPassword(tempAuth, email, password);
+                    const newUser = userCredential.user;
+
+                    await setDoc(doc(db, "users", newUser.uid), {
+                        uid: newUser.uid,
+                        nama,
+                        email,
+                        noWhatsapp,
+                        role,
+                    });
+                    
+                    alert(`Pegawai ${nama} berhasil dibuat. Admin tetap login.`);
+                    closeModal();
+                } finally {
+                    await deleteApp(tempApp);
+                }
             }
-            closeModal();
         } catch (error) {
             console.error("Error saving user: ", error);
-            const err = error as { message?: string };
-            alert(`Gagal menyimpan data pegawai. Pastikan email unik.\nError: ${err.message}`);
+            const err = error as { code?: string, message?: string };
+            const errorMessage = err.code === 'auth/email-already-in-use' 
+                ? 'Email ini sudah terdaftar. Silakan gunakan email lain.'
+                : `Gagal menyimpan data pegawai. Error: ${err.message}`;
+            alert(errorMessage);
         } finally {
             setLoading(false);
         }
@@ -84,6 +113,19 @@ const UserModal: React.FC<UserModalProps> = ({ user, closeModal }) => {
                         <label className="block text-sm font-bold mb-2">Nomor WhatsApp</label>
                         <input type="tel" value={noWhatsapp} onChange={e => setNoWhatsapp(e.target.value)} className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" required />
                     </div>
+                    {user && (
+                         <div className="mb-4">
+                            <label className="block text-sm font-bold mb-2">Manajemen Password</label>
+                            <button
+                                type="button"
+                                onClick={handlePasswordReset}
+                                disabled={isResetting}
+                                className="w-full p-2 rounded-lg bg-yellow-500 text-white hover:bg-yellow-600 disabled:opacity-50 transition-colors"
+                            >
+                                {isResetting ? 'Mengirim...' : 'Kirim Email Reset Password'}
+                            </button>
+                        </div>
+                    )}
                     {!user && (
                         <>
                             <div className="mb-4">

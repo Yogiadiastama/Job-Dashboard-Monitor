@@ -79,28 +79,22 @@ const TaskManagement: React.FC = () => {
         }
     };
     
-    const handleWhatsAppShare = (task: Task) => {
-        const assignedUser = users.find(u => u.uid === task.assignedTo);
-        if (!assignedUser || !assignedUser.noWhatsapp) {
-            alert('Nomor WhatsApp untuk pegawai ini tidak ditemukan.');
-            return;
-        }
+    const handleWhatsAppExport = (task: Task) => {
+        const assignedUserName = getUserName(task.assignedTo);
+        const formattedDueDate = new Date(task.dueDate).toLocaleDateString('id-ID', {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+        });
 
-        let phoneNumber = assignedUser.noWhatsapp.trim().replace(/[^0-9]/g, '');
-        if (phoneNumber.startsWith('0')) {
-            phoneNumber = '62' + phoneNumber.substring(1);
-        } else if (!phoneNumber.startsWith('62')) {
-            phoneNumber = '62' + phoneNumber;
-        }
+        const message = `*Detail Pekerjaan - ProjectFlow Pro*\n\n` +
+                        `*Judul:* ${task.title}\n` +
+                        `*Ditugaskan Kepada:* ${assignedUserName}\n\n` +
+                        `*Deskripsi:*\n${task.description || 'Tidak ada deskripsi.'}\n\n` +
+                        `*Prioritas:* ${task.priority}\n` +
+                        `*Batas Waktu:* ${formattedDueDate}\n\n` +
+                        `---\n` +
+                        `_Catatan: Tanggal kapan pekerjaan diberikan tidak tercatat dalam sistem._`;
 
-        const message = `*Pemberitahuan Tugas - ProjectFlow Pro*\n\n` +
-                        `Halo ${assignedUser.nama},\n` +
-                        `Anda memiliki tugas yang perlu diperhatikan:\n\n` +
-                        `*Judul*: ${task.title}\n` +
-                        `*Batas Waktu*: ${new Date(task.dueDate).toLocaleDateString('id-ID')}\n\n` +
-                        `Silakan periksa detailnya di dashboard aplikasi. Terima kasih.`;
-
-        const whatsappUrl = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodeURIComponent(message)}`;
+        const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
         window.open(whatsappUrl, '_blank');
     };
 
@@ -176,7 +170,7 @@ const TaskManagement: React.FC = () => {
                                     </td>
                                     <td className="p-4 flex items-center space-x-2">
                                         <button onClick={() => openModal(task)} className="p-2 rounded-full hover:bg-yellow-200 dark:hover:bg-yellow-800 text-yellow-600 dark:text-yellow-300 transition-colors" title="Edit Pekerjaan">{ICONS.edit}</button>
-                                        <button onClick={() => handleWhatsAppShare(task)} className="p-2 rounded-full hover:bg-green-200 dark:hover:bg-green-800 text-green-600 dark:text-green-300 transition-colors" title="Kirim Notifikasi WhatsApp">
+                                        <button onClick={() => handleWhatsAppExport(task)} className="p-2 rounded-full hover:bg-green-200 dark:hover:bg-green-800 text-green-600 dark:text-green-300 transition-colors" title="Export Detail ke WhatsApp">
                                             {ICONS.whatsapp}
                                         </button>
                                         {['admin', 'pimpinan', 'pegawai'].includes(userData.role) && (

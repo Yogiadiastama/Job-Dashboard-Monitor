@@ -1,9 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { collection, query, where, onSnapshot, deleteDoc, doc } from 'firebase/firestore';
 import { ref, deleteObject } from 'firebase/storage';
 import { db, storage } from '../../services/firebase';
 import { useAuth } from '../../hooks/useAuth';
+import { useNotification } from '../../hooks/useNotification';
 import { Task, UserData } from '../../types';
 import { ICONS } from '../../constants';
 import TaskModal from './TaskModal';
@@ -16,9 +16,11 @@ const TaskManagement: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingTask, setEditingTask] = useState<Task | null>(null);
     const { userData } = useAuth();
+    const { showNotification } = useNotification();
     
     useEffect(() => {
         if (!userData) return;
+        const offlineMessage = "Anda sepertinya offline. Data yang ditampilkan mungkin sudah usang.";
 
         // Semua role kini dapat melihat semua pekerjaan
         const tasksUnsub = onSnapshot(collection(db, "tasks"), 
@@ -29,7 +31,7 @@ const TaskManagement: React.FC = () => {
             },
             (error) => {
                 console.error("TaskManagement: Error fetching tasks:", error);
-                alert("Gagal memuat data pekerjaan. Aplikasi mungkin sedang offline dan menampilkan data yang kedaluwarsa.");
+                showNotification(offlineMessage, "warning");
                 setLoading(false);
             }
         );
@@ -41,6 +43,7 @@ const TaskManagement: React.FC = () => {
             },
             (error) => {
                 console.error("TaskManagement: Error fetching users:", error);
+                showNotification(offlineMessage, "warning");
             }
         );
         
@@ -48,7 +51,7 @@ const TaskManagement: React.FC = () => {
             tasksUnsub();
             usersUnsub();
         };
-    }, [userData]);
+    }, [userData, showNotification]);
     
     const openModal = (task: Task | null = null) => {
         setEditingTask(task);

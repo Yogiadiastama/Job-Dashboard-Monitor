@@ -1,8 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '../../services/firebase';
 import { useAuth } from '../../hooks/useAuth';
+import { useNotification } from '../../hooks/useNotification';
 import { Task, UserData } from '../../types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { ICONS } from '../../constants';
@@ -26,12 +26,14 @@ const Dashboard: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [viewMode, setViewMode] = useState('table');
     const { userData } = useAuth();
+    const { showNotification } = useNotification();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalTasks, setModalTasks] = useState<Task[]>([]);
     const [modalTitle, setModalTitle] = useState('');
 
     useEffect(() => {
         if (!userData) return;
+        const offlineMessage = "Anda sepertinya offline. Data yang ditampilkan mungkin sudah usang.";
 
         // Semua role dengan akses dashboard kini dapat melihat semua pekerjaan
         const tasksUnsub = onSnapshot(collection(db, "tasks"), 
@@ -42,7 +44,7 @@ const Dashboard: React.FC = () => {
             },
             (error) => {
                 console.error("Dashboard: Error fetching tasks:", error);
-                alert("Gagal memuat data pekerjaan. Aplikasi mungkin sedang offline dan menampilkan data yang kedaluwarsa.");
+                showNotification(offlineMessage, "warning");
                 setLoading(false);
             }
         );
@@ -57,6 +59,7 @@ const Dashboard: React.FC = () => {
                 },
                 (error) => {
                      console.error("Dashboard: Error fetching users:", error);
+                     showNotification(offlineMessage, "warning");
                 }
             );
         }
@@ -65,7 +68,7 @@ const Dashboard: React.FC = () => {
             tasksUnsub();
             usersUnsub();
         };
-    }, [userData]);
+    }, [userData, showNotification]);
 
     const getStatusCount = (status: string) => tasks.filter(task => task.status === status).length;
     

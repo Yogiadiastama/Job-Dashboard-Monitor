@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../services/firebase';
@@ -11,6 +10,7 @@ import UserManagement from '../users/UserManagement';
 import Settings from '../settings/Settings';
 import LoadingSpinner from '../common/LoadingSpinner';
 import Calendar from '../calendar/Calendar';
+import NotificationBanner from '../common/NotificationBanner';
 
 const MainLayout: React.FC = () => {
     const { userData } = useAuth();
@@ -149,8 +149,9 @@ const MainLayout: React.FC = () => {
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col overflow-y-auto">
-                 <header className="flex flex-col sm:flex-row justify-between sm:items-center p-4 sm:p-6 md:p-10 gap-4 sticky top-0 bg-gray-100/80 dark:bg-gray-900/80 backdrop-blur-sm z-10 border-b border-gray-200 dark:border-gray-700">
+            <main className="flex-1 flex flex-col overflow-hidden">
+                 <NotificationBanner />
+                 <header className="flex flex-col sm:flex-row justify-between sm:items-center p-4 sm:p-6 md:p-10 gap-4 bg-gray-100/80 dark:bg-gray-900/80 backdrop-blur-sm z-10 border-b border-gray-200 dark:border-gray-700">
                     <div className="flex items-center">
                         <button onClick={() => setSidebarVisible(true)} className="md:hidden p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 mr-4">
                             {ICONS.drag}
@@ -168,7 +169,7 @@ const MainLayout: React.FC = () => {
                        </div>
                     </div>
                 </header>
-                <div className="flex-1 p-4 sm:p-6 md:p-10">
+                <div className="flex-1 p-4 sm:p-6 md:p-10 overflow-y-auto">
                     {renderContent()}
                 </div>
             </main>

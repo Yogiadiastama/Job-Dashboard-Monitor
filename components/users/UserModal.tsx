@@ -1,9 +1,9 @@
-
 import React, { useState } from 'react';
 import { collection, doc, updateDoc, setDoc } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, sendPasswordResetEmail, getAuth } from 'firebase/auth';
 import { initializeApp, deleteApp } from 'firebase/app';
-import { db, auth as mainAuth, firebaseConfig } from '../../services/firebase';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { db, auth as mainAuth, firebaseConfig, storage } from '../../services/firebase';
 import { UserData, UserRole } from '../../types';
 
 interface UserModalProps {
@@ -20,6 +20,11 @@ const UserModal: React.FC<UserModalProps> = ({ user, closeModal }) => {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [isResetting, setIsResetting] = useState(false);
+    
+    // State for photo management
+    const [profilePicFile, setProfilePicFile] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(user?.photoURL || null);
+    const [isPhotoRemoved, setIsPhotoRemoved] = useState(false);
 
     const handlePasswordReset = async () => {
         if (!user) return;
@@ -37,6 +42,23 @@ const UserModal: React.FC<UserModalProps> = ({ user, closeModal }) => {
             }
         }
     };
+    
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            setProfilePicFile(file);
+            setImagePreview(URL.createObjectURL(file));
+            setIsPhotoRemoved(false);
+        }
+    };
+
+    const handleRemovePhoto = () => {
+        setProfilePicFile(null);
+        setImagePreview(null);
+        setIsPhotoRemoved(true);
+        const fileInput = document.getElementById('profilePicInput') as HTMLInputElement;
+        if (fileInput) fileInput.value = '';
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -44,10 +66,25 @@ const UserModal: React.FC<UserModalProps> = ({ user, closeModal }) => {
 
         try {
             if (user) { // Edit existing user
+                let updatedPhotoURL = user.photoURL || '';
+
+                if (profilePicFile) { // New photo uploaded
+                    const photoRef = ref(storage, `profile-pictures/${user.uid}`);
+                    await uploadBytes(photoRef, profilePicFile);
+                    updatedPhotoURL = await getDownloadURL(photoRef);
+                } else if (isPhotoRemoved && user.photoURL) { // Existing photo removed
+                    const photoRef = ref(storage, `profile-pictures/${user.uid}`);
+                    await deleteObject(photoRef).catch(err => {
+                        if (err.code !== 'storage/object-not-found') console.error("Could not delete old photo:", err);
+                    });
+                    updatedPhotoURL = '';
+                }
+
                 const userRef = doc(db, "users", user.id);
-                await updateDoc(userRef, { nama, noWhatsapp, role });
+                await updateDoc(userRef, { nama, noWhatsapp, role, photoURL: updatedPhotoURL });
                 alert('Data pegawai berhasil diperbarui.');
                 closeModal();
+
             } else { // Add new user
                 if (password !== confirmPassword) {
                     alert("Password tidak cocok.");
@@ -60,7 +97,6 @@ const UserModal: React.FC<UserModalProps> = ({ user, closeModal }) => {
                     return;
                 }
 
-                // Create user in a temporary auth instance to prevent admin from being logged out.
                 const tempAppName = `temp-app-${Date.now()}`;
                 const tempApp = initializeApp(firebaseConfig, tempAppName);
                 const tempAuth = getAuth(tempApp);
@@ -69,15 +105,23 @@ const UserModal: React.FC<UserModalProps> = ({ user, closeModal }) => {
                     const userCredential = await createUserWithEmailAndPassword(tempAuth, email, password);
                     const newUser = userCredential.user;
 
+                    let photoURL = '';
+                    if (profilePicFile) {
+                        const photoRef = ref(storage, `profile-pictures/${newUser.uid}`);
+                        await uploadBytes(photoRef, profilePicFile);
+                        photoURL = await getDownloadURL(photoRef);
+                    }
+
                     await setDoc(doc(db, "users", newUser.uid), {
                         uid: newUser.uid,
                         nama,
                         email,
                         noWhatsapp,
                         role,
+                        photoURL,
                     });
                     
-                    alert(`Pegawai ${nama} berhasil dibuat. Admin tetap login.`);
+                    alert(`Pegawai ${nama} berhasil dibuat.`);
                     closeModal();
                 } finally {
                     await deleteApp(tempApp);
@@ -97,12 +141,41 @@ const UserModal: React.FC<UserModalProps> = ({ user, closeModal }) => {
     
     return (
          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg p-8 animate-fade-in-up">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg p-8 animate-fade-in-up max-h-[95vh] overflow-y-auto">
                 <h2 className="text-2xl font-bold mb-6">{user ? 'Edit Pegawai' : 'Tambah Pegawai Baru'}</h2>
                 <form onSubmit={handleSubmit}>
                     <div className="mb-4">
                         <label className="block text-sm font-bold mb-2">Nama Lengkap</label>
                         <input type="text" value={nama} onChange={e => setNama(e.target.value)} className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" required />
+                    </div>
+                     <div className="mb-4">
+                        <label className="block text-sm font-bold mb-2">Foto Profil</label>
+                        <div className="flex items-center space-x-4">
+                            {imagePreview ? (
+                                <img src={imagePreview} alt="Preview" className="w-20 h-20 rounded-full object-cover" />
+                            ) : (
+                                <div className="w-20 h-20 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center font-bold text-gray-500">
+                                    {nama.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || '?'}
+                                </div>
+                            )}
+                            <div className="flex-1">
+                                <input 
+                                    id="profilePicInput"
+                                    type="file" 
+                                    accept="image/*" 
+                                    onChange={handleFileChange} 
+                                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+                                {imagePreview && (
+                                    <button 
+                                        type="button" 
+                                        onClick={handleRemovePhoto}
+                                        className="mt-2 text-xs text-red-500 hover:text-red-700"
+                                    >
+                                        Hapus Foto
+                                    </button>
+                                )}
+                            </div>
+                        </div>
                     </div>
                     <div className="mb-4">
                         <label className="block text-sm font-bold mb-2">Email</label>

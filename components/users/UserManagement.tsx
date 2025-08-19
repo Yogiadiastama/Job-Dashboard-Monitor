@@ -1,17 +1,19 @@
-
 import React, { useState, useEffect } from 'react';
 import { collection, onSnapshot, doc, deleteDoc } from 'firebase/firestore';
-import { db } from '../../services/firebase';
+import { ref, deleteObject } from 'firebase/storage';
+import { db, storage } from '../../services/firebase';
 import { UserData } from '../../types';
 import { ICONS } from '../../constants';
 import UserModal from './UserModal';
 import LoadingSpinner from '../common/LoadingSpinner';
+import { useNotification } from '../../hooks/useNotification';
 
 const UserManagement: React.FC = () => {
     const [users, setUsers] = useState<UserData[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<UserData | null>(null);
+    const { showNotification } = useNotification();
 
     useEffect(() => {
         const unsub = onSnapshot(collection(db, "users"), 
@@ -22,12 +24,12 @@ const UserManagement: React.FC = () => {
             },
             (error) => {
                 console.error("UserManagement: Error fetching users:", error);
-                alert("Gagal memuat data pengguna. Aplikasi mungkin sedang offline dan menampilkan data yang kedaluwarsa.");
+                showNotification("Anda sepertinya offline. Data yang ditampilkan mungkin sudah usang.", "warning");
                 setLoading(false);
             }
         );
         return () => unsub();
-    }, []);
+    }, [showNotification]);
 
     const openModal = (user: UserData | null = null) => {
         setEditingUser(user);
@@ -39,11 +41,23 @@ const UserManagement: React.FC = () => {
         setEditingUser(null);
     };
 
-    const handleDelete = async (userId: string) => {
-        if (window.confirm('Apakah Anda yakin ingin menghapus pegawai ini? Ini hanya akan menghapus data dari database, bukan akun autentikasi.')) {
+    const handleDelete = async (user: UserData) => {
+        if (window.confirm(`Apakah Anda yakin ingin menghapus ${user.nama}? Tindakan ini akan menghapus data dan foto profilnya.`)) {
             try {
-                await deleteDoc(doc(db, "users", userId));
-                alert("Pegawai berhasil dihapus dari database.");
+                // Delete profile picture from Storage if it exists
+                if (user.photoURL) {
+                    const photoRef = ref(storage, `profile-pictures/${user.uid}`);
+                    await deleteObject(photoRef).catch(error => {
+                        // It's okay if the file doesn't exist, log other errors
+                        if (error.code !== 'storage/object-not-found') {
+                            console.error("Error deleting profile photo:", error);
+                        }
+                    });
+                }
+                
+                // Delete user document from Firestore
+                await deleteDoc(doc(db, "users", user.id));
+                alert("Pegawai berhasil dihapus.");
             } catch (error) {
                 console.error("Error deleting user: ", error);
                 alert("Gagal menghapus pegawai.");
@@ -65,6 +79,7 @@ const UserManagement: React.FC = () => {
                     <table className="w-full text-left">
                         <thead>
                             <tr className="border-b-2 dark:border-gray-700">
+                                <th className="p-4">Foto</th>
                                 <th className="p-4">Nama</th>
                                 <th className="p-4">Email</th>
                                 <th className="p-4">No. WhatsApp</th>
@@ -75,13 +90,22 @@ const UserManagement: React.FC = () => {
                         <tbody>
                             {users.map(user => (
                                 <tr key={user.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                    <td className="p-4">
+                                        {user.photoURL ? (
+                                            <img src={user.photoURL} alt={user.nama} className="w-10 h-10 rounded-full object-cover" />
+                                        ) : (
+                                            <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center font-bold text-gray-500">
+                                                {user.nama.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                                            </div>
+                                        )}
+                                    </td>
                                     <td className="p-4 font-medium">{user.nama}</td>
                                     <td className="p-4">{user.email}</td>
                                     <td className="p-4">{user.noWhatsapp}</td>
                                     <td className="p-4 capitalize">{user.role}</td>
                                     <td className="p-4 flex items-center space-x-2">
                                         <button onClick={() => openModal(user)} className="p-2 rounded-full hover:bg-yellow-200 dark:hover:bg-yellow-800 text-yellow-600 dark:text-yellow-300">{ICONS.edit}</button>
-                                        {user.role !== 'admin' && <button onClick={() => handleDelete(user.id)} className="p-2 rounded-full hover:bg-red-200 dark:hover:bg-red-800 text-red-600 dark:text-red-300">{ICONS.delete}</button>}
+                                        {user.role !== 'admin' && <button onClick={() => handleDelete(user)} className="p-2 rounded-full hover:bg-red-200 dark:hover:bg-red-800 text-red-600 dark:text-red-300">{ICONS.delete}</button>}
                                     </td>
                                 </tr>
                             ))}

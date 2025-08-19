@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { collection, onSnapshot, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '../../services/firebase';
@@ -6,6 +5,7 @@ import { CalendarEvent } from '../../types';
 import { ICONS } from '../../constants';
 import LoadingSpinner from '../common/LoadingSpinner';
 import EventModal from './EventModal';
+import { useNotification } from '../../hooks/useNotification';
 
 const Calendar: React.FC = () => {
     const [currentDate, setCurrentDate] = useState(new Date());
@@ -13,6 +13,7 @@ const Calendar: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+    const { showNotification } = useNotification();
 
     useEffect(() => {
         setLoading(true);
@@ -24,12 +25,12 @@ const Calendar: React.FC = () => {
             },
             (error) => {
                 console.error("Calendar: Error fetching events:", error);
-                alert("Gagal memuat data kalender. Aplikasi mungkin sedang offline dan menampilkan data yang kedaluwarsa.");
+                showNotification("Anda sepertinya offline. Data yang ditampilkan mungkin sudah usang.", "warning");
                 setLoading(false);
             }
         );
         return () => unsub();
-    }, []);
+    }, [showNotification]);
 
     const openModal = (event: CalendarEvent | null = null) => {
         setSelectedEvent(event);

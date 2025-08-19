@@ -9,6 +9,7 @@ import TaskManagement from '../tasks/TaskManagement';
 import UserManagement from '../users/UserManagement';
 import Settings from '../settings/Settings';
 import LoadingSpinner from '../common/LoadingSpinner';
+import Calendar from '../calendar/Calendar';
 
 const MainLayout: React.FC = () => {
     const { userData } = useAuth();
@@ -29,6 +30,7 @@ const MainLayout: React.FC = () => {
     const menuItems = [
         { id: 'dashboard', label: 'Dashboard', icon: ICONS.dashboard, roles: ['pegawai', 'pimpinan', 'admin'] },
         { id: 'tasks', label: 'Pekerjaan', icon: ICONS.tasks, roles: ['pegawai', 'pimpinan', 'admin'] },
+        { id: 'calendar', label: 'Kalender', icon: ICONS.calendar, roles: ['pegawai', 'pimpinan', 'admin'] },
         { id: 'users', label: 'Manajemen Pegawai', icon: ICONS.users, roles: ['admin'] },
         { id: 'settings', label: 'Pengaturan', icon: ICONS.settings, roles: ['admin'] },
     ];
@@ -37,6 +39,7 @@ const MainLayout: React.FC = () => {
         switch (activeMenu) {
             case 'dashboard': return <Dashboard />;
             case 'tasks': return <TaskManagement />;
+            case 'calendar': return <Calendar />;
             case 'users': return <UserManagement />;
             case 'settings': return <Settings />;
             default: return <Dashboard />;

@@ -23,3 +23,11 @@ export interface Task {
   fileUrl?: string;
   rating?: number;
 }
+
+export interface CalendarEvent {
+  id: string;
+  title: string;
+  date: string; // YYYY-MM-DD format
+  description: string;
+  createdBy: string; // User UID
+}

@@ -16,11 +16,18 @@ const Calendar: React.FC = () => {
 
     useEffect(() => {
         setLoading(true);
-        const unsub = onSnapshot(collection(db, 'events'), (snapshot) => {
-            const eventsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CalendarEvent));
-            setEvents(eventsData);
-            setLoading(false);
-        });
+        const unsub = onSnapshot(collection(db, 'events'), 
+            (snapshot) => {
+                const eventsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CalendarEvent));
+                setEvents(eventsData);
+                setLoading(false);
+            },
+            (error) => {
+                console.error("Calendar: Error fetching events:", error);
+                alert("Gagal memuat data kalender. Aplikasi mungkin sedang offline dan menampilkan data yang kedaluwarsa.");
+                setLoading(false);
+            }
+        );
         return () => unsub();
     }, []);
 

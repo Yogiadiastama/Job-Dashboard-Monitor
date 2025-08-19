@@ -14,11 +14,18 @@ const UserManagement: React.FC = () => {
     const [editingUser, setEditingUser] = useState<UserData | null>(null);
 
     useEffect(() => {
-        const unsub = onSnapshot(collection(db, "users"), (snapshot) => {
-            const usersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UserData));
-            setUsers(usersData);
-            setLoading(false);
-        });
+        const unsub = onSnapshot(collection(db, "users"), 
+            (snapshot) => {
+                const usersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UserData));
+                setUsers(usersData);
+                setLoading(false);
+            },
+            (error) => {
+                console.error("UserManagement: Error fetching users:", error);
+                alert("Gagal memuat data pengguna. Aplikasi mungkin sedang offline dan menampilkan data yang kedaluwarsa.");
+                setLoading(false);
+            }
+        );
         return () => unsub();
     }, []);
 

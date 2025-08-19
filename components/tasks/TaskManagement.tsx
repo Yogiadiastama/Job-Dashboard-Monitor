@@ -21,16 +21,28 @@ const TaskManagement: React.FC = () => {
         if (!userData) return;
 
         // Semua role kini dapat melihat semua pekerjaan
-        const tasksUnsub = onSnapshot(collection(db, "tasks"), (snapshot) => {
-            const tasksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Task));
-            setTasks(tasksData);
-            setLoading(false);
-        });
+        const tasksUnsub = onSnapshot(collection(db, "tasks"), 
+            (snapshot) => {
+                const tasksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Task));
+                setTasks(tasksData);
+                setLoading(false);
+            },
+            (error) => {
+                console.error("TaskManagement: Error fetching tasks:", error);
+                alert("Gagal memuat data pekerjaan. Aplikasi mungkin sedang offline dan menampilkan data yang kedaluwarsa.");
+                setLoading(false);
+            }
+        );
 
-        const usersUnsub = onSnapshot(collection(db, "users"), (snapshot) => {
-            const usersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UserData));
-            setUsers(usersData);
-        });
+        const usersUnsub = onSnapshot(collection(db, "users"), 
+            (snapshot) => {
+                const usersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UserData));
+                setUsers(usersData);
+            },
+            (error) => {
+                console.error("TaskManagement: Error fetching users:", error);
+            }
+        );
         
         return () => {
             tasksUnsub();

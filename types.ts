@@ -10,6 +10,7 @@ export interface UserData {
   email: string;
   noWhatsapp: string;
   role: UserRole;
+  photoURL?: string;
 }
 
 export interface Task {
@@ -30,4 +31,10 @@ export interface CalendarEvent {
   date: string; // YYYY-MM-DD format
   description: string;
   createdBy: string; // User UID
+}
+
+export interface ThemeSettings {
+  headerTitle: string;
+  accentColor: string;
+  loginBgUrl: string;
 }

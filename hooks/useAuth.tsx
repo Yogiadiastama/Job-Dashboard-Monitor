@@ -26,12 +26,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             if (firebaseUser) {
                 setUser(firebaseUser);
-                const userDocRef = doc(db, "users", firebaseUser.uid);
-                const docSnap = await getDoc(userDocRef);
-                if (docSnap.exists()) {
-                    setUserData({ id: docSnap.id, ...docSnap.data() } as UserData);
-                } else {
-                    console.log("No such user document!");
+                try {
+                    const userDocRef = doc(db, "users", firebaseUser.uid);
+                    const docSnap = await getDoc(userDocRef);
+                    if (docSnap.exists()) {
+                        setUserData({ id: docSnap.id, ...docSnap.data() } as UserData);
+                    } else {
+                        console.log("No such user document!");
+                        setUserData(null);
+                    }
+                } catch (error) {
+                    console.error("Error fetching user data (might be offline):", error);
                     setUserData(null);
                 }
             } else {

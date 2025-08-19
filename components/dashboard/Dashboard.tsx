@@ -34,19 +34,31 @@ const Dashboard: React.FC = () => {
         if (!userData) return;
 
         // Semua role dengan akses dashboard kini dapat melihat semua pekerjaan
-        const tasksUnsub = onSnapshot(collection(db, "tasks"), (snapshot) => {
-            const tasksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Task));
-            setTasks(tasksData);
-            setLoading(false);
-        });
+        const tasksUnsub = onSnapshot(collection(db, "tasks"), 
+            (snapshot) => {
+                const tasksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Task));
+                setTasks(tasksData);
+                setLoading(false);
+            },
+            (error) => {
+                console.error("Dashboard: Error fetching tasks:", error);
+                alert("Gagal memuat data pekerjaan. Aplikasi mungkin sedang offline dan menampilkan data yang kedaluwarsa.");
+                setLoading(false);
+            }
+        );
 
         // Ambil semua data pengguna untuk admin, pimpinan, dan sekarang pegawai
         let usersUnsub = () => {};
         if (['admin', 'pimpinan', 'pegawai'].includes(userData.role)) {
-            usersUnsub = onSnapshot(collection(db, "users"), (snapshot) => {
-                const usersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UserData));
-                setUsers(usersData);
-            });
+            usersUnsub = onSnapshot(collection(db, "users"), 
+                (snapshot) => {
+                    const usersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UserData));
+                    setUsers(usersData);
+                },
+                (error) => {
+                     console.error("Dashboard: Error fetching users:", error);
+                }
+            );
         }
         
         return () => {

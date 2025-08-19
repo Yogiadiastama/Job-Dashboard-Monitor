@@ -4,6 +4,7 @@ import { createUserWithEmailAndPassword, sendPasswordResetEmail, getAuth } from 
 import { initializeApp, deleteApp } from 'firebase/app';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db, auth as mainAuth, firebaseConfig, storage } from '../../services/firebase';
+import { useNotification } from '../../hooks/useNotification';
 import { UserData, UserRole } from '../../types';
 
 interface UserModalProps {
@@ -20,6 +21,7 @@ const UserModal: React.FC<UserModalProps> = ({ user, closeModal }) => {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [isResetting, setIsResetting] = useState(false);
+    const { showNotification } = useNotification();
     
     // State for photo management
     const [profilePicFile, setProfilePicFile] = useState<File | null>(null);
@@ -32,11 +34,11 @@ const UserModal: React.FC<UserModalProps> = ({ user, closeModal }) => {
             setIsResetting(true);
             try {
                 await sendPasswordResetEmail(mainAuth, user.email);
-                alert(`Email untuk mereset password telah berhasil dikirim ke ${user.email}.`);
+                showNotification(`Email reset password telah dikirim ke ${user.email}.`, 'success');
             } catch (error) {
                 console.error("Error sending password reset email: ", error);
                 const err = error as { message?: string };
-                alert(`Gagal mengirim email. Error: ${err.message}`);
+                showNotification(`Gagal mengirim email. Error: ${err.message}`, 'error');
             } finally {
                 setIsResetting(false);
             }
@@ -82,17 +84,17 @@ const UserModal: React.FC<UserModalProps> = ({ user, closeModal }) => {
 
                 const userRef = doc(db, "users", user.id);
                 await updateDoc(userRef, { nama, noWhatsapp, role, photoURL: updatedPhotoURL });
-                alert('Data pegawai berhasil diperbarui.');
+                showNotification('Data pegawai berhasil diperbarui.', 'success');
                 closeModal();
 
             } else { // Add new user
                 if (password !== confirmPassword) {
-                    alert("Password tidak cocok.");
+                    showNotification("Password tidak cocok.", 'error');
                     setLoading(false);
                     return;
                 }
                 if (password.length < 6) {
-                    alert("Password minimal harus 6 karakter.");
+                    showNotification("Password minimal harus 6 karakter.", 'error');
                     setLoading(false);
                     return;
                 }
@@ -121,7 +123,7 @@ const UserModal: React.FC<UserModalProps> = ({ user, closeModal }) => {
                         photoURL,
                     });
                     
-                    alert(`Pegawai ${nama} berhasil dibuat.`);
+                    showNotification(`Pegawai ${nama} berhasil dibuat.`, 'success');
                     closeModal();
                 } finally {
                     await deleteApp(tempApp);
@@ -133,7 +135,7 @@ const UserModal: React.FC<UserModalProps> = ({ user, closeModal }) => {
             const errorMessage = err.code === 'auth/email-already-in-use' 
                 ? 'Email ini sudah terdaftar. Silakan gunakan email lain.'
                 : `Gagal menyimpan data pegawai. Error: ${err.message}`;
-            alert(errorMessage);
+            showNotification(errorMessage, 'error');
         } finally {
             setLoading(false);
         }

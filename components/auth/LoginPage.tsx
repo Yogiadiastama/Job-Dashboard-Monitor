@@ -4,6 +4,7 @@ import { collection, getDocs, setDoc, doc } from 'firebase/firestore';
 import { auth, db } from '../../services/firebase';
 import { ICONS } from '../../constants';
 import { useTheme } from '../../hooks/useTheme';
+import { useNotification } from '../../hooks/useNotification';
 
 const LoginPage: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -13,6 +14,7 @@ const LoginPage: React.FC = () => {
     const [setupLoading, setSetupLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const { themeSettings } = useTheme();
+    const { showNotification } = useNotification();
 
     const getFriendlyErrorMessage = (errorCode: string): string => {
         if (errorCode.includes('requests-from-referer')) {
@@ -63,7 +65,7 @@ const LoginPage: React.FC = () => {
             const usersSnapshot = await getDocs(usersCollection);
 
             if (!usersSnapshot.empty) {
-                alert('Setup sudah selesai. Akun admin sudah ada.');
+                showNotification('Setup sudah selesai. Akun admin sudah ada.', 'info');
                 setSetupLoading(false);
                 return;
             }
@@ -78,7 +80,7 @@ const LoginPage: React.FC = () => {
                 role: "admin",
                 uid: user.uid
             });
-            alert("Akun admin berhasil dibuat! Anda sekarang bisa login dengan email 'admin@proapp.local' atau username 'admin' dan password 'Admin123'.");
+            showNotification("Akun admin berhasil dibuat! Login dengan 'admin' dan 'Admin123'.", 'success');
 
         } catch (error) {
             console.error("Error creating initial admin: ", error);

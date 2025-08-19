@@ -57,10 +57,10 @@ const UserManagement: React.FC = () => {
                 
                 // Delete user document from Firestore
                 await deleteDoc(doc(db, "users", user.id));
-                alert("Pegawai berhasil dihapus.");
+                showNotification("Pegawai berhasil dihapus.", "success");
             } catch (error) {
                 console.error("Error deleting user: ", error);
-                alert("Gagal menghapus pegawai.");
+                showNotification("Gagal menghapus pegawai.", "error");
             }
         }
     };

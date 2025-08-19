@@ -46,10 +46,11 @@ const Calendar: React.FC = () => {
         if (window.confirm('Apakah Anda yakin ingin menghapus event ini?')) {
             try {
                 await deleteDoc(doc(db, 'events', eventId));
+                showNotification("Event berhasil dihapus.", "success");
                 closeModal();
             } catch (error) {
                 console.error("Error deleting event: ", error);
-                alert("Gagal menghapus event.");
+                showNotification("Gagal menghapus event.", "error");
             }
         }
     };

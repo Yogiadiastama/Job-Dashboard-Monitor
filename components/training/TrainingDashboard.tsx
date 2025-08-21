@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { collection, onSnapshot, doc, deleteDoc, addDoc, updateDoc, query, orderBy } from '@firebase/firestore';
 import { db, getFirestoreErrorMessage } from '../../services/firebase';
@@ -283,10 +282,10 @@ const TrainingDashboard: React.FC = () => {
                 </div>
                 <button 
                     onClick={() => handleOpenModal()} 
-                    className="flex items-center justify-center gap-2 px-5 py-3 bg-brand-purple text-white font-semibold rounded-lg shadow-md hover:bg-opacity-90 transition-transform transform hover:-translate-y-0.5"
+                    className="flex items-center justify-center w-14 h-14 bg-brand-purple text-white rounded-full hover:bg-opacity-90 transition-transform transform hover:scale-110 shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                    title="Tambah Training Baru"
                 >
-                    {ICONS.add}
-                    <span>Tambah Training Baru</span>
+                    {ICONS.addLarge}
                 </button>
             </header>
 

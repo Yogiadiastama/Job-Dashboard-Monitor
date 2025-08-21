@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { collection, query, where, onSnapshot, deleteDoc, doc, addDoc } from '@firebase/firestore';
 import { ref, deleteObject } from '@firebase/storage';
@@ -172,9 +171,12 @@ const TaskManagement: React.FC = () => {
             <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
                 <h3 className="text-2xl font-bold">Daftar Pekerjaan</h3>
                 {['admin', 'pimpinan', 'pegawai'].includes(userData.role) && (
-                    <button onClick={() => openModal()} className="flex items-center justify-center sm:justify-start space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors transform hover:-translate-y-1 shadow-lg w-full sm:w-auto">
-                        {ICONS.add}
-                        <span>Tambah Pekerjaan</span>
+                    <button 
+                        onClick={() => openModal()} 
+                        className="flex items-center justify-center w-14 h-14 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors transform hover:scale-110 shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        title="Tambah Pekerjaan"
+                    >
+                        {ICONS.addLarge}
                     </button>
                 )}
             </div>

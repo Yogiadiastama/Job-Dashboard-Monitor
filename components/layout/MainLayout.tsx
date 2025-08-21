@@ -11,6 +11,7 @@ import UserManagement from '../users/UserManagement';
 import Settings from '../settings/Settings';
 import TrainingDashboard from '../training/TrainingDashboard';
 import NotificationBanner from '../common/NotificationBanner';
+import VoiceCommandButton from '../common/VoiceCommandButton';
 
 const MainLayout: React.FC = () => {
     const { userData } = useAuth();
@@ -156,6 +157,7 @@ const MainLayout: React.FC = () => {
                 <div className="flex-1 p-4 sm:p-6 md:p-10 overflow-y-auto">
                     {renderContent()}
                 </div>
+                <VoiceCommandButton />
             </main>
         </div>
     );

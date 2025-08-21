@@ -6,6 +6,7 @@ import { Training, TrainingStatus, ALL_STATUSES } from '../../types';
 import { ICONS } from '../../constants';
 import LoadingSpinner from '../common/LoadingSpinner';
 import { useNotification } from '../../hooks/useNotification';
+import { eventBus } from '../../services/eventBus';
 
 // --- Helper Functions ---
 const formatDateRange = (start: string, end: string) => {
@@ -415,8 +416,14 @@ const TrainingDashboard: React.FC = () => {
             }
         );
 
+        const handleOpenModalEvent = (data: { initialData: Partial<Training> }) => {
+            handleOpenModal(data.initialData);
+        };
+        eventBus.on('openTrainingModal', handleOpenModalEvent);
+
         return () => {
             unsub();
+            eventBus.remove('openTrainingModal', handleOpenModalEvent);
         };
     }, [showNotification]);
 

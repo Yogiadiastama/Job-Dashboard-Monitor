@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../services/firebase';
@@ -8,13 +9,12 @@ import Dashboard from '../dashboard/Dashboard';
 import TaskManagement from '../tasks/TaskManagement';
 import UserManagement from '../users/UserManagement';
 import Settings from '../settings/Settings';
-import LoadingSpinner from '../common/LoadingSpinner';
-import Calendar from '../calendar/Calendar';
+import TrainingDashboard from '../training/TrainingDashboard';
 import NotificationBanner from '../common/NotificationBanner';
 
 const MainLayout: React.FC = () => {
     const { userData } = useAuth();
-    const { themeSettings, loading: themeLoading } = useTheme();
+    const { themeSettings } = useTheme();
     const [activeMenu, setActiveMenu] = useState('dashboard');
     const [isSidebarVisible, setSidebarVisible] = useState(false);
 
@@ -39,7 +39,7 @@ const MainLayout: React.FC = () => {
     const menuItems = [
         { id: 'dashboard', label: 'Dashboard', icon: ICONS.dashboard, roles: ['pegawai', 'pimpinan', 'admin'] },
         { id: 'tasks', label: 'Pekerjaan', icon: ICONS.tasks, roles: ['pegawai', 'pimpinan', 'admin'] },
-        { id: 'calendar', label: 'Kalender', icon: ICONS.calendar, roles: ['pegawai', 'pimpinan', 'admin'] },
+        { id: 'training', label: 'Training', icon: ICONS.training, roles: ['pegawai', 'pimpinan', 'admin'] },
         { id: 'users', label: 'Manajemen Pegawai', icon: ICONS.users, roles: ['admin'] },
         { id: 'settings', label: 'Pengaturan', icon: ICONS.settings, roles: ['admin'] },
     ];
@@ -48,35 +48,19 @@ const MainLayout: React.FC = () => {
         switch (activeMenu) {
             case 'dashboard': return <Dashboard />;
             case 'tasks': return <TaskManagement />;
-            case 'calendar': return <Calendar />;
+            case 'training': return <TrainingDashboard />;
             case 'users': return <UserManagement />;
             case 'settings': return <Settings />;
             default: return <Dashboard />;
         }
     };
     
-    if (themeLoading) {
-      return <div className="flex items-center justify-center h-screen bg-gray-100 dark:bg-gray-900"><LoadingSpinner text="Memuat aplikasi..."/></div>;
-    }
-
+    // The loading check has been removed from here and centralized in App.tsx
+    // to prevent any rendering race conditions that cause flickering.
     if (!userData) {
-        return (
-            <div className="flex flex-col items-center justify-center h-screen bg-gray-100 dark:bg-gray-900 text-center p-4">
-                <h2 className="text-2xl font-bold text-red-600 mb-4">Gagal Memuat Data Pengguna</h2>
-                <p className="text-gray-600 dark:text-gray-300 mb-6">
-                    Tidak dapat mengambil detail profil Anda. Ini mungkin karena masalah koneksi internet. <br />
-                    Silakan periksa koneksi Anda dan muat ulang halaman, atau coba lagi nanti.
-                </p>
-                <button
-                    onClick={() => signOut(auth)}
-                    className="bg-red-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-red-600 transition-colors"
-                >
-                    Logout
-                </button>
-            </div>
-        );
+        // This is a safety net, but should ideally not be reached if App.tsx works correctly.
+        return null; 
     }
-
 
     const UserAvatar = () => {
         if (userData?.photoURL) {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { collection, onSnapshot, query, where } from 'firebase/firestore';
-import { db } from '../../services/firebase';
+import { db, getFirestoreErrorMessage } from '../../services/firebase';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotification } from '../../hooks/useNotification';
 import { Task, UserData } from '../../types';
@@ -33,8 +33,7 @@ const Dashboard: React.FC = () => {
 
     useEffect(() => {
         if (!userData) return;
-        const offlineMessage = "Anda sepertinya offline. Data yang ditampilkan mungkin sudah usang.";
-
+        
         // Semua role dengan akses dashboard kini dapat melihat semua pekerjaan
         const tasksUnsub = onSnapshot(collection(db, "tasks"), 
             (snapshot) => {
@@ -44,7 +43,8 @@ const Dashboard: React.FC = () => {
             },
             (error) => {
                 console.error("Dashboard: Error fetching tasks:", error);
-                showNotification(offlineMessage, "warning");
+                const firebaseError = error as { code?: string };
+                showNotification(getFirestoreErrorMessage(firebaseError), "warning");
                 setLoading(false);
             }
         );
@@ -59,7 +59,8 @@ const Dashboard: React.FC = () => {
                 },
                 (error) => {
                      console.error("Dashboard: Error fetching users:", error);
-                     showNotification(offlineMessage, "warning");
+                     const firebaseError = error as { code?: string };
+                     showNotification(getFirestoreErrorMessage(firebaseError), "warning");
                 }
             );
         }

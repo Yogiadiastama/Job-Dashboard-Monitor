@@ -1,8 +1,9 @@
+
 import React from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { AuthProvider, useAuth } from './hooks/useAuth';
-import { ThemeProvider } from './hooks/useTheme';
+import { ThemeProvider, useTheme } from './hooks/useTheme';
 import { NotificationProvider } from './hooks/useNotification';
 import { isConfigured } from './services/firebase';
 import LoginPage from './components/auth/LoginPage';
@@ -26,9 +27,11 @@ const FirebaseConfigWarning = () => (
 
 // Component to handle the main application logic: show login or main app.
 const AppContent = () => {
-    const { user, loading } = useAuth();
+    const { user, userData, loading: authLoading } = useAuth();
+    const { loading: themeLoading } = useTheme();
 
-    if (loading) {
+    // Centralized loading check for both auth and theme data
+    if (authLoading || themeLoading) {
         return (
             <div className="flex items-center justify-center h-screen bg-gray-100 dark:bg-gray-900">
                 <LoadingSpinner text="Memuat Aplikasi..." />
@@ -36,15 +39,19 @@ const AppContent = () => {
         );
     }
 
-    // If a user is logged in, show the main application layout, otherwise show the login page.
-    return user ? (
-        <DndProvider backend={HTML5Backend}>
-            <MainLayout />
-        </DndProvider>
-    ) : (
-        <LoginPage />
-    );
+    // If a user is logged in and we have their data, show the main app.
+    if (user && userData) {
+        return (
+            <DndProvider backend={HTML5Backend}>
+                <MainLayout />
+            </DndProvider>
+        );
+    }
+
+    // If there's no user, or user data failed to load, show the login page.
+    return <LoginPage />;
 };
+
 
 // The main App component that wraps everything.
 export default function App() {
@@ -55,12 +62,12 @@ export default function App() {
     
     // If configured, provide the authentication context to the rest of the app.
     return (
-        <AuthProvider>
-            <NotificationProvider>
+        <NotificationProvider>
+            <AuthProvider>
                 <ThemeProvider>
                     <AppContent />
                 </ThemeProvider>
-            </NotificationProvider>
-        </AuthProvider>
+            </AuthProvider>
+        </NotificationProvider>
     );
 }

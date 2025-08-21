@@ -2,8 +2,9 @@
 import React, { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { User, onAuthStateChanged } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
-import { auth, db } from '../services/firebase';
+import { auth, db, getFirestoreErrorMessage } from '../services/firebase';
 import { UserData } from '../types';
+import { useNotification } from './useNotification';
 
 interface AuthContextType {
     user: User | null;
@@ -21,6 +22,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [user, setUser] = useState<User | null>(null);
     const [userData, setUserData] = useState<UserData | null>(null);
     const [loading, setLoading] = useState(true);
+    const { showNotification } = useNotification();
 
     useEffect(() => {
         let userDocUnsubscribe: () => void = () => {};
@@ -44,6 +46,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                     },
                     (error) => {
                         console.error("Error fetching user data (might be offline):", error);
+                        const firebaseError = error as { code?: string };
+                        showNotification(getFirestoreErrorMessage(firebaseError), "warning");
                         // Don't nullify data on network errors, allowing cached data to be used.
                         setLoading(false);
                     }
@@ -59,7 +63,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             authUnsubscribe();
             userDocUnsubscribe();
         };
-    }, []);
+    }, [showNotification]);
 
     const value = { user, userData, loading };
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { collection, onSnapshot, doc, deleteDoc } from 'firebase/firestore';
 import { ref, deleteObject } from 'firebase/storage';
-import { db, storage } from '../../services/firebase';
+import { db, storage, getFirestoreErrorMessage } from '../../services/firebase';
 import { UserData } from '../../types';
 import { ICONS } from '../../constants';
 import UserModal from './UserModal';
@@ -24,7 +24,8 @@ const UserManagement: React.FC = () => {
             },
             (error) => {
                 console.error("UserManagement: Error fetching users:", error);
-                showNotification("Anda sepertinya offline. Data yang ditampilkan mungkin sudah usang.", "warning");
+                const firebaseError = error as { code?: string };
+                showNotification(getFirestoreErrorMessage(firebaseError), "warning");
                 setLoading(false);
             }
         );

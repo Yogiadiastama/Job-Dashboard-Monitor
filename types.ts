@@ -38,3 +38,19 @@ export interface ThemeSettings {
   accentColor: string;
   loginBgUrl: string;
 }
+
+// New types for the Training Dashboard
+export type TrainingStatus = 'Belum Dikonfirmasi' | 'Terkonfirmasi' | 'Menunggu Jawaban';
+
+export const ALL_STATUSES: TrainingStatus[] = ['Belum Dikonfirmasi', 'Terkonfirmasi', 'Menunggu Jawaban'];
+
+export interface Training {
+  id: string;
+  nama: string;
+  tanggalMulai: string; // YYYY-MM-DD
+  tanggalSelesai: string; // YYYY-MM-DD
+  lokasi: string;
+  pic: string;
+  catatan: string;
+  status: TrainingStatus;
+}

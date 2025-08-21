@@ -37,5 +37,18 @@ enableIndexedDbPersistence(db, { cacheSizeBytes: CACHE_SIZE_UNLIMITED })
     }
   });
 
+export const getFirestoreErrorMessage = (error: { code?: string }): string => {
+    console.error("Firestore Error:", error); // Log the full error for debugging
+    switch (error.code) {
+        case 'unavailable':
+            return "Gagal terhubung ke server. Periksa koneksi internet Anda. Aplikasi akan berjalan dalam mode offline.";
+        case 'permission-denied':
+            return "Akses ditolak. Anda tidak memiliki izin untuk melihat data ini. Hubungi administrator.";
+        case 'unauthenticated':
+             return "Sesi Anda telah berakhir. Silakan login kembali untuk melanjutkan.";
+        default:
+            return "Gagal memuat data karena masalah jaringan atau server. Data yang ditampilkan mungkin sudah usang.";
+    }
+};
 
 export { auth, db, storage };

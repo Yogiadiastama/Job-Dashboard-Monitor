@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { collection, query, where, onSnapshot, deleteDoc, doc } from 'firebase/firestore';
 import { ref, deleteObject } from 'firebase/storage';
-import { db, storage } from '../../services/firebase';
+import { db, storage, getFirestoreErrorMessage } from '../../services/firebase';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotification } from '../../hooks/useNotification';
 import { Task, UserData } from '../../types';
@@ -20,7 +20,6 @@ const TaskManagement: React.FC = () => {
     
     useEffect(() => {
         if (!userData) return;
-        const offlineMessage = "Anda sepertinya offline. Data yang ditampilkan mungkin sudah usang.";
 
         // Semua role kini dapat melihat semua pekerjaan
         const tasksUnsub = onSnapshot(collection(db, "tasks"), 
@@ -31,7 +30,8 @@ const TaskManagement: React.FC = () => {
             },
             (error) => {
                 console.error("TaskManagement: Error fetching tasks:", error);
-                showNotification(offlineMessage, "warning");
+                const firebaseError = error as { code?: string };
+                showNotification(getFirestoreErrorMessage(firebaseError), "warning");
                 setLoading(false);
             }
         );
@@ -43,7 +43,8 @@ const TaskManagement: React.FC = () => {
             },
             (error) => {
                 console.error("TaskManagement: Error fetching users:", error);
-                showNotification(offlineMessage, "warning");
+                const firebaseError = error as { code?: string };
+                showNotification(getFirestoreErrorMessage(firebaseError), "warning");
             }
         );
         

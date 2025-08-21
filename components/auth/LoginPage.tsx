@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { collection, getDocs, setDoc, doc } from 'firebase/firestore';
@@ -18,16 +17,31 @@ const LoginPage: React.FC = () => {
     const getFriendlyErrorMessage = (err: { code?: string, message?: string }): string => {
         const errorCode = err.code || '';
         const errorMessage = err.message || '';
+        const combinedErrorString = `${errorCode} ${errorMessage}`;
         
-        if (errorMessage.includes('requests-from-referer') || errorCode === 'auth/unauthorized-domain') {
-            const hostname = window.location.hostname;
-            return `Domain aplikasi (${hostname}) tidak diotorisasi. Untuk memperbaikinya, buka Firebase Console > Authentication > Settings > Authorized domains, lalu tambahkan domain ini.`;
+        if (combinedErrorString.includes('requests-from-referer') || errorCode === 'auth/unauthorized-domain') {
+            let domain = window.location.hostname;
+            
+            // This regex correctly captures domains with hyphens from "...-are-blocked" error messages.
+            const domainMatch = combinedErrorString.match(/https?:\/\/([^\s)]+)-are-blocked/);
+            if (domainMatch && domainMatch[1]) {
+                domain = domainMatch[1];
+            }
+            
+            if (domain && domain !== 'localhost') {
+                return `Domain aplikasi ('${domain}') tidak diotorisasi. Buka Firebase Console > Authentication > Settings > Authorized domains, lalu tambahkan: ${domain} (tanpa "https://"). Ini adalah masalah umum di lingkungan pratinjau.`;
+            }
+            
+            return `Domain aplikasi ini tidak diotorisasi oleh Firebase. Buka Firebase Console > Authentication > Settings > Authorized domains, lalu tambahkan domain tempat aplikasi ini berjalan.`;
         }
+
         switch (errorCode) {
             case 'auth/user-not-found':
             case 'auth/wrong-password':
             case 'auth/invalid-credential':
                 return 'Login Gagal. Periksa kembali email dan password Anda.';
+            case 'auth/network-request-failed':
+                return 'Gagal terhubung ke server. Periksa koneksi internet Anda.';
             case 'auth/operation-not-allowed':
                 return 'Operasi ini tidak diizinkan oleh Firebase. Periksa pengaturan API key dan otorisasi domain di Google Cloud & Firebase Console.';
             case 'auth/email-already-in-use':
@@ -35,6 +49,9 @@ const LoginPage: React.FC = () => {
             case 'auth/weak-password':
                 return 'Password terlalu lemah. Gunakan minimal 6 karakter.';
             default:
+                 if (combinedErrorString.includes('unavailable')) {
+                     return 'Gagal terhubung ke server. Periksa koneksi internet Anda. Aplikasi mungkin berjalan dalam mode offline.';
+                }
                 return `Terjadi kesalahan yang tidak diketahui (${errorCode}). Silakan coba lagi.`;
         }
     };

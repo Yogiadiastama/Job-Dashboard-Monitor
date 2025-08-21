@@ -1,13 +1,16 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, useMemo } from 'react';
 import { collection, query, where, onSnapshot, deleteDoc, doc, addDoc } from '@firebase/firestore';
 import { ref, deleteObject } from '@firebase/storage';
 import { db, storage, getFirestoreErrorMessage } from '../../services/firebase';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotification } from '../../hooks/useNotification';
-import { Task, UserData, TrainingStatus } from '../../types';
+import { Task, UserData, TrainingStatus, TaskPriority, TaskStatus } from '../../types';
 import { ICONS } from '../../constants';
 import TaskModal from './TaskModal';
 import LoadingSpinner from '../common/LoadingSpinner';
+
+type SortableTaskKeys = keyof Pick<Task, 'title' | 'dueDate' | 'priority' | 'status' | 'createdAt'>;
 
 const TaskManagement: React.FC = () => {
     const [tasks, setTasks] = useState<Task[]>([]);
@@ -17,11 +20,11 @@ const TaskManagement: React.FC = () => {
     const [editingTask, setEditingTask] = useState<Task | null>(null);
     const { userData } = useAuth();
     const { showNotification } = useNotification();
+    const [sortConfig, setSortConfig] = useState<{ key: SortableTaskKeys; direction: 'ascending' | 'descending' }>({ key: 'createdAt', direction: 'descending' });
     
     useEffect(() => {
         if (!userData) return;
 
-        // Semua role kini dapat melihat semua pekerjaan
         const tasksUnsub = onSnapshot(collection(db, "tasks"), 
             (snapshot) => {
                 const tasksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Task));
@@ -30,21 +33,18 @@ const TaskManagement: React.FC = () => {
             },
             (error) => {
                 console.error("TaskManagement: Error fetching tasks:", error);
-                const firebaseError = error as { code?: string };
-                showNotification(getFirestoreErrorMessage(firebaseError), "warning");
+                showNotification(getFirestoreErrorMessage(error as { code?: string }), "warning");
                 setLoading(false);
             }
         );
 
         const usersUnsub = onSnapshot(collection(db, "users"), 
             (snapshot) => {
-                const usersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UserData));
-                setUsers(usersData);
+                setUsers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UserData)));
             },
             (error) => {
                 console.error("TaskManagement: Error fetching users:", error);
-                const firebaseError = error as { code?: string };
-                showNotification(getFirestoreErrorMessage(firebaseError), "warning");
+                showNotification(getFirestoreErrorMessage(error as { code?: string }), "warning");
             }
         );
         
@@ -53,6 +53,37 @@ const TaskManagement: React.FC = () => {
             usersUnsub();
         };
     }, [userData, showNotification]);
+
+    const sortedTasks = useMemo(() => {
+        let sortableItems = [...tasks];
+        if (sortConfig.key) {
+            sortableItems.sort((a, b) => {
+                const valA = a[sortConfig.key];
+                const valB = b[sortConfig.key];
+
+                if (valA === undefined || valA === null) return 1;
+                if (valB === undefined || valB === null) return -1;
+                
+                if (valA < valB) return sortConfig.direction === 'ascending' ? -1 : 1;
+                if (valA > valB) return sortConfig.direction === 'ascending' ? 1 : -1;
+                return 0;
+            });
+        }
+        return sortableItems;
+    }, [tasks, sortConfig]);
+
+    const requestSort = (key: SortableTaskKeys) => {
+        let direction: 'ascending' | 'descending' = 'ascending';
+        if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+            direction = 'descending';
+        }
+        setSortConfig({ key, direction });
+    };
+
+    const getSortIndicator = (key: SortableTaskKeys) => {
+        if (sortConfig.key !== key) return null;
+        return sortConfig.direction === 'ascending' ? ' ▲' : ' ▼';
+    };
     
     const openModal = (task: Task | null = null) => {
         setEditingTask(task);
@@ -68,8 +99,7 @@ const TaskManagement: React.FC = () => {
         if (window.confirm('Apakah Anda yakin ingin menghapus pekerjaan ini?')) {
             try {
                 if (fileUrl) {
-                    const fileRef = ref(storage, fileUrl);
-                    await deleteObject(fileRef);
+                    await deleteObject(ref(storage, fileUrl));
                 }
                 await deleteDoc(doc(db, "tasks", taskId));
                 alert("Pekerjaan berhasil dihapus!");
@@ -102,42 +132,34 @@ const TaskManagement: React.FC = () => {
     const handleExportToTraining = async (task: Task) => {
         if (window.confirm(`Apakah Anda yakin ingin membuat jadwal training dari pekerjaan "${task.title}"?`)) {
             try {
-                const assignedUserName = getUserName(task.assignedTo);
-
                 const newTrainingData = {
                     nama: task.title,
                     tanggalMulai: task.dueDate,
                     tanggalSelesai: task.dueDate,
                     lokasi: 'Akan ditentukan',
-                    pic: assignedUserName,
+                    pic: getUserName(task.assignedTo),
                     catatan: `Diekspor dari pekerjaan: ${task.description || 'Tidak ada deskripsi.'}`,
                     status: 'Belum Dikonfirmasi' as TrainingStatus,
                 };
 
                 await addDoc(collection(db, "trainings"), newTrainingData);
-                
                 showNotification(`Pekerjaan "${task.title}" berhasil diekspor ke dashboard training.`, 'success');
-
-            } catch (error)
-                {
+            } catch (error) {
                 console.error("Error exporting task to training: ", error);
                 showNotification("Gagal mengekspor pekerjaan ke training.", 'error');
             }
         }
     };
 
-    const getUserName = (userId: string) => {
-        const user = users.find(u => u.uid === userId);
-        return user ? user.nama : 'Tidak diketahui';
-    };
+    const getUserName = (userId: string) => users.find(u => u.uid === userId)?.nama || 'Tidak diketahui';
     
-    const priorityClass: { [key: string]: string } = {
+    const priorityClass: { [key in TaskPriority]: string } = {
         High: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
         Mid: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
         Low: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
     };
 
-    const statusClass: { [key:string]: string } = {
+    const statusClass: { [key in TaskStatus]: string } = {
         'On Progress': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
         'Completed': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
         'Pending': 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
@@ -159,51 +181,43 @@ const TaskManagement: React.FC = () => {
             
             {loading ? <LoadingSpinner text="Memuat pekerjaan..."/> : (
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left min-w-[640px]">
+                    <table className="w-full text-left min-w-[720px]">
                         <thead>
                             <tr className="border-b-2 dark:border-gray-700">
-                                <th className="p-4">Judul</th>
+                                <th className="p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700" onClick={() => requestSort('title')}>Judul{getSortIndicator('title')}</th>
                                 <th className="p-4">Ditugaskan Kepada</th>
-                                <th className="p-4">Due Date</th>
-                                <th className="p-4">Prioritas</th>
-                                <th className="p-4">Status</th>
+                                <th className="p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700" onClick={() => requestSort('dueDate')}>Due Date{getSortIndicator('dueDate')}</th>
+                                <th className="p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700" onClick={() => requestSort('createdAt')}>Tgl. Dibuat{getSortIndicator('createdAt')}</th>
+                                <th className="p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700" onClick={() => requestSort('priority')}>Prioritas{getSortIndicator('priority')}</th>
+                                <th className="p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700" onClick={() => requestSort('status')}>Status{getSortIndicator('status')}</th>
                                 <th className="p-4">Rating</th>
                                 <th className="p-4">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {tasks.map(task => (
+                            {sortedTasks.map(task => (
                                 <tr key={task.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                                     <td className="p-4 font-medium">{task.title}</td>
                                     <td className="p-4">{getUserName(task.assignedTo)}</td>
                                     <td className="p-4">{new Date(task.dueDate).toLocaleDateString('id-ID')}</td>
+                                    <td className="p-4">{task.createdAt ? new Date(task.createdAt).toLocaleDateString('id-ID') : '-'}</td>
                                     <td className="p-4">
-                                        <span className={`px-3 py-1 text-sm font-semibold rounded-full ${priorityClass[task.priority]}`}>
-                                            {task.priority}
-                                        </span>
+                                        <span className={`px-3 py-1 text-sm font-semibold rounded-full ${priorityClass[task.priority]}`}>{task.priority}</span>
                                     </td>
                                     <td className="p-4">
-                                        <span className={`px-3 py-1 text-sm font-semibold rounded-full ${statusClass[task.status]}`}>
-                                            {task.status}
-                                        </span>
+                                        <span className={`px-3 py-1 text-sm font-semibold rounded-full ${statusClass[task.status]}`}>{task.status}</span>
                                     </td>
                                     <td className="p-4">
                                        <div className="flex">
                                             {[...Array(5)].map((_, i) => (
-                                                <span key={i} className={i < (task.rating || 0) ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600'}>
-                                                    {ICONS.star}
-                                                </span>
+                                                <span key={i} className={i < (task.rating || 0) ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600'}>{ICONS.star}</span>
                                             ))}
                                         </div>
                                     </td>
                                     <td className="p-4 flex items-center space-x-2">
                                         <button onClick={() => openModal(task)} className="p-2 rounded-full hover:bg-yellow-200 dark:hover:bg-yellow-800 text-yellow-600 dark:text-yellow-300 transition-colors" title="Edit Pekerjaan">{ICONS.edit}</button>
-                                        <button onClick={() => handleWhatsAppExport(task)} className="p-2 rounded-full hover:bg-green-200 dark:hover:bg-green-800 text-green-600 dark:text-green-300 transition-colors" title="Export Detail ke WhatsApp">
-                                            {ICONS.whatsapp}
-                                        </button>
-                                        <button onClick={() => handleExportToTraining(task)} className="p-2 rounded-full hover:bg-purple-200 dark:hover:bg-purple-800 text-purple-600 dark:text-purple-300 transition-colors" title="Export ke Training">
-                                            {ICONS.graduationCap}
-                                        </button>
+                                        <button onClick={() => handleWhatsAppExport(task)} className="p-2 rounded-full hover:bg-green-200 dark:hover:bg-green-800 text-green-600 dark:text-green-300 transition-colors" title="Export Detail ke WhatsApp">{ICONS.whatsapp}</button>
+                                        <button onClick={() => handleExportToTraining(task)} className="p-2 rounded-full hover:bg-purple-200 dark:hover:bg-purple-800 text-purple-600 dark:text-purple-300 transition-colors" title="Export ke Training">{ICONS.graduationCap}</button>
                                         {['admin', 'pimpinan', 'pegawai'].includes(userData.role) && (
                                             <button onClick={() => handleDelete(task.id, task.fileUrl)} className="p-2 rounded-full hover:bg-red-200 dark:hover:bg-red-800 text-red-600 dark:text-red-300 transition-colors" title="Hapus Pekerjaan">{ICONS.delete}</button>
                                         )}

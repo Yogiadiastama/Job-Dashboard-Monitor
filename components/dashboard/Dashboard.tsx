@@ -1,103 +1,129 @@
+
 import React, { useState, useEffect } from 'react';
 import { collection, onSnapshot, query, where } from '@firebase/firestore';
 import { db, getFirestoreErrorMessage } from '../../services/firebase';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotification } from '../../hooks/useNotification';
-import { Task, UserData } from '../../types';
+import { Task, UserData, Training } from '../../types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { ICONS } from '../../constants';
 import LoadingSpinner from '../common/LoadingSpinner';
 import DashboardTaskModal from './DashboardTaskModal';
+import DashboardTrainingModal from './DashboardTrainingModal';
+
 
 const isTaskLate = (task: Task): boolean => {
     if (!task.dueDate) return false;
-    // Pekerjaan dianggap terlambat jika batas waktunya adalah SEBELUM hari ini.
-    // Pekerjaan yang batas waktunya hari ini belum dianggap terlambat.
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Atur ke awal hari ini
-    // Input tanggal (dueDate) menghasilkan format 'YYYY-MM-DD', new Date() akan menginterpretasikannya sebagai waktu lokal tengah malam.
-    // Perbandingan ini akan akurat untuk menentukan apakah batas waktu sudah lewat.
+    today.setHours(0, 0, 0, 0); 
     return new Date(task.dueDate) < today && task.status !== 'Completed';
 };
 
 const Dashboard: React.FC = () => {
     const [tasks, setTasks] = useState<Task[]>([]);
+    const [trainings, setTrainings] = useState<Training[]>([]);
     const [users, setUsers] = useState<UserData[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [loadingTasks, setLoadingTasks] = useState(true);
+    const [loadingTrainings, setLoadingTrainings] = useState(true);
     const [viewMode, setViewMode] = useState('table');
     const { userData } = useAuth();
     const { showNotification } = useNotification();
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    
+    // State for Task Modal
+    const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
     const [modalTasks, setModalTasks] = useState<Task[]>([]);
-    const [modalTitle, setModalTitle] = useState('');
+    const [modalTaskTitle, setModalTaskTitle] = useState('');
+
+    // State for Training Modal
+    const [isTrainingModalOpen, setIsTrainingModalOpen] = useState(false);
+    const [modalTrainings, setModalTrainings] = useState<Training[]>([]);
+    const [modalTrainingTitle, setModalTrainingTitle] = useState('');
+
 
     useEffect(() => {
         if (!userData) return;
         
-        // Semua role dengan akses dashboard kini dapat melihat semua pekerjaan
         const tasksUnsub = onSnapshot(collection(db, "tasks"), 
             (snapshot) => {
                 const tasksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Task));
                 setTasks(tasksData);
-                setLoading(false);
+                setLoadingTasks(false);
             },
             (error) => {
                 console.error("Dashboard: Error fetching tasks:", error);
-                const firebaseError = error as { code?: string };
-                showNotification(getFirestoreErrorMessage(firebaseError), "warning");
-                setLoading(false);
+                showNotification(getFirestoreErrorMessage(error as { code?: string }), "warning");
+                setLoadingTasks(false);
+            }
+        );
+        
+        const trainingsUnsub = onSnapshot(collection(db, "trainings"), 
+            (snapshot) => {
+                const trainingsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Training));
+                setTrainings(trainingsData);
+                setLoadingTrainings(false);
+            },
+            (error) => {
+                console.error("Dashboard: Error fetching trainings:", error);
+                showNotification(getFirestoreErrorMessage(error as { code?: string }), "warning");
+                setLoadingTrainings(false);
             }
         );
 
-        // Ambil semua data pengguna untuk admin, pimpinan, dan sekarang pegawai
         let usersUnsub = () => {};
         if (['admin', 'pimpinan', 'pegawai'].includes(userData.role)) {
             usersUnsub = onSnapshot(collection(db, "users"), 
                 (snapshot) => {
-                    const usersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UserData));
-                    setUsers(usersData);
+                    setUsers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UserData)));
                 },
                 (error) => {
                      console.error("Dashboard: Error fetching users:", error);
-                     const firebaseError = error as { code?: string };
-                     showNotification(getFirestoreErrorMessage(firebaseError), "warning");
+                     showNotification(getFirestoreErrorMessage(error as { code?: string }), "warning");
                 }
             );
         }
         
         return () => {
             tasksUnsub();
+            trainingsUnsub();
             usersUnsub();
         };
     }, [userData, showNotification]);
 
-    const getStatusCount = (status: string) => tasks.filter(task => task.status === status).length;
-    
-    const completedTasks = getStatusCount('Completed');
-    const inProgressTasks = getStatusCount('On Progress');
+    // Task stats
+    const completedTasks = tasks.filter(task => task.status === 'Completed').length;
+    const inProgressTasks = tasks.filter(task => task.status === 'On Progress').length;
     const lateTasks = tasks.filter(isTaskLate).length;
-
-    const employeeOfTheMonth = () => {
-        if (users.length === 0 || tasks.length === 0) return { nama: 'N/A', completed: 0 };
-        
-        const employeeStats = users.map(user => {
-            const completed = tasks.filter(task => task.assignedTo === user.uid && task.status === 'Completed').length;
-            return { ...user, completed };
-        });
-
-        const sortedEmployees = employeeStats.sort((a, b) => b.completed - a.completed);
-        return sortedEmployees.length > 0 ? sortedEmployees[0] : { nama: 'N/A', completed: 0 };
-    };
     
-    const bestEmployee = employeeOfTheMonth();
-
-    const stats = [
+    const taskStats = [
         { title: 'Total Pekerjaan', value: tasks.length, color: 'blue', filter: 'All' },
         { title: 'Completed', value: completedTasks, color: 'green', filter: 'Completed' },
         { title: 'On Progress', value: inProgressTasks, color: 'yellow', filter: 'On Progress' },
         { title: 'Late', value: lateTasks, color: 'red', filter: 'Late' },
     ];
+
+    // Training stats
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const upcomingTrainings = trainings.filter(t => new Date(t.tanggalMulai) >= today).length;
+    const pastTrainings = trainings.filter(t => new Date(t.tanggalSelesai) < today).length;
+
+    const trainingStats = [
+        { title: 'Total Training', value: trainings.length, color: 'purple', filter: 'All' },
+        { title: 'Akan Datang', value: upcomingTrainings, color: 'indigo', filter: 'Upcoming' },
+        { title: 'Telah Lewat', value: pastTrainings, color: 'gray', filter: 'Past' },
+    ];
     
+    const employeeOfTheMonth = () => {
+        if (users.length === 0 || tasks.length === 0) return { nama: 'N/A', completed: 0 };
+        const employeeStats = users.map(user => ({
+            ...user,
+            completed: tasks.filter(task => task.assignedTo === user.uid && task.status === 'Completed').length
+        }));
+        return employeeStats.sort((a, b) => b.completed - a.completed)[0];
+    };
+    
+    const bestEmployee = employeeOfTheMonth();
+
     const chartData = users
       .filter(u => u.role !== 'admin')
       .map(user => ({
@@ -122,48 +148,72 @@ const Dashboard: React.FC = () => {
         window.open(whatsappUrl, '_blank');
     };
 
-    const handleStatCardClick = (filter: string, title: string) => {
+    const handleTaskStatCardClick = (filter: string, title: string) => {
         let filteredTasks: Task[] = [];
         switch (filter) {
-            case 'All':
-                filteredTasks = tasks;
-                break;
-            case 'Late':
-                filteredTasks = tasks.filter(isTaskLate);
-                break;
-            default:
-                filteredTasks = tasks.filter(task => task.status === filter);
-                break;
+            case 'All': filteredTasks = tasks; break;
+            case 'Late': filteredTasks = tasks.filter(isTaskLate); break;
+            default: filteredTasks = tasks.filter(task => task.status === filter); break;
         }
         setModalTasks(filteredTasks);
-        setModalTitle(`Daftar Pekerjaan: ${title}`);
-        setIsModalOpen(true);
+        setModalTaskTitle(`Daftar Pekerjaan: ${title}`);
+        setIsTaskModalOpen(true);
+    };
+    
+    const handleTrainingStatCardClick = (filter: string, title: string) => {
+        let filteredTrainings: Training[] = [];
+        switch (filter) {
+            case 'All': filteredTrainings = trainings; break;
+            case 'Upcoming': filteredTrainings = trainings.filter(t => new Date(t.tanggalMulai) >= today); break;
+            case 'Past': filteredTrainings = trainings.filter(t => new Date(t.tanggalSelesai) < today); break;
+        }
+        setModalTrainings(filteredTrainings);
+        setModalTrainingTitle(`Daftar Training: ${title}`);
+        setIsTrainingModalOpen(true);
     };
 
-    if (loading || !userData) {
+    if (loadingTasks || loadingTrainings || !userData) {
         return <div className="text-center p-10"><LoadingSpinner text="Memuat dashboard..." /></div>;
     }
 
     return (
-        <div className="animate-fade-in-up">
-            {/* Stat Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                {stats.map(stat => (
-                    <div 
-                        key={stat.title} 
-                        className={`bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border-l-4 border-${stat.color}-500 transform transition-transform duration-300 hover:-translate-y-2 hover:shadow-xl cursor-pointer`}
-                        onClick={() => handleStatCardClick(stat.filter, stat.title)}
-                    >
-                        <h3 className="text-gray-500 dark:text-gray-400 font-medium">{stat.title}</h3>
-                        <p className="text-4xl font-bold mt-2">{stat.value}</p>
-                    </div>
-                ))}
+        <div className="animate-fade-in-up space-y-8">
+            {/* Task Stat Cards */}
+            <div>
+                 <h2 className="text-xl font-bold text-gray-700 dark:text-gray-300 mb-4">Ringkasan Pekerjaan</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {taskStats.map(stat => (
+                        <div 
+                            key={stat.title} 
+                            className={`bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border-l-4 border-${stat.color}-500 transform transition-transform duration-300 hover:-translate-y-2 hover:shadow-xl cursor-pointer`}
+                            onClick={() => handleTaskStatCardClick(stat.filter, stat.title)}
+                        >
+                            <h3 className="text-gray-500 dark:text-gray-400 font-medium">{stat.title}</h3>
+                            <p className="text-4xl font-bold mt-2">{stat.value}</p>
+                        </div>
+                    ))}
+                </div>
             </div>
 
-            {/* Admin, Pimpinan & Pegawai View */}
+            {/* Training Stat Cards */}
+             <div>
+                 <h2 className="text-xl font-bold text-gray-700 dark:text-gray-300 mb-4">Ringkasan Training</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {trainingStats.map(stat => (
+                        <div 
+                            key={stat.title} 
+                            className={`bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border-l-4 border-${stat.color}-500 transform transition-transform duration-300 hover:-translate-y-2 hover:shadow-xl cursor-pointer`}
+                            onClick={() => handleTrainingStatCardClick(stat.filter, stat.title)}
+                        >
+                            <h3 className="text-gray-500 dark:text-gray-400 font-medium">{stat.title}</h3>
+                            <p className="text-4xl font-bold mt-2">{stat.value}</p>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
             {['admin', 'pimpinan', 'pegawai'].includes(userData.role) && (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                    {/* Employee of the Month */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div className="lg:col-span-1 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg flex flex-col items-center justify-center text-center">
                         <h3 className="text-xl font-bold mb-4">Pegawai Terbaik Bulan Ini</h3>
                         <img className="h-24 w-24 rounded-full object-cover ring-4 ring-yellow-400 mb-4" src={`https://ui-avatars.com/api/?name=${bestEmployee.nama}&background=random&color=fff`} alt="Best Employee" />
@@ -171,7 +221,6 @@ const Dashboard: React.FC = () => {
                         <p className="text-gray-500 dark:text-gray-400">{bestEmployee.completed} pekerjaan selesai</p>
                     </div>
 
-                    {/* Overview */}
                     <div className="lg:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg">
                         <div className="flex flex-wrap gap-4 justify-between items-center mb-4">
                             <h3 className="text-xl font-bold">Overview Pekerjaan Pegawai</h3>
@@ -228,11 +277,17 @@ const Dashboard: React.FC = () => {
                 </div>
             )}
             <DashboardTaskModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                title={modalTitle}
+                isOpen={isTaskModalOpen}
+                onClose={() => setIsTaskModalOpen(false)}
+                title={modalTaskTitle}
                 tasks={modalTasks}
                 users={users}
+            />
+            <DashboardTrainingModal
+                isOpen={isTrainingModalOpen}
+                onClose={() => setIsTrainingModalOpen(false)}
+                title={modalTrainingTitle}
+                trainings={modalTrainings}
             />
         </div>
     );

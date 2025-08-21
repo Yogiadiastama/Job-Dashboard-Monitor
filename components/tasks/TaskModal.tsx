@@ -30,22 +30,30 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, users, closeModal }) => {
         setLoading(true);
 
         try {
-            let fileUrl = task ? task.fileUrl : '';
+            let fileUrl = task?.fileUrl || '';
             if (file) {
                 const storageRef = ref(storage, `task-files/${Date.now()}-${file.name}`);
                 const snapshot = await uploadBytes(storageRef, file);
                 fileUrl = await getDownloadURL(snapshot.ref);
             }
 
-            const taskData = { title, description, assignedTo, dueDate, priority, status, fileUrl, rating };
-            
             if (task) {
+                const taskData = { title, description, assignedTo, dueDate, priority, status, fileUrl, rating };
                 await updateDoc(doc(db, "tasks", task.id), taskData);
-                // NOTIFIKASI
                 sendNotification(task.assignedTo, `Pekerjaan "${title}" telah diperbarui.`);
             } else {
+                const taskData = { 
+                    title, 
+                    description, 
+                    assignedTo, 
+                    dueDate, 
+                    priority, 
+                    status, 
+                    fileUrl, 
+                    rating, 
+                    createdAt: new Date().toISOString() 
+                };
                 await addDoc(collection(db, "tasks"), taskData);
-                // NOTIFIKASI
                 sendNotification(assignedTo, `Anda mendapat pekerjaan baru: "${title}".`);
             }
             
@@ -63,7 +71,8 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, users, closeModal }) => {
         const userToNotify = users.find(u => u.uid === userId);
         if (userToNotify) {
             console.log(`MENGIRIM NOTIFIKASI ke ${userToNotify.nama}: ${message}`);
-            alert(`Notifikasi (simulasi) terkirim ke ${userToNotify.nama}: ${message}`);
+            // In a real app, you would use a proper notification service.
+            // alert() is used here for demonstration purposes.
         }
     };
 

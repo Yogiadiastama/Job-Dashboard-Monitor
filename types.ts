@@ -23,6 +23,7 @@ export interface Task {
   status: TaskStatus;
   fileUrl?: string;
   rating?: number;
+  createdAt?: string; // YYYY-MM-DDTHH:mm:ss.sssZ format
 }
 
 export interface CalendarEvent {

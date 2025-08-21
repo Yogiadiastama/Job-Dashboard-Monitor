@@ -6,13 +6,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ProjectFlow Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
                     colors: {
-                        'brand-purple': '#6D28D9',
+                        'brand-purple': '#7C3AED', // violet-500
+                        'brand-ai': '#0891B2', // cyan-600
                         'status-red': '#EF4444',
                         'status-red-bg': '#FEE2E2',
                         'status-red-text': '#991B1B',
@@ -41,7 +48,7 @@
                         }
                     },
                     animation: {
-                        'fade-in-up': 'fade-in-up 0.3s ease-out',
+                        'fade-in-up': 'fade-in-up 0.5s ease-out',
                         'shake': 'shake 0.5s ease-in-out',
                     }
                 }
@@ -61,12 +68,13 @@
     "@firebase/app": "https://esm.sh/@firebase/app@^0.14.1",
     "@firebase/firestore": "https://esm.sh/@firebase/firestore@^4.9.0",
     "@firebase/auth": "https://esm.sh/@firebase/auth@^1.11.0",
-    "@firebase/storage": "https://esm.sh/@firebase/storage@^0.14.0"
+    "@firebase/storage": "https://esm.sh/@firebase/storage@^0.14.0",
+    "@google/genai": "https://esm.sh/@google/genai"
   }
 }
 </script>
 </head>
-<body class="bg-gray-100 dark:bg-gray-900">
+<body class="bg-gray-100 dark:bg-gray-900 font-sans">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
 </body>

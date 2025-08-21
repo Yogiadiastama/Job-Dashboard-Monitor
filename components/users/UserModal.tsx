@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { collection, doc, updateDoc, setDoc } from 'firebase/firestore';
-import { createUserWithEmailAndPassword, sendPasswordResetEmail, getAuth } from 'firebase/auth';
+import { collection, doc, updateDoc, setDoc } from '@firebase/firestore';
+import { createUserWithEmailAndPassword, sendPasswordResetEmail, getAuth } from '@firebase/auth';
 import { initializeApp, deleteApp } from '@firebase/app';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from '@firebase/storage';
 import { db, auth as mainAuth, firebaseConfig, storage } from '../../services/firebase';
 import { UserData, UserRole } from '../../types';
 

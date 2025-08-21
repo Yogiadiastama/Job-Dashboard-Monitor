@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { addDoc, collection, doc, updateDoc } from 'firebase/firestore';
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import { addDoc, collection, doc, updateDoc } from '@firebase/firestore';
+import { getDownloadURL, ref, uploadBytes } from '@firebase/storage';
 import { db, storage } from '../../services/firebase';
 import { useAuth } from '../../hooks/useAuth';
 import { Task, TaskPriority, TaskStatus, UserData } from '../../types';

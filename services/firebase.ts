@@ -1,7 +1,8 @@
+
 import { initializeApp } from '@firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore, enableIndexedDbPersistence, CACHE_SIZE_UNLIMITED } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
+import { getAuth } from '@firebase/auth';
+import { getFirestore, enableIndexedDbPersistence, CACHE_SIZE_UNLIMITED } from '@firebase/firestore';
+import { getStorage } from '@firebase/storage';
 
 export const firebaseConfig = {
   apiKey: "AIzaSyBme0QBJ2p57XROfLUF6L8cZgz5loE00Mo",

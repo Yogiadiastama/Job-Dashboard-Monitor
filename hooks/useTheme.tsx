@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, createContext, useContext, ReactNode } from 'react';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot } from '@firebase/firestore';
 import { db, getFirestoreErrorMessage } from '../services/firebase';
 import { ThemeSettings } from '../types';
 import { useNotification } from './useNotification';

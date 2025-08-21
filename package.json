@@ -15,7 +15,10 @@
     "firebase": "^12.1.0",
     "react-dnd": "^16.0.1",
     "react-dnd-html5-backend": "^16.0.1",
-    "@firebase/app": "^0.14.1"
+    "@firebase/app": "^0.14.1",
+    "@firebase/firestore": "^4.9.0",
+    "@firebase/auth": "^1.11.0",
+    "@firebase/storage": "^0.14.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

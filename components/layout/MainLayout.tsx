@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { signOut } from 'firebase/auth';
+import { signOut } from '@firebase/auth';
 import { auth } from '../../services/firebase';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';

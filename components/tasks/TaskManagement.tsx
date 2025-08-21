@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, where, onSnapshot, deleteDoc, doc } from 'firebase/firestore';
-import { ref, deleteObject } from 'firebase/storage';
+import { collection, query, where, onSnapshot, deleteDoc, doc, addDoc } from '@firebase/firestore';
+import { ref, deleteObject } from '@firebase/storage';
 import { db, storage, getFirestoreErrorMessage } from '../../services/firebase';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotification } from '../../hooks/useNotification';
-import { Task, UserData } from '../../types';
+import { Task, UserData, TrainingStatus } from '../../types';
 import { ICONS } from '../../constants';
 import TaskModal from './TaskModal';
 import LoadingSpinner from '../common/LoadingSpinner';
@@ -99,6 +99,33 @@ const TaskManagement: React.FC = () => {
         window.open(whatsappUrl, '_blank');
     };
 
+    const handleExportToTraining = async (task: Task) => {
+        if (window.confirm(`Apakah Anda yakin ingin membuat jadwal training dari pekerjaan "${task.title}"?`)) {
+            try {
+                const assignedUserName = getUserName(task.assignedTo);
+
+                const newTrainingData = {
+                    nama: task.title,
+                    tanggalMulai: task.dueDate,
+                    tanggalSelesai: task.dueDate,
+                    lokasi: 'Akan ditentukan',
+                    pic: assignedUserName,
+                    catatan: `Diekspor dari pekerjaan: ${task.description || 'Tidak ada deskripsi.'}`,
+                    status: 'Belum Dikonfirmasi' as TrainingStatus,
+                };
+
+                await addDoc(collection(db, "trainings"), newTrainingData);
+                
+                showNotification(`Pekerjaan "${task.title}" berhasil diekspor ke dashboard training.`, 'success');
+
+            } catch (error)
+                {
+                console.error("Error exporting task to training: ", error);
+                showNotification("Gagal mengekspor pekerjaan ke training.", 'error');
+            }
+        }
+    };
+
     const getUserName = (userId: string) => {
         const user = users.find(u => u.uid === userId);
         return user ? user.nama : 'Tidak diketahui';
@@ -173,6 +200,9 @@ const TaskManagement: React.FC = () => {
                                         <button onClick={() => openModal(task)} className="p-2 rounded-full hover:bg-yellow-200 dark:hover:bg-yellow-800 text-yellow-600 dark:text-yellow-300 transition-colors" title="Edit Pekerjaan">{ICONS.edit}</button>
                                         <button onClick={() => handleWhatsAppExport(task)} className="p-2 rounded-full hover:bg-green-200 dark:hover:bg-green-800 text-green-600 dark:text-green-300 transition-colors" title="Export Detail ke WhatsApp">
                                             {ICONS.whatsapp}
+                                        </button>
+                                        <button onClick={() => handleExportToTraining(task)} className="p-2 rounded-full hover:bg-purple-200 dark:hover:bg-purple-800 text-purple-600 dark:text-purple-300 transition-colors" title="Export ke Training">
+                                            {ICONS.graduationCap}
                                         </button>
                                         {['admin', 'pimpinan', 'pegawai'].includes(userData.role) && (
                                             <button onClick={() => handleDelete(task.id, task.fileUrl)} className="p-2 rounded-full hover:bg-red-200 dark:hover:bg-red-800 text-red-600 dark:text-red-300 transition-colors" title="Hapus Pekerjaan">{ICONS.delete}</button>

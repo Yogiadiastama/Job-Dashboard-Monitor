@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, createContext, useContext, ReactNode } from 'react';
-import { User, onAuthStateChanged } from 'firebase/auth';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { User, onAuthStateChanged } from '@firebase/auth';
+import { doc, onSnapshot } from '@firebase/firestore';
 import { auth, db, getFirestoreErrorMessage } from '../services/firebase';
 import { UserData } from '../types';
 import { useNotification } from './useNotification';

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { getDocs, collection, doc, setDoc, updateDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { getDocs, collection, doc, setDoc, updateDoc } from '@firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from '@firebase/storage';
 import { db, storage } from '../../services/firebase';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';

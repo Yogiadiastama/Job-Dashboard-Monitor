@@ -8,6 +8,7 @@ import { Task, UserData, TrainingStatus, TaskPriority, TaskStatus } from '../../
 import { ICONS } from '../../constants';
 import TaskModal from './TaskModal';
 import LoadingSpinner from '../common/LoadingSpinner';
+import { eventBus } from '../../services/eventBus';
 
 type SortableTaskKeys = keyof Pick<Task, 'title' | 'dueDate' | 'priority' | 'status' | 'createdAt'>;
 
@@ -16,7 +17,7 @@ const TaskManagement: React.FC = () => {
     const [users, setUsers] = useState<UserData[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingTask, setEditingTask] = useState<Task | null>(null);
+    const [editingTask, setEditingTask] = useState<Partial<Task> | null>(null);
     const { userData } = useAuth();
     const { showNotification } = useNotification();
     const [sortConfig, setSortConfig] = useState<{ key: SortableTaskKeys; direction: 'ascending' | 'descending' }>({ key: 'createdAt', direction: 'descending' });
@@ -46,10 +47,16 @@ const TaskManagement: React.FC = () => {
                 showNotification(getFirestoreErrorMessage(error as { code?: string }), "warning");
             }
         );
+
+        const handleOpenModalEvent = (data: { initialData: Partial<Task> }) => {
+            openModal(data.initialData);
+        };
+        eventBus.on('openTaskModal', handleOpenModalEvent);
         
         return () => {
             tasksUnsub();
             usersUnsub();
+            eventBus.remove('openTaskModal', handleOpenModalEvent);
         };
     }, [userData, showNotification]);
 
@@ -57,8 +64,8 @@ const TaskManagement: React.FC = () => {
         let sortableItems = [...tasks];
         if (sortConfig.key) {
             sortableItems.sort((a, b) => {
-                const valA = a[sortConfig.key];
-                const valB = b[sortConfig.key];
+                const valA = a[sortConfig.key as keyof Task];
+                const valB = b[sortConfig.key as keyof Task];
 
                 if (valA === undefined || valA === null) return 1;
                 if (valB === undefined || valB === null) return -1;
@@ -84,7 +91,7 @@ const TaskManagement: React.FC = () => {
         return sortConfig.direction === 'ascending' ? ' ▲' : ' ▼';
     };
     
-    const openModal = (task: Task | null = null) => {
+    const openModal = (task: Partial<Task> | null = null) => {
         setEditingTask(task);
         setIsModalOpen(true);
     };

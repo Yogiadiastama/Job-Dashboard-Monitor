@@ -7,19 +7,19 @@ import { useAuth } from '../../hooks/useAuth';
 import { Task, TaskPriority, TaskStatus, UserData } from '../../types';
 
 interface TaskModalProps {
-    task: Task | null;
+    task: Partial<Task> | null;
     users: UserData[];
     closeModal: () => void;
 }
 
 const TaskModal: React.FC<TaskModalProps> = ({ task, users, closeModal }) => {
-    const [title, setTitle] = useState(task ? task.title : '');
-    const [description, setDescription] = useState(task ? task.description : '');
-    const [assignedTo, setAssignedTo] = useState(task ? task.assignedTo : '');
-    const [dueDate, setDueDate] = useState(task ? task.dueDate : '');
-    const [priority, setPriority] = useState<TaskPriority>(task ? task.priority : 'Mid');
-    const [status, setStatus] = useState<TaskStatus>(task ? task.status : 'On Progress');
-    const [rating, setRating] = useState(task ? task.rating || 0 : 0);
+    const [title, setTitle] = useState(task?.title || '');
+    const [description, setDescription] = useState(task?.description || '');
+    const [assignedTo, setAssignedTo] = useState(task?.assignedTo || '');
+    const [dueDate, setDueDate] = useState(task?.dueDate || '');
+    const [priority, setPriority] = useState<TaskPriority>(task?.priority || 'Mid');
+    const [status, setStatus] = useState<TaskStatus>(task?.status || 'On Progress');
+    const [rating, setRating] = useState(task?.rating || 0);
     const [file, setFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
     const { userData } = useAuth();
@@ -37,10 +37,10 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, users, closeModal }) => {
                 fileUrl = await getDownloadURL(snapshot.ref);
             }
 
-            if (task) {
+            if (task && task.id) {
                 const taskData = { title, description, assignedTo, dueDate, priority, status, fileUrl, rating };
                 await updateDoc(doc(db, "tasks", task.id), taskData);
-                sendNotification(task.assignedTo, `Pekerjaan "${title}" telah diperbarui.`);
+                sendNotification(assignedTo, `Pekerjaan "${title}" telah diperbarui.`);
             } else {
                 const taskData = { 
                     title, 
@@ -81,7 +81,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, users, closeModal }) => {
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl p-8 max-h-screen overflow-y-auto animate-fade-in-up">
-                <h2 className="text-2xl font-bold mb-6">{task ? 'Edit Pekerjaan' : 'Tambah Pekerjaan Baru'}</h2>
+                <h2 className="text-2xl font-bold mb-6">{task?.id ? 'Edit Pekerjaan' : 'Tambah Pekerjaan Baru'}</h2>
                 <form onSubmit={handleSubmit}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>

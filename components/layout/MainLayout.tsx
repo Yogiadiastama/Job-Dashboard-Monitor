@@ -11,6 +11,7 @@ import UserManagement from '../users/UserManagement';
 import Settings from '../settings/Settings';
 import TrainingDashboard from '../training/TrainingDashboard';
 import NotificationBanner from '../common/NotificationBanner';
+import VoiceCommandButton from '../common/VoiceCommandButton';
 
 const MainLayout: React.FC = () => {
     const { userData } = useAuth();
@@ -133,7 +134,7 @@ const MainLayout: React.FC = () => {
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col overflow-hidden">
+            <main className="flex-1 flex flex-col overflow-hidden relative">
                  <NotificationBanner />
                  <header className="flex flex-col sm:flex-row justify-between sm:items-center p-4 sm:p-6 md:p-10 gap-4 bg-gray-100/80 dark:bg-gray-900/80 backdrop-blur-sm z-10 border-b border-gray-200 dark:border-gray-700">
                     <div className="flex items-center">
@@ -156,6 +157,7 @@ const MainLayout: React.FC = () => {
                 <div className="flex-1 p-4 sm:p-6 md:p-10 overflow-y-auto">
                     {renderContent()}
                 </div>
+                <VoiceCommandButton />
             </main>
         </div>
     );

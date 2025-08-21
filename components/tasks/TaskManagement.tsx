@@ -8,7 +8,6 @@ import { Task, UserData, TrainingStatus, TaskPriority, TaskStatus } from '../../
 import { ICONS } from '../../constants';
 import TaskModal from './TaskModal';
 import LoadingSpinner from '../common/LoadingSpinner';
-import { eventBus } from '../../services/eventBus';
 
 type SortableTaskKeys = keyof Pick<Task, 'title' | 'dueDate' | 'priority' | 'status' | 'createdAt'>;
 
@@ -47,16 +46,10 @@ const TaskManagement: React.FC = () => {
                 showNotification(getFirestoreErrorMessage(error as { code?: string }), "warning");
             }
         );
-
-        const handleOpenModalEvent = (data: { initialData: Partial<Task> }) => {
-            openModal(data.initialData);
-        };
-        eventBus.on('openTaskModal', handleOpenModalEvent);
         
         return () => {
             tasksUnsub();
             usersUnsub();
-            eventBus.remove('openTaskModal', handleOpenModalEvent);
         };
     }, [userData, showNotification]);
 

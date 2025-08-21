@@ -1,7 +1,5 @@
 {
   "name": "Job Dashboard Monitor",
   "description": "An advanced project management application built with React and Firebase, featuring role-based access, task tracking, user management, and a dynamic dashboard with data visualizations.",
-  "requestFramePermissions": [
-    "microphone"
-  ]
+  "requestFramePermissions": []
 }

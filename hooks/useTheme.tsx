@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { doc, onSnapshot } from '@firebase/firestore';
 import { db, getFirestoreErrorMessage } from '../services/firebase';
@@ -12,7 +11,7 @@ interface ThemeContextType {
 
 const defaultTheme: ThemeSettings = {
     headerTitle: 'ProFlow',
-    accentColor: '#4F46E5', // Indigo-600
+    accentColor: '#7C3AED', // primary-600
     loginBgUrl: '',
 };
 

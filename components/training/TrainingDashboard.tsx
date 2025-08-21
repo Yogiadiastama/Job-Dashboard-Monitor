@@ -20,23 +20,23 @@ const getStatusStyles = (status: TrainingStatus) => {
     switch (status) {
         case 'Belum Dikonfirmasi':
             return {
-                badge: 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300',
-                gradient: 'from-red-400 to-red-600',
+                badge: 'bg-danger-bg text-danger-text',
+                gradient: 'from-danger to-red-600',
             };
         case 'Terkonfirmasi':
             return {
-                badge: 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300',
-                gradient: 'from-green-400 to-green-600',
+                badge: 'bg-success-bg text-success-text',
+                gradient: 'from-success to-green-600',
             };
         case 'Menunggu Jawaban':
             return {
-                badge: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300',
-                gradient: 'from-yellow-400 to-yellow-600',
+                badge: 'bg-warning-bg text-warning-text',
+                gradient: 'from-warning to-yellow-600',
             };
         default:
             return {
-                badge: 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
-                gradient: 'from-gray-400 to-gray-600',
+                badge: 'bg-neutral-200 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-300',
+                gradient: 'from-neutral-400 to-neutral-600',
             };
     }
 };
@@ -170,18 +170,18 @@ Return the extracted information strictly as a JSON object matching the provided
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 animate-fade-in-up">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
-                <div className="p-6 border-b dark:border-gray-700 flex justify-between items-center">
+            <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+                <div className="p-6 border-b dark:border-neutral-700 flex justify-between items-center">
                     <h2 className="text-2xl font-bold">Tambah Training dengan AI</h2>
-                     <button onClick={handleClose} className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">&times;</button>
+                     <button onClick={handleClose} className="p-1 rounded-full hover:bg-neutral-200 dark:hover:bg-neutral-700">&times;</button>
                 </div>
                 <div className="flex-grow overflow-y-auto p-6">
-                    <div className="mb-4 border-b border-gray-200 dark:border-gray-700">
+                    <div className="mb-4 border-b border-neutral-200 dark:border-neutral-700">
                         <nav className="-mb-px flex space-x-6" aria-label="Tabs">
-                            <button onClick={() => setActiveTab('text')} className={`${activeTab === 'text' ? 'border-brand-purple text-brand-purple' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm`}>
+                            <button onClick={() => setActiveTab('text')} className={`${activeTab === 'text' ? 'border-primary-500 text-primary-600' : 'border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300'} whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm`}>
                                 Dari Teks
                             </button>
-                             <button onClick={() => setActiveTab('image')} className={`${activeTab === 'image' ? 'border-brand-purple text-brand-purple' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm`}>
+                             <button onClick={() => setActiveTab('image')} className={`${activeTab === 'image' ? 'border-primary-500 text-primary-600' : 'border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300'} whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm`}>
                                 Dari Screenshot
                             </button>
                         </nav>
@@ -194,41 +194,41 @@ Return the extracted information strictly as a JSON object matching the provided
                         <div>
                         {activeTab === 'text' && (
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Salin & tempel teks dari WhatsApp</label>
+                                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Salin & tempel teks dari WhatsApp</label>
                                 <textarea
                                     value={inputText}
                                     onChange={(e) => setInputText(e.target.value)}
                                     rows={10}
-                                    className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700"
+                                    className="w-full p-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700"
                                     placeholder="Tempel teks di sini..."
                                 ></textarea>
                             </div>
                         )}
                         {activeTab === 'image' && (
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Unggah screenshot WhatsApp</label>
+                                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Unggah screenshot WhatsApp</label>
                                 <input id="file-upload" type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
-                                <label htmlFor="file-upload" className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 dark:border-gray-100/25 px-6 py-10 cursor-pointer hover:border-brand-purple">
+                                <label htmlFor="file-upload" className="mt-2 flex justify-center rounded-lg border border-dashed border-neutral-900/25 dark:border-neutral-100/25 px-6 py-10 cursor-pointer hover:border-primary-500">
                                     {imagePreview ? (
                                         <img src={imagePreview} alt="Preview" className="max-h-48 rounded-md"/>
                                     ) : (
                                         <div className="text-center">
-                                            <div className="mt-4 flex text-sm leading-6 text-gray-600 dark:text-gray-400">
+                                            <div className="mt-4 flex text-sm leading-6 text-neutral-600 dark:text-neutral-400">
                                                 <p className="pl-1">Klik untuk mengunggah atau seret dan lepas</p>
                                             </div>
-                                            <p className="text-xs leading-5 text-gray-600 dark:text-gray-400">PNG, JPG, GIF hingga 10MB</p>
+                                            <p className="text-xs leading-5 text-neutral-600 dark:text-neutral-400">PNG, JPG, GIF hingga 10MB</p>
                                         </div>
                                     )}
                                 </label>
                             </div>
                         )}
-                        {error && <p className="mt-4 text-center text-red-500">{error}</p>}
+                        {error && <p className="mt-4 text-center text-danger-text">{error}</p>}
                     </div>
                     )}
                 </div>
-                <div className="p-6 border-t dark:border-gray-700 flex justify-end space-x-3">
-                    <button type="button" onClick={handleClose} className="px-4 py-2 bg-gray-200 dark:bg-gray-600 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500">Batal</button>
-                    <button type="button" onClick={handleAnalyze} disabled={loading} className="flex items-center space-x-2 px-4 py-2 bg-brand-ai text-white rounded-md hover:bg-opacity-90 disabled:bg-opacity-50">
+                <div className="p-6 border-t dark:border-neutral-700 flex justify-end space-x-3">
+                    <button type="button" onClick={handleClose} className="px-4 py-2 bg-neutral-200 dark:bg-neutral-600 rounded-md hover:bg-neutral-300 dark:hover:bg-neutral-500">Batal</button>
+                    <button type="button" onClick={handleAnalyze} disabled={loading} className="flex items-center space-x-2 px-4 py-2 bg-accent-ai text-white rounded-md hover:bg-opacity-90 disabled:bg-opacity-50">
                         {ICONS.magicWand}
                         <span>{loading ? 'Menganalisis...' : 'Analisis dengan AI'}</span>
                     </button>
@@ -287,8 +287,8 @@ const TrainingModal: React.FC<{
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 animate-fade-in-up">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
-                <div className="p-6 border-b dark:border-gray-700">
+            <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+                <div className="p-6 border-b dark:border-neutral-700">
                     <h2 className="text-2xl font-bold">{trainingToEdit?.id ? 'Edit Training' : 'Tambah Training Baru'}</h2>
                 </div>
                 <form id="training-form" onSubmit={handleSubmit} className="flex-grow overflow-y-auto p-6 space-y-4">
@@ -304,9 +304,9 @@ const TrainingModal: React.FC<{
                         {ALL_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                     </SelectField>
                 </form>
-                <div className="p-6 border-t dark:border-gray-700 flex justify-end space-x-3">
-                    <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 dark:bg-gray-600 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500">Batal</button>
-                    <button type="submit" form="training-form" disabled={loading} className="px-4 py-2 bg-brand-purple text-white rounded-md hover:bg-opacity-90 disabled:bg-opacity-50">
+                <div className="p-6 border-t dark:border-neutral-700 flex justify-end space-x-3">
+                    <button type="button" onClick={onClose} className="px-4 py-2 bg-neutral-200 dark:bg-neutral-600 rounded-md hover:bg-neutral-300 dark:hover:bg-neutral-500">Batal</button>
+                    <button type="submit" form="training-form" disabled={loading} className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:bg-opacity-50">
                         {loading ? 'Menyimpan...' : 'Simpan'}
                     </button>
                 </div>
@@ -317,20 +317,20 @@ const TrainingModal: React.FC<{
 
 const InputField: React.FC<{label: string, value: string, onChange: React.ChangeEventHandler<HTMLInputElement>, [key: string]: any}> = ({ label, ...props }) => (
     <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</label>
-        <input className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 focus:ring-brand-purple focus:border-brand-purple" {...props} />
+        <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{label}</label>
+        <input className="w-full p-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 focus:ring-primary-500 focus:border-primary-500" {...props} />
     </div>
 );
 const TextAreaField: React.FC<{label: string, value: string, onChange: React.ChangeEventHandler<HTMLTextAreaElement>, [key: string]: any}> = ({ label, ...props }) => (
     <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</label>
-        <textarea className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 focus:ring-brand-purple focus:border-brand-purple" {...props}></textarea>
+        <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{label}</label>
+        <textarea className="w-full p-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 focus:ring-primary-500 focus:border-primary-500" {...props}></textarea>
     </div>
 );
 const SelectField: React.FC<{label: string, children: React.ReactNode, value: string, onChange: React.ChangeEventHandler<HTMLSelectElement>}> = ({ label, children, ...props }) => (
      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</label>
-        <select className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 focus:ring-brand-purple focus:border-brand-purple" {...props}>
+        <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{label}</label>
+        <select className="w-full p-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 focus:ring-primary-500 focus:border-primary-500" {...props}>
             {children}
         </select>
     </div>
@@ -347,36 +347,36 @@ const TrainingCard: React.FC<{
     const { badge, gradient } = getStatusStyles(training.status);
 
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 flex flex-col relative overflow-hidden animate-fade-in-up">
-            <div className={`absolute left-0 top-0 bottom-0 w-2 bg-gradient-to-b ${gradient}`}></div>
+        <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 flex flex-col relative overflow-hidden animate-fade-in-up">
+            <div className={`absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b ${gradient}`}></div>
             <div className="pl-6 p-5 flex-grow">
                 <div className="flex justify-between items-start mb-3">
-                    <h3 className="font-bold text-lg text-gray-800 dark:text-gray-100 pr-2">{training.nama}</h3>
+                    <h3 className="font-bold text-lg text-neutral-800 dark:text-neutral-100 pr-2">{training.nama}</h3>
                     <span className={`px-3 py-1 text-xs font-semibold rounded-full ${badge} whitespace-nowrap`}>{training.status}</span>
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400 space-y-2">
+                <div className="text-sm text-neutral-600 dark:text-neutral-400 space-y-2">
                     <p className="flex items-center">{ICONS.calendar} {formatDateRange(training.tanggalMulai, training.tanggalSelesai)}</p>
                     <p className="flex items-center">{ICONS.locationPin} {training.lokasi}</p>
                     <p className="flex items-center">{ICONS.person} {training.pic}</p>
                 </div>
                 {training.catatan && (
-                    <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-md">
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Catatan:</p>
-                        <p className="text-sm mt-1 text-gray-700 dark:text-gray-300">{training.catatan}</p>
+                    <div className="mt-4 p-3 bg-neutral-50 dark:bg-neutral-700/50 rounded-md">
+                        <p className="text-xs text-neutral-500 dark:text-neutral-400">Catatan:</p>
+                        <p className="text-sm mt-1 text-neutral-700 dark:text-neutral-300">{training.catatan}</p>
                     </div>
                 )}
             </div>
-            <div className="bg-gray-50 dark:bg-gray-700/50 px-6 py-3 flex justify-between items-center">
+            <div className="bg-neutral-50 dark:bg-neutral-700/50 px-6 py-3 flex justify-between items-center">
                 <select 
                     value={training.status} 
                     onChange={(e) => onStatusChange(training.id, e.target.value as TrainingStatus)}
-                    className="text-sm bg-transparent font-semibold border-none focus:ring-0 p-1 -ml-1"
+                    className="text-sm bg-transparent font-semibold border-none focus:ring-0 p-1 -ml-1 text-neutral-600 dark:text-neutral-300"
                 >
                     {ALL_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
-                <div className="flex items-center space-x-2 text-gray-500 dark:text-gray-400">
-                    <button onClick={() => onEdit(training)} className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-blue-600 dark:hover:text-blue-400 transition-colors" title="Edit">{ICONS.edit}</button>
-                    <button onClick={() => onDelete(training.id)} className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-red-600 dark:hover:text-red-400 transition-colors" title="Hapus">{ICONS.delete}</button>
+                <div className="flex items-center space-x-2 text-neutral-500 dark:text-neutral-400">
+                    <button onClick={() => onEdit(training)} className="p-2 rounded-full hover:bg-neutral-200 dark:hover:bg-neutral-600 hover:text-primary-600 dark:hover:text-primary-400 transition-colors" title="Edit">{ICONS.edit}</button>
+                    <button onClick={() => onDelete(training.id)} className="p-2 rounded-full hover:bg-neutral-200 dark:hover:bg-neutral-600 hover:text-danger-600 dark:hover:text-danger-400 transition-colors" title="Hapus">{ICONS.delete}</button>
                 </div>
             </div>
         </div>
@@ -481,13 +481,13 @@ const TrainingDashboard: React.FC = () => {
         <div className="space-y-6">
             <header className="flex flex-col md:flex-row justify-between md:items-center gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Dashboard Training</h1>
-                    <p className="text-gray-500 dark:text-gray-400">Pantau semua jadwal dan status konfirmasi training.</p>
+                    <h1 className="text-3xl font-bold text-neutral-800 dark:text-white">Dashboard Training</h1>
+                    <p className="text-neutral-500 dark:text-neutral-400">Pantau semua jadwal dan status konfirmasi training.</p>
                 </div>
                 <div className="flex items-center space-x-3">
                     <button 
                         onClick={() => setIsAIModalOpen(true)} 
-                        className="flex items-center space-x-2 bg-brand-ai text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-ai"
+                        className="flex items-center space-x-2 bg-accent-ai text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent-ai"
                         title="Tambah dengan AI"
                     >
                         {ICONS.magicWand}
@@ -495,7 +495,7 @@ const TrainingDashboard: React.FC = () => {
                     </button>
                     <button 
                         onClick={() => handleOpenModal()} 
-                        className="flex items-center space-x-2 bg-brand-purple text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-purple"
+                        className="flex items-center space-x-2 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-opacity shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                         title="Tambah Training Baru"
                     >
                         {ICONS.add}
@@ -504,20 +504,20 @@ const TrainingDashboard: React.FC = () => {
                 </div>
             </header>
 
-            <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
+            <div className="bg-white dark:bg-neutral-800 p-4 rounded-lg shadow-md">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <input 
                         type="text" 
                         placeholder="Cari Nama Training..." 
                         value={searchTerm}
                         onChange={e => setSearchTerm(e.target.value)}
-                        className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700"
+                        className="w-full p-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                     />
-                    <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700">
+                    <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="w-full p-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                         <option>Semua Status</option>
                         {ALL_STATUSES.map(s => <option key={s}>{s}</option>)}
                     </select>
-                     <select value={sortOrder} onChange={e => setSortOrder(e.target.value)} className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700">
+                     <select value={sortOrder} onChange={e => setSortOrder(e.target.value)} className="w-full p-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                         <option value="Terdekat">Urutkan: Terdekat</option>
                         <option value="Terjauh">Urutkan: Terjauh</option>
                     </select>
@@ -538,9 +538,9 @@ const TrainingDashboard: React.FC = () => {
                         ))}
                     </div>
                 ) : (
-                    <div className="text-center py-16 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-                        <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300">Tidak Ada Training</h3>
-                        <p className="text-gray-500 dark:text-gray-400 mt-2">Belum ada data training yang cocok dengan filter Anda.</p>
+                    <div className="text-center py-16 bg-white dark:bg-neutral-800 rounded-lg shadow-md">
+                        <h3 className="text-xl font-semibold text-neutral-700 dark:text-neutral-300">Tidak Ada Training</h3>
+                        <p className="text-neutral-500 dark:text-neutral-400 mt-2">Belum ada data training yang cocok dengan filter Anda.</p>
                     </div>
                 )
             )}

@@ -80,7 +80,7 @@ const TaskManagement: React.FC = () => {
     };
 
     const getSortIndicator = (key: SortableTaskKeys) => {
-        if (sortConfig.key !== key) return null;
+        if (sortConfig.key !== key) return <span className="text-neutral-400"> T </span>;
         return sortConfig.direction === 'ascending' ? ' ▲' : ' ▼';
     };
     
@@ -153,75 +153,77 @@ const TaskManagement: React.FC = () => {
     const getUserName = (userId: string) => users.find(u => u.uid === userId)?.nama || 'Tidak diketahui';
     
     const priorityClass: { [key in TaskPriority]: string } = {
-        High: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-        Mid: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-        Low: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+        High: 'bg-danger-bg text-danger-text',
+        Mid: 'bg-warning-bg text-warning-text',
+        Low: 'bg-success-bg text-success-text',
     };
 
     const statusClass: { [key in TaskStatus]: string } = {
-        'On Progress': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-        'Completed': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-        'Pending': 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
+        'On Progress': 'bg-info-bg text-info-text',
+        'Completed': 'bg-success-bg text-success-text',
+        'Pending': 'bg-neutral-200 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-200',
     };
 
     if (!userData) return <LoadingSpinner />;
 
     return (
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg animate-fade-in-up">
+        <div className="bg-white dark:bg-neutral-800 p-6 rounded-xl shadow-md animate-fade-in-up">
             <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
-                <h3 className="text-2xl font-bold">Daftar Pekerjaan</h3>
+                <h3 className="text-2xl font-bold text-neutral-800 dark:text-neutral-100">Daftar Pekerjaan</h3>
                 {['admin', 'pimpinan', 'pegawai'].includes(userData.role) && (
                     <button 
                         onClick={() => openModal()} 
-                        className="flex items-center justify-center w-14 h-14 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors transform hover:scale-110 shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        className="flex items-center justify-center gap-2 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors shadow-md hover:shadow-lg transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                         title="Tambah Pekerjaan"
                     >
-                        {ICONS.addLarge}
+                        {ICONS.add}
+                        <span>Tambah Pekerjaan</span>
                     </button>
                 )}
             </div>
             
             {loading ? <LoadingSpinner text="Memuat pekerjaan..."/> : (
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left min-w-[720px]">
+                    <table className="w-full text-left min-w-[800px]">
                         <thead>
-                            <tr className="border-b-2 dark:border-gray-700">
-                                <th className="p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700" onClick={() => requestSort('title')}>Judul{getSortIndicator('title')}</th>
-                                <th className="p-4">Ditugaskan Kepada</th>
-                                <th className="p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700" onClick={() => requestSort('dueDate')}>Due Date{getSortIndicator('dueDate')}</th>
-                                <th className="p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700" onClick={() => requestSort('createdAt')}>Tgl. Dibuat{getSortIndicator('createdAt')}</th>
-                                <th className="p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700" onClick={() => requestSort('priority')}>Prioritas{getSortIndicator('priority')}</th>
-                                <th className="p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700" onClick={() => requestSort('status')}>Status{getSortIndicator('status')}</th>
-                                <th className="p-4">Rating</th>
-                                <th className="p-4">Aksi</th>
+                            <tr className="border-b-2 border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-700/50">
+                                {['title', 'dueDate', 'createdAt', 'priority', 'status'].map(key => (
+                                    <th key={key} className="p-4 text-sm font-semibold text-neutral-600 dark:text-neutral-300 uppercase tracking-wider cursor-pointer" onClick={() => requestSort(key as SortableTaskKeys)}>
+                                        {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                                        {getSortIndicator(key as SortableTaskKeys)}
+                                    </th>
+                                ))}
+                                <th className="p-4 text-sm font-semibold text-neutral-600 dark:text-neutral-300 uppercase tracking-wider">Ditugaskan</th>
+                                <th className="p-4 text-sm font-semibold text-neutral-600 dark:text-neutral-300 uppercase tracking-wider">Rating</th>
+                                <th className="p-4 text-sm font-semibold text-neutral-600 dark:text-neutral-300 uppercase tracking-wider">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             {sortedTasks.map(task => (
-                                <tr key={task.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                                    <td className="p-4 font-medium">{task.title}</td>
-                                    <td className="p-4">{getUserName(task.assignedTo)}</td>
-                                    <td className="p-4">{new Date(task.dueDate).toLocaleDateString('id-ID')}</td>
-                                    <td className="p-4">{task.createdAt ? new Date(task.createdAt).toLocaleDateString('id-ID') : '-'}</td>
+                                <tr key={task.id} className="border-b border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-700/50 transition-colors">
+                                    <td className="p-4 font-medium text-neutral-800 dark:text-neutral-100">{task.title}</td>
+                                    <td className="p-4 text-neutral-600 dark:text-neutral-300">{new Date(task.dueDate).toLocaleDateString('id-ID')}</td>
+                                    <td className="p-4 text-neutral-600 dark:text-neutral-300">{task.createdAt ? new Date(task.createdAt).toLocaleDateString('id-ID') : '-'}</td>
                                     <td className="p-4">
-                                        <span className={`px-3 py-1 text-sm font-semibold rounded-full ${priorityClass[task.priority]}`}>{task.priority}</span>
+                                        <span className={`px-3 py-1 text-xs font-semibold rounded-full ${priorityClass[task.priority]}`}>{task.priority}</span>
                                     </td>
                                     <td className="p-4">
-                                        <span className={`px-3 py-1 text-sm font-semibold rounded-full ${statusClass[task.status]}`}>{task.status}</span>
+                                        <span className={`px-3 py-1 text-xs font-semibold rounded-full ${statusClass[task.status]}`}>{task.status}</span>
                                     </td>
+                                    <td className="p-4 text-neutral-600 dark:text-neutral-300">{getUserName(task.assignedTo)}</td>
                                     <td className="p-4">
                                        <div className="flex">
                                             {[...Array(5)].map((_, i) => (
-                                                <span key={i} className={i < (task.rating || 0) ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600'}>{ICONS.star}</span>
+                                                <span key={i} className={i < (task.rating || 0) ? 'text-yellow-400' : 'text-neutral-300 dark:text-neutral-600'}>{ICONS.star}</span>
                                             ))}
                                         </div>
                                     </td>
                                     <td className="p-4 flex items-center space-x-2">
-                                        <button onClick={() => openModal(task)} className="p-2 rounded-full hover:bg-yellow-200 dark:hover:bg-yellow-800 text-yellow-600 dark:text-yellow-300 transition-colors" title="Edit Pekerjaan">{ICONS.edit}</button>
-                                        <button onClick={() => handleWhatsAppExport(task)} className="p-2 rounded-full hover:bg-green-200 dark:hover:bg-green-800 text-green-600 dark:text-green-300 transition-colors" title="Export Detail ke WhatsApp">{ICONS.whatsapp}</button>
-                                        <button onClick={() => handleExportToTraining(task)} className="p-2 rounded-full hover:bg-purple-200 dark:hover:bg-purple-800 text-purple-600 dark:text-purple-300 transition-colors" title="Export ke Training">{ICONS.graduationCap}</button>
+                                        <button onClick={() => openModal(task)} className="p-2 rounded-full hover:bg-yellow-100 dark:hover:bg-yellow-800/50 text-yellow-500 transition-colors" title="Edit Pekerjaan">{ICONS.edit}</button>
+                                        <button onClick={() => handleWhatsAppExport(task)} className="p-2 rounded-full hover:bg-green-100 dark:hover:bg-green-800/50 text-green-500 transition-colors" title="Export Detail ke WhatsApp">{ICONS.whatsapp}</button>
+                                        <button onClick={() => handleExportToTraining(task)} className="p-2 rounded-full hover:bg-purple-100 dark:hover:bg-purple-800/50 text-purple-500 transition-colors" title="Export ke Training">{ICONS.graduationCap}</button>
                                         {['admin', 'pimpinan', 'pegawai'].includes(userData.role) && (
-                                            <button onClick={() => handleDelete(task.id, task.fileUrl)} className="p-2 rounded-full hover:bg-red-200 dark:hover:bg-red-800 text-red-600 dark:text-red-300 transition-colors" title="Hapus Pekerjaan">{ICONS.delete}</button>
+                                            <button onClick={() => handleDelete(task.id, task.fileUrl)} className="p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-800/50 text-red-500 transition-colors" title="Hapus Pekerjaan">{ICONS.delete}</button>
                                         )}
                                     </td>
                                 </tr>

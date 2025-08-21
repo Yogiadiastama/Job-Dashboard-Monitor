@@ -8,7 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -18,17 +18,58 @@
                         sans: ['Inter', 'sans-serif'],
                     },
                     colors: {
-                        'brand-purple': '#7C3AED', // violet-500
-                        'brand-ai': '#0891B2', // cyan-600
-                        'status-red': '#EF4444',
-                        'status-red-bg': '#FEE2E2',
-                        'status-red-text': '#991B1B',
-                        'status-green': '#10B981',
-                        'status-green-bg': '#D1FAE5',
-                        'status-green-text': '#047857',
-                        'status-yellow': '#F59E0B',
-                        'status-yellow-bg': '#FEF3C7',
-                        'status-yellow-text': '#92400E',
+                        primary: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            200: '#ddd6fe',
+                            300: '#c4b5fd',
+                            400: '#a78bfa',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            800: '#5b21b6',
+                            900: '#4c1d95',
+                            950: '#2e1065',
+                        },
+                        neutral: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                            950: '#020617',
+                        },
+                        'accent-ai': '#0891B2', // cyan-600
+                        success: {
+                            'bg': '#f0fdf4',
+                            'text': '#16a34a',
+                            'DEFAULT': '#22c55e',
+                        },
+                        warning: {
+                            'bg': '#fffbeb',
+                            'text': '#f59e0b',
+                            'DEFAULT': '#f59e0b',
+                        },
+                        danger: {
+                            'bg': '#fef2f2',
+                            'text': '#ef4444',
+                            'DEFAULT': '#ef4444',
+                        },
+                         info: {
+                            'bg': '#eff6ff',
+                            'text': '#3b82f6',
+                            'DEFAULT': '#3b82f6',
+                        },
+                    },
+                    boxShadow: {
+                        'md': '0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07)',
+                        'lg': '0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.07)',
+                        'xl': '0 20px 25px -5px rgb(0 0 0 / 0.07), 0 8px 10px -6px rgb(0 0 0 / 0.07)',
                     },
                     keyframes: {
                         'fade-in-up': {
@@ -74,7 +115,7 @@
 }
 </script>
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 font-sans">
+<body class="bg-neutral-100 dark:bg-neutral-900 font-sans">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
 </body>

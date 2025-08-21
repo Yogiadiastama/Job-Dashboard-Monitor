@@ -140,21 +140,21 @@ const UserModal: React.FC<UserModalProps> = ({ user, closeModal }) => {
     };
     
     return (
-         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg p-8 animate-fade-in-up max-h-[95vh] overflow-y-auto">
-                <h2 className="text-2xl font-bold mb-6">{user ? 'Edit Pegawai' : 'Tambah Pegawai Baru'}</h2>
-                <form onSubmit={handleSubmit}>
-                    <div className="mb-4">
-                        <label className="block text-sm font-bold mb-2">Nama Lengkap</label>
-                        <input type="text" value={nama} onChange={e => setNama(e.target.value)} className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" required />
+         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-xl w-full max-w-lg p-8 animate-fade-in-up max-h-[95vh] overflow-y-auto">
+                <h2 className="text-2xl font-bold mb-6 text-neutral-800 dark:text-neutral-100">{user ? 'Edit Pegawai' : 'Tambah Pegawai Baru'}</h2>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-bold mb-2 text-neutral-700 dark:text-neutral-300">Nama Lengkap</label>
+                        <input type="text" value={nama} onChange={e => setNama(e.target.value)} className="w-full p-2.5 border border-neutral-300 rounded-lg dark:bg-neutral-700 dark:border-neutral-600 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required />
                     </div>
-                     <div className="mb-4">
-                        <label className="block text-sm font-bold mb-2">Foto Profil</label>
+                     <div>
+                        <label className="block text-sm font-bold mb-2 text-neutral-700 dark:text-neutral-300">Foto Profil</label>
                         <div className="flex items-center space-x-4">
                             {imagePreview ? (
                                 <img src={imagePreview} alt="Preview" className="w-20 h-20 rounded-full object-cover" />
                             ) : (
-                                <div className="w-20 h-20 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center font-bold text-gray-500">
+                                <div className="w-20 h-20 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center font-bold text-neutral-500">
                                     {nama.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || '?'}
                                 </div>
                             )}
@@ -164,12 +164,12 @@ const UserModal: React.FC<UserModalProps> = ({ user, closeModal }) => {
                                     type="file" 
                                     accept="image/*" 
                                     onChange={handleFileChange} 
-                                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+                                    className="w-full text-sm text-neutral-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100" />
                                 {imagePreview && (
                                     <button 
                                         type="button" 
                                         onClick={handleRemovePhoto}
-                                        className="mt-2 text-xs text-red-500 hover:text-red-700"
+                                        className="mt-2 text-xs text-danger-text hover:underline"
                                     >
                                         Hapus Foto
                                     </button>
@@ -177,23 +177,23 @@ const UserModal: React.FC<UserModalProps> = ({ user, closeModal }) => {
                             </div>
                         </div>
                     </div>
-                    <div className="mb-4">
-                        <label className="block text-sm font-bold mb-2">Email</label>
-                        <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" required disabled={!!user} />
-                         {user && <p className="text-xs text-gray-500 mt-1">Email tidak dapat diubah.</p>}
+                    <div>
+                        <label className="block text-sm font-bold mb-2 text-neutral-700 dark:text-neutral-300">Email</label>
+                        <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full p-2.5 border border-neutral-300 rounded-lg dark:bg-neutral-700 dark:border-neutral-600 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:opacity-50" required disabled={!!user} />
+                         {user && <p className="text-xs text-neutral-500 mt-1">Email tidak dapat diubah.</p>}
                     </div>
-                     <div className="mb-4">
-                        <label className="block text-sm font-bold mb-2">Nomor WhatsApp</label>
-                        <input type="tel" value={noWhatsapp} onChange={e => setNoWhatsapp(e.target.value)} className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" required />
+                     <div>
+                        <label className="block text-sm font-bold mb-2 text-neutral-700 dark:text-neutral-300">Nomor WhatsApp</label>
+                        <input type="tel" value={noWhatsapp} onChange={e => setNoWhatsapp(e.target.value)} className="w-full p-2.5 border border-neutral-300 rounded-lg dark:bg-neutral-700 dark:border-neutral-600 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required />
                     </div>
                     {user && (
-                         <div className="mb-4">
-                            <label className="block text-sm font-bold mb-2">Manajemen Password</label>
+                         <div>
+                            <label className="block text-sm font-bold mb-2 text-neutral-700 dark:text-neutral-300">Manajemen Password</label>
                             <button
                                 type="button"
                                 onClick={handlePasswordReset}
                                 disabled={isResetting}
-                                className="w-full p-2 rounded-lg bg-yellow-500 text-white hover:bg-yellow-600 disabled:opacity-50 transition-colors"
+                                className="w-full p-2.5 rounded-lg bg-yellow-500 text-white hover:bg-yellow-600 disabled:opacity-50 transition-colors"
                             >
                                 {isResetting ? 'Mengirim...' : 'Kirim Email Reset Password'}
                             </button>
@@ -201,27 +201,27 @@ const UserModal: React.FC<UserModalProps> = ({ user, closeModal }) => {
                     )}
                     {!user && (
                         <>
-                            <div className="mb-4">
-                                <label className="block text-sm font-bold mb-2">Password</label>
-                                <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Minimal 6 karakter" className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" required />
+                            <div>
+                                <label className="block text-sm font-bold mb-2 text-neutral-700 dark:text-neutral-300">Password</label>
+                                <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Minimal 6 karakter" className="w-full p-2.5 border border-neutral-300 rounded-lg dark:bg-neutral-700 dark:border-neutral-600 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required />
                             </div>
-                            <div className="mb-4">
-                                <label className="block text-sm font-bold mb-2">Konfirmasi Password</label>
-                                <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" required />
+                            <div>
+                                <label className="block text-sm font-bold mb-2 text-neutral-700 dark:text-neutral-300">Konfirmasi Password</label>
+                                <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="w-full p-2.5 border border-neutral-300 rounded-lg dark:bg-neutral-700 dark:border-neutral-600 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required />
                             </div>
                         </>
                     )}
-                    <div className="mb-4">
-                        <label className="block text-sm font-bold mb-2">Role</label>
-                        <select value={role} onChange={e => setRole(e.target.value as UserRole)} className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
+                    <div>
+                        <label className="block text-sm font-bold mb-2 text-neutral-700 dark:text-neutral-300">Role</label>
+                        <select value={role} onChange={e => setRole(e.target.value as UserRole)} className="w-full p-2.5 border border-neutral-300 rounded-lg dark:bg-neutral-700 dark:border-neutral-600 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                             <option value="pegawai">Pegawai</option>
                             <option value="pimpinan">Pimpinan</option>
                             <option value="admin">Admin</option>
                         </select>
                     </div>
-                    <div className="flex justify-end space-x-4 mt-8">
-                        <button type="button" onClick={closeModal} className="px-6 py-2 rounded-lg bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500">Batal</button>
-                        <button type="submit" disabled={loading} className="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50">
+                    <div className="flex justify-end space-x-4 pt-4">
+                        <button type="button" onClick={closeModal} className="px-6 py-2 rounded-lg bg-neutral-200 dark:bg-neutral-600 text-neutral-800 dark:text-neutral-100 hover:bg-neutral-300 dark:hover:bg-neutral-500">Batal</button>
+                        <button type="submit" disabled={loading} className="px-6 py-2 rounded-lg bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50">
                             {loading ? 'Menyimpan...' : 'Simpan'}
                         </button>
                     </div>

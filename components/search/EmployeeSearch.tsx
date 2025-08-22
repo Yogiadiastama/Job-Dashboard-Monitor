@@ -4,42 +4,85 @@ import { EmployeeProfile } from '../../types';
 import LoadingSpinner from '../common/LoadingSpinner';
 import EmployeeProfileCard from './EmployeeProfileCard';
 
-const SHEET_ID = '1VDcH6vEEZ2D1i2T57dRS7tDIYLN4NvupZviFt8twVx0';
-const SHEET_URL = `https://spreadsheets.google.com/feeds/list/${SHEET_ID}/od6/public/values?alt=json`;
+// The URL is taken from the user's prompt. It points to the published CSV version of the sheet.
+const SHEET_URL = `https://docs.google.com/spreadsheets/d/e/2PACX-1vT7wdYuXPw-6RCvXKSjK5xMwGLWc3eHYbaqpoY4PYSYm6NJOvCnU7iQUk33yAMtHTeKeD8T-x8Ful2l/pub?gid=0&single=true&output=csv`;
 
-// Helper function to transform the ugly Google Sheets JSON into a clean array of objects
-const parseSheetData = (data: any): EmployeeProfile[] => {
-    const entries = data.feed.entry || [];
-    return entries.map((entry: any) => ({
-        employeeId: entry['gsx$employeeid']?.$t || '',
-        fullName: entry['gsx$fullname']?.$t || '',
-        gender: entry['gsx$gender']?.$t || '',
-        age: entry['gsx$age']?.$t || '',
-        email: entry['gsx$email']?.$t || '',
-        position: entry['gsx$position']?.$t || '',
-        joinDate: entry['gsx$joindate']?.$t || '',
-        performanceRating: entry['gsx$performanceratinglast3years']?.$t || '',
-        grade: entry['gsx$grade']?.$t || '',
-        gradeRange: entry['gsx$graderange']?.$t || '',
-        tmtGrade: entry['gsx$tmtgrade']?.$t || '',
-        maritalStatus: entry['gsx$maritalstatus']?.$t || '',
-        workContractType: entry['gsx$workcontracttype']?.$t || '',
-        bankMandiriJoinDate: entry['gsx$bankmandirijoindate']?.$t || '',
-        permanentEmployeeDate: entry['gsx$permanentemployeedate']?.$t || '',
-        pensionDate: entry['gsx$pensiondate']?.$t || '',
-        organizationUnit: entry['gsx$organizationunit']?.$t || '',
-        group: entry['gsx$group']?.$t || '',
-        tmtGroup: entry['gsx$tmtgroup']?.$t || '',
-        corporateTitle: entry['gsx$corporatetitle']?.$t || '',
-        jobFamily: entry['gsx$jobfamily']?.$t || '',
-        directorate: entry['gsx$directorate']?.$t || '',
-        legacy: entry['gsx$legacy']?.$t || '',
-        location: entry['gsx$location']?.$t || '',
-        tmtLocation: entry['gsx$tmtlocation']?.$t || '',
-        em: entry['gsx$ememployeemanager']?.$t || '',
-        emm: entry['gsx$emmemployeemanagermanager']?.$t || '',
-    }));
+// This mapping is crucial to convert CSV headers (like 'employeeid')
+// to the camelCase keys used in the EmployeeProfile type (like 'employeeId').
+// It's derived from the old implementation's G-Sheets JSON keys.
+const headerMapping: { [key: string]: keyof EmployeeProfile } = {
+    employeeid: 'employeeId',
+    fullname: 'fullName',
+    gender: 'gender',
+    age: 'age',
+    email: 'email',
+    position: 'position',
+    joindate: 'joinDate',
+    performanceratinglast3years: 'performanceRating',
+    grade: 'grade',
+    graderange: 'gradeRange',
+    tmtgrade: 'tmtGrade',
+    maritalstatus: 'maritalStatus',
+    workcontracttype: 'workContractType',
+    bankmandirijoindate: 'bankMandiriJoinDate',
+    permanentemployeedate: 'permanentEmployeeDate',
+    pensiondate: 'pensionDate',
+    organizationunit: 'organizationUnit',
+    group: 'group',
+    tmtgroup: 'tmtGroup',
+    corporatetitle: 'corporateTitle',
+    jobfamily: 'jobFamily',
+    directorate: 'directorate',
+    legacy: 'legacy',
+    location: 'location',
+    tmtlocation: 'tmtLocation',
+    ememployeemanager: 'em',
+    emmemployeemanagermanager: 'emm',
 };
+
+// New helper function to parse CSV data from the published Google Sheet.
+// This replaces the old JSON parsing logic which used a deprecated API.
+const parseSheetData = (csvText: string): EmployeeProfile[] => {
+    // Split text into lines, removing any empty lines at the end.
+    const lines = csvText.trim().split(/\r?\n/);
+    if (lines.length < 2) return []; // Need at least a header and one data row.
+
+    // Get headers from the first line, clean them up for reliable mapping.
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/\s+/g, ''));
+    const employeeProfiles: EmployeeProfile[] = [];
+
+    // This regex robustly handles commas within quoted fields (e.g., "Value, with comma").
+    const csvRegex = /(?:,|^)(?:"([^"]*(?:""[^"]*)*)"|([^",]*))/g;
+
+    // Process each data row.
+    for (let i = 1; i < lines.length; i++) {
+        if (!lines[i]) continue; // Skip empty rows
+
+        const profile: Partial<EmployeeProfile> = {};
+        let match;
+        let headerIndex = 0;
+        csvRegex.lastIndex = 0; // Reset regex state for each new line.
+
+        while ((match = csvRegex.exec(lines[i])) && headerIndex < headers.length) {
+            const csvHeader = headers[headerIndex];
+            const profileKey = headerMapping[csvHeader]; // Find the corresponding camelCase key.
+
+            if (profileKey) {
+                // value is from either the quoted group (match[1]) or unquoted group (match[2]).
+                let value = match[1] !== undefined
+                    ? match[1].replace(/""/g, '"') // Unescape double quotes inside a quoted field.
+                    : match[2];
+                
+                profile[profileKey] = value.trim();
+            }
+            headerIndex++;
+        }
+        
+        employeeProfiles.push(profile as EmployeeProfile);
+    }
+    return employeeProfiles;
+};
+
 
 const EmployeeSearch: React.FC = () => {
     const [employeeData, setEmployeeData] = useState<EmployeeProfile[]>([]);
@@ -52,14 +95,15 @@ const EmployeeSearch: React.FC = () => {
             try {
                 const response = await fetch(SHEET_URL);
                 if (!response.ok) {
-                    throw new Error(`Gagal mengambil data. Status: ${response.status}. Pastikan Google Sheet Anda sudah di-"Publish to the web".`);
+                    // Provide a more specific error message based on the new fetching method.
+                    throw new Error(`Gagal mengambil data dari Google Sheet (Status: ${response.status}). Pastikan link CSV publik valid dan dapat diakses.`);
                 }
-                const data = await response.json();
-                const parsedData = parseSheetData(data);
+                const csvText = await response.text();
+                const parsedData = parseSheetData(csvText);
                 setEmployeeData(parsedData);
             } catch (err) {
                 console.error("Error fetching or parsing sheet data:", err);
-                const errorMessage = err instanceof Error ? err.message : 'Terjadi kesalahan tidak diketahui.';
+                const errorMessage = err instanceof Error ? err.message : 'Terjadi kesalahan tidak diketahui saat memuat data.';
                 setError(errorMessage);
             } finally {
                 setLoading(false);

@@ -19,8 +19,8 @@ const TMTItem: React.FC<{ label: string, value: string | undefined }> = ({ label
     </div>
 );
 
-const PerformanceTable: React.FC<{ performanceData: string }> = ({ performanceData }) => {
-    const ratings = performanceData.split(',').map(s => s.trim());
+const PerformanceTable: React.FC<{ performanceData: string | undefined }> = ({ performanceData }) => {
+    const ratings = (performanceData || '').split(',').map(s => s.trim());
     const [pl, tc, cat] = ratings;
     const currentYear = new Date().getFullYear();
 
@@ -67,10 +67,10 @@ const EmployeeProfileCard: React.FC<{ employee: EmployeeProfile }> = ({ employee
             {/* Header Section */}
             <div className="flex items-start space-x-6 pb-6 border-b border-gray-200 dark:border-gray-700">
                 <div className="w-20 h-20 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center font-bold text-3xl text-indigo-600 dark:text-indigo-300 flex-shrink-0">
-                    {employee.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                    {((employee.fullName || '').split(' ').map(n => n[0]).join('') || '??').substring(0, 2).toUpperCase()}
                 </div>
                 <div className="flex-1">
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{employee.fullName}</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{employee.fullName || 'Nama Tidak Ditemukan'}</h2>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-4 mt-3">
                         <DetailItem label="NIP" value={employee.employeeId} />
                         <DetailItem label="Age" value={employee.age} />

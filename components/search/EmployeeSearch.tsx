@@ -117,8 +117,9 @@ const EmployeeSearch: React.FC = () => {
         if (!searchTerm) {
             return [];
         }
+        // Added a fallback for employee.fullName to prevent crashes on records with missing names.
         return employeeData.filter(employee =>
-            employee.fullName.toLowerCase().includes(searchTerm.toLowerCase())
+            (employee.fullName || '').toLowerCase().includes(searchTerm.toLowerCase())
         );
     }, [searchTerm, employeeData]);
 
@@ -153,7 +154,7 @@ const EmployeeSearch: React.FC = () => {
                         )}
                         
                         {searchResults.map(employee => (
-                            <EmployeeProfileCard key={employee.employeeId} employee={employee} />
+                            <EmployeeProfileCard key={employee.employeeId || Math.random()} employee={employee} />
                         ))}
                         
                         {searchTerm && searchResults.length === 0 && (

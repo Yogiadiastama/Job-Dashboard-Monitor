@@ -1,4 +1,5 @@
 
+
 export type UserRole = 'pegawai' | 'pimpinan' | 'admin';
 export type TaskStatus = 'Pending' | 'On Progress' | 'Completed';
 export type TaskPriority = 'Low' | 'Mid' | 'High';
@@ -56,33 +57,33 @@ export interface Training {
   status: TrainingStatus;
 }
 
-// New type for Employee Search from Google Sheets
+// Updated EmployeeProfile to match the user's specific Google Sheet columns
 export interface EmployeeProfile {
-    employeeId: string;
+    nip: string;
     fullName: string;
-    gender: string;
-    age: string;
-    email: string;
-    position: string;
-    joinDate: string;
-    performanceRating: string; // e.g., "PL2, CR, HIPO"
+    level: string;
     grade: string;
-    gradeRange: string;
-    tmtGrade: string;
-    maritalStatus: string;
-    workContractType: string;
-    bankMandiriJoinDate: string;
-    permanentEmployeeDate: string;
-    pensionDate: string;
-    organizationUnit: string;
-    group: string;
-    tmtGroup: string;
-    corporateTitle: string;
-    jobFamily: string;
-    directorate: string;
-    legacy: string;
-    location: string;
-    tmtLocation: string;
-    em: string;
-    emm: string;
+    startDate: string;
+    employeeSubgroup: string;
+    jabatan: string;
+    tmtJabatan: string;
+    lamaJabatan: string;
+    unitKerja: string;
+    area: string;
+    kelasCabang: string;
+    tmtMasuk: string;
+    masaKerja: string;
+    tmtMandiri: string;
+    tmtTetap: string;
+    usiaPensiun: string;
+    tanggalPensiun: string;
+    agama: string;
+    birthDate: string;
+    noHpLinkAja: string;
+    pl2022: string;
+    tc2022: string;
+    pl2023: string;
+    tc2023: string;
+    pl2024: string;
+    tc2024: string;
 }

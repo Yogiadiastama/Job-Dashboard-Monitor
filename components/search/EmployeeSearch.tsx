@@ -7,38 +7,38 @@ import EmployeeProfileCard from './EmployeeProfileCard';
 // The URL is taken from the user's prompt. It points to the published CSV version of the sheet.
 const SHEET_URL = `https://docs.google.com/spreadsheets/d/e/2PACX-1vT7wdYuXPw-6RCvXKSjK5xMwGLWc3eHYbaqpoY4PYSYm6NJOvCnU7iQUk33yAMtHTeKeD8T-x8Ful2l/pub?gid=0&single=true&output=csv`;
 
-// This mapping is crucial to convert CSV headers (like 'employeeid')
-// to the camelCase keys used in the EmployeeProfile type (like 'employeeId').
-// It's derived from the old implementation's G-Sheets JSON keys.
+// Updated mapping to match the new CSV headers provided by the user.
+// This is crucial for parsing the data correctly.
 const headerMapping: { [key: string]: keyof EmployeeProfile } = {
-    employeeid: 'employeeId',
+    nip: 'nip',
     fullname: 'fullName',
-    gender: 'gender',
-    age: 'age',
-    email: 'email',
-    position: 'position',
-    joindate: 'joinDate',
-    performanceratinglast3years: 'performanceRating',
+    level: 'level',
     grade: 'grade',
-    graderange: 'gradeRange',
-    tmtgrade: 'tmtGrade',
-    maritalstatus: 'maritalStatus',
-    workcontracttype: 'workContractType',
-    bankmandirijoindate: 'bankMandiriJoinDate',
-    permanentemployeedate: 'permanentEmployeeDate',
-    pensiondate: 'pensionDate',
-    organizationunit: 'organizationUnit',
-    group: 'group',
-    tmtgroup: 'tmtGroup',
-    corporatetitle: 'corporateTitle',
-    jobfamily: 'jobFamily',
-    directorate: 'directorate',
-    legacy: 'legacy',
-    location: 'location',
-    tmtlocation: 'tmtLocation',
-    ememployeemanager: 'em',
-    emmemployeemanagermanager: 'emm',
+    startdate: 'startDate',
+    employeesubgroup: 'employeeSubgroup',
+    jabatan: 'jabatan',
+    tmtjabatan: 'tmtJabatan',
+    lamajabatan: 'lamaJabatan',
+    unitkerja: 'unitKerja',
+    area: 'area',
+    kelascabang: 'kelasCabang',
+    tmtmasuk: 'tmtMasuk',
+    'masakerja(darikontrak)': 'masaKerja',
+    tmtmandiri: 'tmtMandiri',
+    tmttetap: 'tmtTetap',
+    usiapensiunpegawai: 'usiaPensiun',
+    tanggalpensiun: 'tanggalPensiun',
+    religiousdenominationkey: 'agama',
+    birthdate: 'birthDate',
+    mobilephonelinkaja: 'noHpLinkAja',
+    pl2022: 'pl2022',
+    tc2022: 'tc2022',
+    pl2023: 'pl2023',
+    tc2023: 'tc2023',
+    pl2024: 'pl2024',
+    tc2024: 'tc2024',
 };
+
 
 // New helper function to parse CSV data from the published Google Sheet.
 // This replaces the old JSON parsing logic which used a deprecated API.
@@ -48,7 +48,7 @@ const parseSheetData = (csvText: string): EmployeeProfile[] => {
     if (lines.length < 2) return []; // Need at least a header and one data row.
 
     // Get headers from the first line, clean them up for reliable mapping.
-    const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/\s+/g, ''));
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/[\s()]+/g, ''));
     const employeeProfiles: EmployeeProfile[] = [];
 
     // This regex robustly handles commas within quoted fields (e.g., "Value, with comma").
@@ -139,7 +139,7 @@ const EmployeeSearch: React.FC = () => {
                     className="w-full p-4 pl-12 text-lg border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                 />
                 <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-400" fill="none" viewBox="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                 </div>
             </div>
 
@@ -154,7 +154,7 @@ const EmployeeSearch: React.FC = () => {
                         )}
                         
                         {searchResults.map(employee => (
-                            <EmployeeProfileCard key={employee.employeeId || Math.random()} employee={employee} />
+                            <EmployeeProfileCard key={employee.nip || Math.random()} employee={employee} />
                         ))}
                         
                         {searchTerm && searchResults.length === 0 && (

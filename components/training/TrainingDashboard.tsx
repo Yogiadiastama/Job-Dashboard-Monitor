@@ -5,8 +5,6 @@ import { Training, TrainingStatus, ALL_STATUSES } from '../../types';
 import { ICONS } from '../../constants';
 import LoadingSpinner from '../common/LoadingSpinner';
 import { useNotification } from '../../hooks/useNotification';
-import FloatingActionButton from './FloatingActionButton';
-import AddWithAIModal from './AddWithAIModal';
 
 // --- Helper Functions ---
 const formatDateRange = (start: string, end: string) => {
@@ -205,7 +203,6 @@ const TrainingDashboard: React.FC = () => {
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingTraining, setEditingTraining] = useState<Training | Partial<Training> | null>(null);
-    const [isAIModalOpen, setIsAIModalOpen] = useState(false);
 
     useEffect(() => {
         const q = query(collection(db, 'trainings'), orderBy('tanggalMulai', 'asc'));
@@ -240,13 +237,6 @@ const TrainingDashboard: React.FC = () => {
     const handleOpenModal = (training: Training | Partial<Training> | null = null) => {
         setEditingTraining(training);
         setIsModalOpen(true);
-    };
-
-    const handleParseComplete = (parsedData: Partial<Training>) => {
-        handleOpenModal({
-            ...parsedData,
-            status: 'Belum Dikonfirmasi',
-        });
     };
 
     const handleSaveTraining = async (trainingData: Omit<Training, 'id'>) => {
@@ -285,11 +275,18 @@ const TrainingDashboard: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            <header>
+            <header className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Dashboard Training</h1>
                     <p className="text-gray-500 dark:text-gray-400">Pantau semua jadwal dan status konfirmasi training.</p>
                 </div>
+                <button
+                    onClick={() => handleOpenModal()}
+                    className="flex items-center space-x-2 bg-brand-purple text-white px-4 py-2 rounded-lg hover:bg-opacity-90 transition-colors"
+                >
+                    {ICONS.add}
+                    <span>Tambah Training</span>
+                </button>
             </header>
 
             <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
@@ -332,19 +329,6 @@ const TrainingDashboard: React.FC = () => {
                     </div>
                 )
             )}
-            
-            <FloatingActionButton
-                actions={[
-                    { label: 'Tambah dengan AI', icon: ICONS.star, onClick: () => setIsAIModalOpen(true) },
-                    { label: 'Tambah Manual', icon: ICONS.edit, onClick: () => handleOpenModal() }
-                ]}
-            />
-
-            <AddWithAIModal
-                isOpen={isAIModalOpen}
-                onClose={() => setIsAIModalOpen(false)}
-                onParseComplete={handleParseComplete}
-            />
             
             <TrainingModal 
                 isOpen={isModalOpen} 

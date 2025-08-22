@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { EmployeeProfile } from '../../types';
+import { ICONS } from '../../constants';
 
 // Helper to check for meaningful data (not null, not empty, not just a dash)
 const hasValue = (value: string | undefined | null): value is string => 
@@ -55,7 +56,7 @@ const PerformanceTable: React.FC<{ employee: EmployeeProfile }> = ({ employee })
     );
 };
 
-const EmployeeProfileCard: React.FC<{ employee: EmployeeProfile }> = ({ employee }) => {
+const EmployeeProfileCard: React.FC<{ employee: EmployeeProfile; onClose: () => void; }> = ({ employee, onClose }) => {
     
     // Dynamically build lists of details to display, only including items with data.
     const keyDetails = [
@@ -79,18 +80,80 @@ const EmployeeProfileCard: React.FC<{ employee: EmployeeProfile }> = ({ employee
         { label: "Kelas Cabang", value: employee.kelasCabang },
     ].filter(item => hasValue(item.value));
 
-    // Check if there are any details to display in the collapsible section
-    const hasSubDetails = keyDetails.length > 0 || dateDetails.length > 0 || organizationalDetails.length > 0 || hasValue(employee.pl2022);
+    const hasPerformanceData = hasValue(employee.pl2022) || hasValue(employee.tc2022) ||
+                             hasValue(employee.pl2023) || hasValue(employee.tc2023) ||
+                             hasValue(employee.pl2024) || hasValue(employee.tc2024);
+
+    const hasSubDetails = keyDetails.length > 0 || dateDetails.length > 0 || organizationalDetails.length > 0 || hasPerformanceData;
+    
+    const handleWhatsAppExport = () => {
+        let message = `*Profil Pegawai*\n\n` +
+            `*Nama Lengkap:* ${employee.fullName || '-'}\n` +
+            `*NIP:* ${employee.nip || '-'}\n` +
+            `*Jabatan:* ${employee.jabatan || '-'}\n`;
+    
+        if (keyDetails.length > 0) {
+            message += `\n--- *Info Utama* ---\n`;
+            keyDetails.forEach(detail => {
+                message += `*${detail.label}:* ${detail.value}\n`;
+            });
+        }
+    
+        if (organizationalDetails.length > 0) {
+            message += `\n--- *Organisasi* ---\n`;
+            organizationalDetails.forEach(detail => {
+                message += `*${detail.label}:* ${detail.value}\n`;
+            });
+        }
+    
+        if (dateDetails.length > 0) {
+            message += `\n--- *Tanggal Penting* ---\n`;
+            dateDetails.forEach(detail => {
+                message += `*${detail.label}:* ${detail.value}\n`;
+            });
+        }
+        
+        if (hasPerformanceData) {
+            message += `\n--- *Performance Level* ---\n` +
+                `*PL 2022:* ${employee.pl2022 || '-'}\n*TC 2022:* ${employee.tc2022 || '-'}\n` +
+                `*PL 2023:* ${employee.pl2023 || '-'}\n*TC 2023:* ${employee.tc2023 || '-'}\n` +
+                `*PL 2024:* ${employee.pl2024 || '-'}\n*TC 2024:* ${employee.tc2024 || '-'}\n`;
+        }
+
+        const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, '_blank');
+    };
+
 
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-xl hover:border-blue-300 dark:hover:border-blue-700">
+        <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-xl hover:border-blue-300 dark:hover:border-blue-700">
+            {/* --- CLOSE BUTTON --- */}
+            <button 
+                onClick={onClose}
+                className="absolute top-4 right-4 p-2 rounded-full bg-red-100 dark:bg-red-900/50 text-red-500 hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
+                aria-label="Tutup profil"
+            >
+                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+
+
             {/* --- HEADER --- */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center sm:space-x-6">
                 <div className="w-20 h-20 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center font-bold text-3xl text-indigo-600 dark:text-indigo-300 flex-shrink-0 mb-4 sm:mb-0">
                     {((employee.fullName || '').split(' ').map(n => n[0]).join('') || '??').substring(0, 2).toUpperCase()}
                 </div>
                 <div className="flex-1">
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{employee.fullName || 'Nama Tidak Ditemukan'}</h2>
+                    <div className="flex items-center gap-4">
+                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{employee.fullName || 'Nama Tidak Ditemukan'}</h2>
+                         <button 
+                            onClick={handleWhatsAppExport} 
+                            className="flex items-center space-x-2 bg-green-500 text-white px-3 py-1 rounded-full hover:bg-green-600 transition-colors text-sm"
+                            title="Ekspor ke WhatsApp"
+                         >
+                            {ICONS.whatsapp}
+                            <span>Export</span>
+                        </button>
+                    </div>
                     <p className="text-md text-gray-600 dark:text-gray-400">{employee.jabatan || 'Jabatan tidak tersedia'}</p>
                     <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">NIP: {employee.nip || '-'}</p>
                 </div>

@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { EmployeeProfile } from '../../types';
 import LoadingSpinner from '../common/LoadingSpinner';
 import EmployeeProfileCard from './EmployeeProfileCard';
+import { ICONS } from '../../constants';
 
 // The URL is taken from the user's prompt. It points to the published CSV version of the sheet.
 const SHEET_URL = `https://docs.google.com/spreadsheets/d/e/2PACX-1vT7wdYuXPw-6RCvXKSjK5xMwGLWc3eHYbaqpoY4PYSYm6NJOvCnU7iQUk33yAMtHTeKeD8T-x8Ful2l/pub?gid=0&single=true&output=csv`;
@@ -89,6 +90,8 @@ const EmployeeSearch: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [selectedEmployee, setSelectedEmployee] = useState<EmployeeProfile | null>(null);
+
 
     useEffect(() => {
         const fetchEmployeeData = async () => {
@@ -122,6 +125,21 @@ const EmployeeSearch: React.FC = () => {
             (employee.fullName || '').toLowerCase().includes(searchTerm.toLowerCase())
         );
     }, [searchTerm, employeeData]);
+    
+    const handleSelectEmployee = (employee: EmployeeProfile) => {
+        setSelectedEmployee(employee);
+        setSearchTerm(''); // Clear search term after selection
+    };
+    
+    const handleDropdownChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const selectedNip = e.target.value;
+        const employee = employeeData.find(emp => emp.nip === selectedNip);
+        if (employee) {
+            setSelectedEmployee(employee);
+        } else {
+            setSelectedEmployee(null);
+        }
+    };
 
     return (
         <div className="space-y-6 animate-fade-in-up">
@@ -130,44 +148,73 @@ const EmployeeSearch: React.FC = () => {
                 <p className="text-gray-500 dark:text-gray-400">Akses informasi detail pegawai secara instan.</p>
             </header>
 
-            <div className="relative">
-                <input
-                    type="text"
-                    placeholder="Ketik nama lengkap pegawai..."
-                    value={searchTerm}
-                    onChange={e => setSearchTerm(e.target.value)}
-                    className="w-full p-4 pl-12 text-lg border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                />
-                <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-400" fill="none" viewBox="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="relative">
+                    <input
+                        type="text"
+                        placeholder="Ketik nama lengkap pegawai..."
+                        value={searchTerm}
+                        onChange={e => {
+                            setSearchTerm(e.target.value);
+                            setSelectedEmployee(null); // Clear selection when typing
+                        }}
+                        className="w-full p-4 pl-12 text-lg border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    />
+                    <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                        {ICONS.search}
+                    </div>
+                </div>
+                <div className="relative">
+                     <select 
+                        onChange={handleDropdownChange}
+                        className="w-full p-4 pl-4 text-lg border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all appearance-none"
+                        defaultValue=""
+                     >
+                        <option value="" disabled>Atau pilih pegawai dari daftar...</option>
+                        {employeeData.sort((a,b) => (a.fullName || "").localeCompare(b.fullName || "")).map(emp => (
+                            <option key={emp.nip} value={emp.nip}>{emp.fullName}</option>
+                        ))}
+                     </select>
                 </div>
             </div>
+
 
             <div className="mt-6">
                 {loading && <div className="text-center p-10"><LoadingSpinner text="Mengambil data pegawai..." /></div>}
                 {error && <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md" role="alert"><p className="font-bold">Error</p><p>{error}</p></div>}
                 
                 {!loading && !error && (
-                    <div className="space-y-4">
-                        {searchTerm && searchResults.length > 0 && (
-                             <p className="text-sm text-gray-500 dark:text-gray-400">Menampilkan {searchResults.length} hasil untuk "{searchTerm}"</p>
-                        )}
-                        
-                        {searchResults.map(employee => (
-                            <EmployeeProfileCard key={employee.nip || Math.random()} employee={employee} />
-                        ))}
-                        
-                        {searchTerm && searchResults.length === 0 && (
-                            <div className="text-center py-16 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+                     <div className="space-y-4">
+                        {selectedEmployee ? (
+                            <EmployeeProfileCard 
+                                employee={selectedEmployee} 
+                                onClose={() => setSelectedEmployee(null)} 
+                            />
+                        ) : searchTerm && searchResults.length > 0 ? (
+                            <>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Menampilkan {searchResults.length} hasil untuk "{searchTerm}"</p>
+                                <ul className="bg-white dark:bg-gray-800 rounded-lg shadow-md divide-y dark:divide-gray-700">
+                                {searchResults.map(employee => (
+                                    <li 
+                                        key={employee.nip || Math.random()} 
+                                        onClick={() => handleSelectEmployee(employee)}
+                                        className="p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                                    >
+                                        <p className="font-semibold">{employee.fullName}</p>
+                                        <p className="text-sm text-gray-500">{employee.jabatan || 'Jabatan tidak tersedia'}</p>
+                                    </li>
+                                ))}
+                                </ul>
+                            </>
+                        ) : searchTerm && searchResults.length === 0 ? (
+                             <div className="text-center py-16 bg-white dark:bg-gray-800 rounded-lg shadow-md">
                                 <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300">Pegawai Tidak Ditemukan</h3>
                                 <p className="text-gray-500 dark:text-gray-400 mt-2">Tidak ada data pegawai yang cocok dengan nama "{searchTerm}".</p>
                             </div>
-                        )}
-                        
-                        {!searchTerm && (
+                        ) : (
                              <div className="text-center py-16 bg-white dark:bg-gray-800 rounded-lg shadow-md">
                                 <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300">Mulai Mencari</h3>
-                                <p className="text-gray-500 dark:text-gray-400 mt-2">Gunakan bilah pencarian di atas untuk menemukan data pegawai.</p>
+                                <p className="text-gray-500 dark:text-gray-400 mt-2">Gunakan bilah pencarian atau dropdown di atas untuk menemukan data pegawai.</p>
                             </div>
                         )}
                     </div>

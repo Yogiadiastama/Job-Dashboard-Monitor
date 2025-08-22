@@ -198,10 +198,16 @@ const EmployeeSearch: React.FC = () => {
                                     <li 
                                         key={employee.nip || Math.random()} 
                                         onClick={() => handleSelectEmployee(employee)}
-                                        className="p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                                        className="p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center space-x-4"
                                     >
-                                        <p className="font-semibold">{employee.fullName}</p>
-                                        <p className="text-sm text-gray-500">{employee.jabatan || 'Jabatan tidak tersedia'}</p>
+                                        <div className="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center font-bold text-xl text-indigo-600 dark:text-indigo-300 flex-shrink-0">
+                                            {((employee.fullName || '').split(' ').map(n => n[0]).join('') || '??').substring(0, 2).toUpperCase()}
+                                        </div>
+                                        <div>
+                                            <p className="font-semibold text-gray-800 dark:text-white">{employee.fullName}</p>
+                                            <p className="text-sm text-gray-500 dark:text-gray-400">{employee.jabatan || 'Jabatan tidak tersedia'}</p>
+                                            <p className="text-xs text-gray-400 dark:text-gray-500">NIP: {employee.nip || '-'}</p>
+                                        </div>
                                     </li>
                                 ))}
                                 </ul>

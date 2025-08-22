@@ -1,15 +1,28 @@
 import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
 import { Training } from '../types';
 
-// This is a hard requirement from the user prompt.
-const API_KEY = process.env.API_KEY;
+// Inisialisasi Klien AI secara "lazy" untuk mencegah crash saat aplikasi dimuat.
+let ai: GoogleGenAI | null = null;
 
-if (!API_KEY) {
-    // This provides a clear error in the console if the API key is missing.
-    console.error("Gemini API key is not configured in environment variables.");
+function getAiClient(): GoogleGenAI {
+    // Jika klien sudah diinisialisasi, gunakan kembali.
+    if (ai) {
+        return ai;
+    }
+
+    // Ambil API key. Ini adalah persyaratan wajib dari prompt pengguna.
+    const apiKey = process.env.API_KEY;
+    if (!apiKey) {
+        // Jika key tidak ada, lempar error yang akan ditangkap oleh UI.
+        console.error("Gemini API key is not configured in environment variables.");
+        throw new Error("Kunci API untuk layanan AI tidak dikonfigurasi. Hubungi administrator.");
+    }
+    
+    // Buat dan simpan instance klien untuk penggunaan di masa mendatang.
+    ai = new GoogleGenAI({ apiKey });
+    return ai;
 }
 
-const ai = new GoogleGenAI({ apiKey: API_KEY });
 
 const trainingSchema = {
     type: Type.OBJECT,
@@ -27,11 +40,11 @@ const trainingSchema = {
 const parseAndCleanResponse = (response: GenerateContentResponse): Partial<Training> => {
     try {
         const text = response.text.trim();
-        // The API might return the JSON wrapped in markdown ```json ... ```, so we need to strip it.
+        // API mungkin mengembalikan JSON dalam format markdown ```json ... ```, jadi kita perlu membersihkannya.
         const jsonStr = text.startsWith('```json') ? text.substring(7, text.length - 3).trim() : text;
         const parsed = JSON.parse(jsonStr);
         
-        // Ensure dates are valid or reset them to avoid invalid date errors later.
+        // Pastikan tanggal valid atau reset untuk menghindari error tanggal yang tidak valid nanti.
         if (parsed.tanggalMulai && isNaN(new Date(parsed.tanggalMulai).getTime())) {
             parsed.tanggalMulai = '';
         }
@@ -48,9 +61,9 @@ const parseAndCleanResponse = (response: GenerateContentResponse): Partial<Train
 };
 
 export const parseTrainingFromText = async (text: string): Promise<Partial<Training>> => {
-    if (!API_KEY) throw new Error("API Key Gemini belum diatur.");
+    const aiClient = getAiClient();
     
-    const response = await ai.models.generateContent({
+    const response = await aiClient.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: `Ekstrak detail training dari teks berikut dan format sebagai JSON. Pastikan tanggal dalam format YYYY-MM-DD. Jika hanya ada satu tanggal, gunakan itu untuk tanggalMulai dan tanggalSelesai.\n\n---\n\n${text}`,
         config: {
@@ -63,7 +76,7 @@ export const parseTrainingFromText = async (text: string): Promise<Partial<Train
 };
 
 export const parseTrainingFromImage = async (base64Image: string, mimeType: string): Promise<Partial<Training>> => {
-    if (!API_KEY) throw new Error("API Key Gemini belum diatur.");
+    const aiClient = getAiClient();
     
     const imagePart = {
         inlineData: {
@@ -76,7 +89,7 @@ export const parseTrainingFromImage = async (base64Image: string, mimeType: stri
         text: "Ekstrak detail training dari gambar ini dan format sebagai JSON. Pastikan tanggal dalam format YYYY-MM-DD. Jika hanya ada satu tanggal, gunakan itu untuk tanggalMulai dan tanggalSelesai.",
     };
 
-    const response = await ai.models.generateContent({
+    const response = await aiClient.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: { parts: [textPart, imagePart] },
         config: {

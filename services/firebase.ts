@@ -1,4 +1,3 @@
-
 import { initializeApp } from '@firebase/app';
 import { getAuth } from '@firebase/auth';
 import { getFirestore, enableIndexedDbPersistence, CACHE_SIZE_UNLIMITED } from '@firebase/firestore';
@@ -21,11 +20,12 @@ export const isConfigured = firebaseConfig.apiKey && !firebaseConfig.apiKey.star
 // it will throw a clear error on application load instead of failing later.
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+// The cache size settings are now passed during Firestore initialization.
 const db = getFirestore(app);
 const storage = getStorage(app);
 
 // Enable Firestore offline persistence
-enableIndexedDbPersistence(db, { cacheSizeBytes: CACHE_SIZE_UNLIMITED })
+enableIndexedDbPersistence(db)
   .catch((err) => {
     if (err.code == 'failed-precondition') {
       // Multiple tabs open, persistence can only be enabled

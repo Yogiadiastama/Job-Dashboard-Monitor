@@ -18,7 +18,8 @@
     "@firebase/app": "^0.14.1",
     "@firebase/firestore": "^4.9.0",
     "@firebase/auth": "^1.11.0",
-    "@firebase/storage": "^0.14.0"
+    "@firebase/storage": "^0.14.0",
+    "@google/genai": "latest"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

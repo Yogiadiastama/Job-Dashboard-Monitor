@@ -5,6 +5,8 @@ import { Training, TrainingStatus, ALL_STATUSES } from '../../types';
 import { ICONS } from '../../constants';
 import LoadingSpinner from '../common/LoadingSpinner';
 import { useNotification } from '../../hooks/useNotification';
+import FloatingActionButton from './FloatingActionButton';
+import AddWithAIModal from './AddWithAIModal';
 
 // --- Helper Functions ---
 const formatDateRange = (start: string, end: string) => {
@@ -46,7 +48,7 @@ const TrainingModal: React.FC<{
     isOpen: boolean;
     onClose: () => void;
     onSave: (training: Omit<Training, 'id'>) => Promise<void>;
-    trainingToEdit: Training | null;
+    trainingToEdit: Training | Partial<Training> | null;
 }> = ({ isOpen, onClose, onSave, trainingToEdit }) => {
     const [nama, setNama] = useState('');
     const [tanggalMulai, setTanggalMulai] = useState('');
@@ -58,17 +60,17 @@ const TrainingModal: React.FC<{
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
+        const today = new Date().toISOString().split('T')[0];
         if (trainingToEdit) {
-            setNama(trainingToEdit.nama);
-            setTanggalMulai(trainingToEdit.tanggalMulai);
-            setTanggalSelesai(trainingToEdit.tanggalSelesai);
-            setLokasi(trainingToEdit.lokasi);
-            setPic(trainingToEdit.pic);
-            setCatatan(trainingToEdit.catatan);
-            setStatus(trainingToEdit.status);
+            setNama(trainingToEdit.nama || '');
+            setTanggalMulai(trainingToEdit.tanggalMulai || today);
+            setTanggalSelesai(trainingToEdit.tanggalSelesai || today);
+            setLokasi(trainingToEdit.lokasi || '');
+            setPic(trainingToEdit.pic || '');
+            setCatatan(trainingToEdit.catatan || '');
+            setStatus(trainingToEdit.status || 'Belum Dikonfirmasi');
         } else {
             setNama('');
-            const today = new Date().toISOString().split('T')[0];
             setTanggalMulai(today);
             setTanggalSelesai(today);
             setLokasi('');
@@ -92,7 +94,7 @@ const TrainingModal: React.FC<{
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 animate-fade-in-up">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
                 <div className="p-6 border-b dark:border-gray-700">
-                    <h2 className="text-2xl font-bold">{trainingToEdit ? 'Edit Training' : 'Tambah Training Baru'}</h2>
+                    <h2 className="text-2xl font-bold">{trainingToEdit && 'id' in trainingToEdit ? 'Edit Training' : 'Tambah Training Baru'}</h2>
                 </div>
                 <form id="training-form" onSubmit={handleSubmit} className="flex-grow overflow-y-auto p-6 space-y-4">
                     <InputField label="Nama Training" value={nama} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNama(e.target.value)} required />
@@ -109,7 +111,7 @@ const TrainingModal: React.FC<{
                 </form>
                 <div className="p-6 border-t dark:border-gray-700 flex justify-end space-x-3">
                     <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 dark:bg-gray-600 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500">Batal</button>
-                    <button type="submit" form="training-form" disabled={loading} className="px-4 py-2 bg-brand-purple text-white rounded-md hover:bg-opacity-90 disabled:bg-opacity-50">
+                    <button type="submit" form="training-form" disabled={loading} className="px-6 py-2 bg-brand-purple text-white rounded-md hover:bg-opacity-90 disabled:bg-opacity-50">
                         {loading ? 'Menyimpan...' : 'Simpan'}
                     </button>
                 </div>
@@ -202,7 +204,8 @@ const TrainingDashboard: React.FC = () => {
 
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingTraining, setEditingTraining] = useState<Training | null>(null);
+    const [editingTraining, setEditingTraining] = useState<Training | Partial<Training> | null>(null);
+    const [isAIModalOpen, setIsAIModalOpen] = useState(false);
 
     useEffect(() => {
         const q = query(collection(db, 'trainings'), orderBy('tanggalMulai', 'asc'));
@@ -234,14 +237,21 @@ const TrainingDashboard: React.FC = () => {
             });
     }, [trainings, searchTerm, statusFilter, sortOrder]);
 
-    const handleOpenModal = (training: Training | null = null) => {
+    const handleOpenModal = (training: Training | Partial<Training> | null = null) => {
         setEditingTraining(training);
         setIsModalOpen(true);
     };
 
+    const handleParseComplete = (parsedData: Partial<Training>) => {
+        handleOpenModal({
+            ...parsedData,
+            status: 'Belum Dikonfirmasi',
+        });
+    };
+
     const handleSaveTraining = async (trainingData: Omit<Training, 'id'>) => {
         try {
-            if (editingTraining) {
+            if (editingTraining && 'id' in editingTraining) {
                 await updateDoc(doc(db, 'trainings', editingTraining.id), trainingData);
                 showNotification('Training berhasil diperbarui.', 'success');
             } else {
@@ -275,18 +285,11 @@ const TrainingDashboard: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            <header className="flex flex-col md:flex-row justify-between md:items-center gap-4">
+            <header>
                 <div>
                     <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Dashboard Training</h1>
                     <p className="text-gray-500 dark:text-gray-400">Pantau semua jadwal dan status konfirmasi training.</p>
                 </div>
-                <button 
-                    onClick={() => handleOpenModal()} 
-                    className="flex items-center justify-center w-14 h-14 bg-brand-purple text-white rounded-full hover:bg-opacity-90 transition-transform transform hover:scale-110 shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-                    title="Tambah Training Baru"
-                >
-                    {ICONS.addLarge}
-                </button>
             </header>
 
             <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
@@ -317,7 +320,7 @@ const TrainingDashboard: React.FC = () => {
                                 key={training.id} 
                                 training={training}
                                 onStatusChange={handleStatusChange}
-                                onEdit={handleOpenModal}
+                                onEdit={() => handleOpenModal(training)}
                                 onDelete={handleDelete}
                             />
                         ))}
@@ -329,6 +332,19 @@ const TrainingDashboard: React.FC = () => {
                     </div>
                 )
             )}
+            
+            <FloatingActionButton
+                actions={[
+                    { label: 'Tambah dengan AI', icon: ICONS.star, onClick: () => setIsAIModalOpen(true) },
+                    { label: 'Tambah Manual', icon: ICONS.edit, onClick: () => handleOpenModal() }
+                ]}
+            />
+
+            <AddWithAIModal
+                isOpen={isAIModalOpen}
+                onClose={() => setIsAIModalOpen(false)}
+                onParseComplete={handleParseComplete}
+            />
             
             <TrainingModal 
                 isOpen={isModalOpen} 

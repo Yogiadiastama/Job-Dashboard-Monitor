@@ -1,5 +1,6 @@
 import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
 import { Training } from '../types';
+import { firebaseConfig } from './firebase'; // Impor konfigurasi Firebase
 
 // Inisialisasi Klien AI secara "lazy" untuk mencegah crash saat aplikasi dimuat.
 let ai: GoogleGenAI | null = null;
@@ -10,11 +11,11 @@ function getAiClient(): GoogleGenAI {
         return ai;
     }
 
-    // Ambil API key. Ini adalah persyaratan wajib dari prompt pengguna.
-    const apiKey = process.env.API_KEY;
-    if (!apiKey) {
+    // Gunakan API key dari konfigurasi Firebase yang sudah ada.
+    const apiKey = firebaseConfig.apiKey;
+    if (!apiKey || apiKey.startsWith('YOUR_')) {
         // Jika key tidak ada, lempar error yang akan ditangkap oleh UI.
-        console.error("Gemini API key is not configured in environment variables.");
+        console.error("Gemini API key is not configured in firebaseConfig.");
         throw new Error("Kunci API untuk layanan AI tidak dikonfigurasi. Hubungi administrator.");
     }
     

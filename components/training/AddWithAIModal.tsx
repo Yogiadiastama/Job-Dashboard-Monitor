@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { parseTrainingFromText, parseTrainingFromImage } from '../../services/geminiService';
 import { Training } from '../../types';
 import LoadingSpinner from '../common/LoadingSpinner';
@@ -21,7 +21,7 @@ interface AddWithAIModalProps {
 }
 
 const AddWithAIModal: React.FC<AddWithAIModalProps> = ({ isOpen, onClose, onParseComplete }) => {
-    const [activeTab, setActiveTab] = useState<'text' | 'image'>('text');
+    const [activeTab, setActiveTab] = useState<'text' | 'image'>('image');
     const [textInput, setTextInput] = useState('');
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -53,14 +53,48 @@ const AddWithAIModal: React.FC<AddWithAIModalProps> = ({ isOpen, onClose, onPars
         onClose();
     };
 
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (file) {
+    const processFile = (file: File) => {
+        if (file && file.type.startsWith('image/')) {
             setImageFile(file);
             setImagePreview(URL.createObjectURL(file));
             setIsCameraOn(false); // Turn off camera if a file is selected
+            setActiveTab('image'); // Switch to image tab
         }
     };
+
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+           processFile(file);
+        }
+    };
+
+    // Effect to handle paste events
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const handlePaste = (event: ClipboardEvent) => {
+            const items = event.clipboardData?.items;
+            if (!items) return;
+
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf('image') !== -1) {
+                    const file = items[i].getAsFile();
+                    if(file){
+                       processFile(file);
+                    }
+                    event.preventDefault(); // Prevent the default paste action
+                    return;
+                }
+            }
+        };
+
+        window.addEventListener('paste', handlePaste);
+        return () => {
+            window.removeEventListener('paste', handlePaste);
+        };
+    }, [isOpen]);
+
 
     const handleProcess = async () => {
         setLoading(true);
@@ -71,7 +105,7 @@ const AddWithAIModal: React.FC<AddWithAIModalProps> = ({ isOpen, onClose, onPars
                 if (!textInput.trim()) throw new Error("Teks tidak boleh kosong.");
                 parsedData = await parseTrainingFromText(textInput);
             } else {
-                if (!imageFile) throw new Error("Silakan pilih atau ambil gambar.");
+                if (!imageFile) throw new Error("Silakan pilih, ambil, atau tempel gambar.");
                 const base64Image = await fileToBase64(imageFile);
                 parsedData = await parseTrainingFromImage(base64Image, imageFile.type);
             }
@@ -158,7 +192,7 @@ const AddWithAIModal: React.FC<AddWithAIModalProps> = ({ isOpen, onClose, onPars
                                     ) : (
                                         <div className="flex flex-col items-center justify-center pt-5 pb-6">
                                             {ICONS.upload}
-                                            <p className="mb-2 text-sm text-gray-500 dark:text-gray-400"><span className="font-semibold">Klik untuk unggah</span> atau seret file</p>
+                                            <p className="mb-2 text-sm text-gray-500 dark:text-gray-400"><span className="font-semibold">Klik, seret, atau tempel (Ctrl+V) gambar</span></p>
                                             <p className="text-xs text-gray-500 dark:text-gray-400">PNG, JPG, atau WEBP</p>
                                         </div>
                                     )}

@@ -67,10 +67,10 @@ const UserManagement: React.FC = () => {
     };
     
     return (
-        <div className="bg-white dark:bg-neutral-800 p-6 rounded-xl shadow-md">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg">
             <div className="flex justify-between items-center mb-6">
-                <h3 className="text-2xl font-bold text-neutral-800 dark:text-neutral-100">Manajemen Pegawai</h3>
-                <button onClick={() => openModal()} className="flex items-center space-x-2 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors">
+                <h3 className="text-2xl font-bold">Manajemen Pegawai</h3>
+                <button onClick={() => openModal()} className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
                     {ICONS.add}
                     <span>Tambah Pegawai</span>
                 </button>
@@ -79,35 +79,34 @@ const UserManagement: React.FC = () => {
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
                         <thead>
-                            <tr className="border-b-2 border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-700/50">
-                                <th className="p-4 text-sm font-semibold text-neutral-600 dark:text-neutral-300 uppercase tracking-wider">Nama</th>
-                                <th className="p-4 text-sm font-semibold text-neutral-600 dark:text-neutral-300 uppercase tracking-wider">Email</th>
-                                <th className="p-4 text-sm font-semibold text-neutral-600 dark:text-neutral-300 uppercase tracking-wider">No. WhatsApp</th>
-                                <th className="p-4 text-sm font-semibold text-neutral-600 dark:text-neutral-300 uppercase tracking-wider">Role</th>
-                                <th className="p-4 text-sm font-semibold text-neutral-600 dark:text-neutral-300 uppercase tracking-wider">Aksi</th>
+                            <tr className="border-b-2 dark:border-gray-700">
+                                <th className="p-4">Foto</th>
+                                <th className="p-4">Nama</th>
+                                <th className="p-4">Email</th>
+                                <th className="p-4">No. WhatsApp</th>
+                                <th className="p-4">Role</th>
+                                <th className="p-4">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             {users.map(user => (
-                                <tr key={user.id} className="border-b border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-700/50">
-                                    <td className="p-4 font-medium">
-                                        <div className="flex items-center space-x-3">
-                                            {user.photoURL ? (
-                                                <img src={user.photoURL} alt={user.nama} className="w-10 h-10 rounded-full object-cover" />
-                                            ) : (
-                                                <div className="w-10 h-10 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center font-bold text-neutral-500 flex-shrink-0">
-                                                    {user.nama.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
-                                                </div>
-                                            )}
-                                            <span className="text-neutral-800 dark:text-neutral-100">{user.nama}</span>
-                                        </div>
+                                <tr key={user.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                    <td className="p-4">
+                                        {user.photoURL ? (
+                                            <img src={user.photoURL} alt={user.nama} className="w-10 h-10 rounded-full object-cover" />
+                                        ) : (
+                                            <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center font-bold text-gray-500">
+                                                {user.nama.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                                            </div>
+                                        )}
                                     </td>
-                                    <td className="p-4 text-neutral-600 dark:text-neutral-300">{user.email}</td>
-                                    <td className="p-4 text-neutral-600 dark:text-neutral-300">{user.noWhatsapp}</td>
-                                    <td className="p-4 text-neutral-600 dark:text-neutral-300 capitalize">{user.role}</td>
+                                    <td className="p-4 font-medium">{user.nama}</td>
+                                    <td className="p-4">{user.email}</td>
+                                    <td className="p-4">{user.noWhatsapp}</td>
+                                    <td className="p-4 capitalize">{user.role}</td>
                                     <td className="p-4 flex items-center space-x-2">
-                                        <button onClick={() => openModal(user)} className="p-2 rounded-full hover:bg-yellow-100 dark:hover:bg-yellow-800/50 text-yellow-500">{ICONS.edit}</button>
-                                        {user.role !== 'admin' && <button onClick={() => handleDelete(user)} className="p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-800/50 text-red-500">{ICONS.delete}</button>}
+                                        <button onClick={() => openModal(user)} className="p-2 rounded-full hover:bg-yellow-200 dark:hover:bg-yellow-800 text-yellow-600 dark:text-yellow-300">{ICONS.edit}</button>
+                                        {user.role !== 'admin' && <button onClick={() => handleDelete(user)} className="p-2 rounded-full hover:bg-red-200 dark:hover:bg-red-800 text-red-600 dark:text-red-300">{ICONS.delete}</button>}
                                     </td>
                                 </tr>
                             ))}

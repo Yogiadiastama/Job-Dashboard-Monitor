@@ -91,13 +91,13 @@ const Settings: React.FC = () => {
     }
 
     return (
-        <div className="space-y-8 max-w-4xl mx-auto">
-            <div className="bg-white dark:bg-neutral-800 p-6 rounded-xl shadow-md">
-                <h3 className="text-xl font-bold mb-4 text-neutral-800 dark:text-neutral-100">Pengaturan Tampilan</h3>
+        <div className="space-y-12">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg">
+                <h3 className="text-2xl font-bold mb-4">Pengaturan Tampilan</h3>
                 <div className="space-y-4">
                     <div>
-                        <label className="block text-sm font-bold mb-2 text-neutral-700 dark:text-neutral-300">Tema</label>
-                        <select value={theme} onChange={e => setTheme(e.target.value)} className="p-2 border border-neutral-300 rounded-lg dark:bg-neutral-700 dark:border-neutral-600 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        <label className="block text-sm font-bold mb-2">Tema</label>
+                        <select value={theme} onChange={e => setTheme(e.target.value)} className="p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
                             <option value="light">Light Mode</option>
                             <option value="dark">Dark Mode</option>
                         </select>
@@ -106,38 +106,38 @@ const Settings: React.FC = () => {
             </div>
 
             {userData?.role === 'admin' && (
-                <div className="bg-white dark:bg-neutral-800 p-6 rounded-xl shadow-md animate-fade-in-up">
-                    <h3 className="text-xl font-bold mb-6 text-neutral-800 dark:text-neutral-100">Kustomisasi Tampilan Aplikasi</h3>
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg animate-fade-in-up">
+                    <h3 className="text-2xl font-bold mb-6">Kustomisasi Tampilan Aplikasi</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {/* Left Column: General Theme */}
                         <div className="space-y-6">
                             <div>
-                                <label className="block text-sm font-bold mb-2 text-neutral-700 dark:text-neutral-300">Nama Aplikasi di Header</label>
-                                <input type="text" value={headerTitle} onChange={e => setHeaderTitle(e.target.value)} className="w-full p-2 border border-neutral-300 rounded-lg dark:bg-neutral-700 dark:border-neutral-600 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" />
+                                <label className="block text-sm font-bold mb-2">Nama Aplikasi di Header</label>
+                                <input type="text" value={headerTitle} onChange={e => setHeaderTitle(e.target.value)} className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" />
                             </div>
                             <div>
-                                <label className="block text-sm font-bold mb-2 text-neutral-700 dark:text-neutral-300">Warna Aksen</label>
-                                <input type="color" value={accentColor} onChange={e => setAccentColor(e.target.value)} className="w-full h-12 p-1 border border-neutral-300 rounded-lg dark:bg-neutral-700 dark:border-neutral-600" />
+                                <label className="block text-sm font-bold mb-2">Warna Aksen</label>
+                                <input type="color" value={accentColor} onChange={e => setAccentColor(e.target.value)} className="w-full h-12 p-1 border rounded-lg dark:bg-gray-700 dark:border-gray-600" />
                             </div>
                             <div>
-                                <label className="block text-sm font-bold mb-2 text-neutral-700 dark:text-neutral-300">Gambar Background Login</label>
-                                <input type="file" accept="image/*" onChange={e => setLoginBgFile(e.target.files ? e.target.files[0] : null)} className="w-full text-sm text-neutral-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100" />
+                                <label className="block text-sm font-bold mb-2">Gambar Background Login</label>
+                                <input type="file" accept="image/*" onChange={e => setLoginBgFile(e.target.files ? e.target.files[0] : null)} className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
                             </div>
-                             <button onClick={handleSaveTheme} disabled={isSavingTheme} className="w-full flex items-center justify-center space-x-2 bg-primary-600 text-white px-4 py-2.5 rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50">
+                             <button onClick={handleSaveTheme} disabled={isSavingTheme} className="w-full flex items-center justify-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50">
                                 {isSavingTheme ? <LoadingSpinner text="Menyimpan..." /> : <span>Simpan Pengaturan Tampilan</span>}
                             </button>
                         </div>
                         {/* Right Column: Admin Profile */}
                         <div className="space-y-6">
-                            <h4 className="text-lg font-bold text-neutral-800 dark:text-neutral-100">Pengaturan Profil Admin</h4>
+                            <h4 className="text-lg font-bold">Pengaturan Profil Admin</h4>
                              <div>
-                                <label className="block text-sm font-bold mb-2 text-neutral-700 dark:text-neutral-300">Foto Profil Anda</label>
+                                <label className="block text-sm font-bold mb-2">Foto Profil Anda</label>
                                 <div className="flex items-center space-x-4">
                                     <img src={userData.photoURL || `https://ui-avatars.com/api/?name=${userData.nama}&background=random`} alt="Profile" className="w-20 h-20 rounded-full object-cover" />
-                                    <input type="file" accept="image/*" onChange={e => setProfilePicFile(e.target.files ? e.target.files[0] : null)} className="w-full text-sm text-neutral-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100" />
+                                    <input type="file" accept="image/*" onChange={e => setProfilePicFile(e.target.files ? e.target.files[0] : null)} className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
                                 </div>
                             </div>
-                            <button onClick={handleSaveProfilePic} disabled={isSavingProfilePic || !profilePicFile} className="w-full flex items-center justify-center space-x-2 bg-green-600 text-white px-4 py-2.5 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50">
+                            <button onClick={handleSaveProfilePic} disabled={isSavingProfilePic || !profilePicFile} className="w-full flex items-center justify-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50">
                                 {isSavingProfilePic ? <LoadingSpinner text="Mengunggah..." /> : <span>Simpan Foto Profil</span>}
                             </button>
                         </div>
@@ -145,8 +145,8 @@ const Settings: React.FC = () => {
                 </div>
             )}
             
-            <div className="bg-white dark:bg-neutral-800 p-6 rounded-xl shadow-md">
-                <h3 className="text-xl font-bold mb-4 text-neutral-800 dark:text-neutral-100">Ekspor Data</h3>
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg">
+                <h3 className="text-2xl font-bold mb-4">Ekspor Data</h3>
                 <button onClick={handleExportAllData} className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
                     {ICONS.download}
                     <span>Export Semua Data (CSV)</span>

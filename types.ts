@@ -14,7 +14,7 @@ export interface UserData {
 }
 
 export interface Task {
-  id: string;
+  id:string;
   title: string;
   description: string;
   assignedTo: string;
@@ -54,4 +54,35 @@ export interface Training {
   pic: string;
   catatan: string;
   status: TrainingStatus;
+}
+
+// New type for Employee Search from Google Sheets
+export interface EmployeeProfile {
+    employeeId: string;
+    fullName: string;
+    gender: string;
+    age: string;
+    email: string;
+    position: string;
+    joinDate: string;
+    performanceRating: string; // e.g., "PL2, CR, HIPO"
+    grade: string;
+    gradeRange: string;
+    tmtGrade: string;
+    maritalStatus: string;
+    workContractType: string;
+    bankMandiriJoinDate: string;
+    permanentEmployeeDate: string;
+    pensionDate: string;
+    organizationUnit: string;
+    group: string;
+    tmtGroup: string;
+    corporateTitle: string;
+    jobFamily: string;
+    directorate: string;
+    legacy: string;
+    location: string;
+    tmtLocation: string;
+    em: string;
+    emm: string;
 }

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { signOut } from '@firebase/auth';
 import { auth } from '../../services/firebase';
@@ -9,6 +10,7 @@ import TaskManagement from '../tasks/TaskManagement';
 import UserManagement from '../users/UserManagement';
 import Settings from '../settings/Settings';
 import TrainingDashboard from '../training/TrainingDashboard';
+import EmployeeSearch from '../search/EmployeeSearch';
 import NotificationBanner from '../common/NotificationBanner';
 
 const MainLayout: React.FC = () => {
@@ -39,6 +41,7 @@ const MainLayout: React.FC = () => {
         { id: 'dashboard', label: 'Dashboard', icon: ICONS.dashboard, roles: ['pegawai', 'pimpinan', 'admin'] },
         { id: 'tasks', label: 'Pekerjaan', icon: ICONS.tasks, roles: ['pegawai', 'pimpinan', 'admin'] },
         { id: 'training', label: 'Training', icon: ICONS.training, roles: ['pegawai', 'pimpinan', 'admin'] },
+        { id: 'employeeSearch', label: 'Pencarian Pegawai', icon: ICONS.search, roles: ['pimpinan', 'admin'] },
         { id: 'users', label: 'Manajemen Pegawai', icon: ICONS.users, roles: ['admin'] },
         { id: 'settings', label: 'Pengaturan', icon: ICONS.settings, roles: ['admin'] },
     ];
@@ -48,41 +51,36 @@ const MainLayout: React.FC = () => {
             case 'dashboard': return <Dashboard />;
             case 'tasks': return <TaskManagement />;
             case 'training': return <TrainingDashboard />;
+            case 'employeeSearch': return <EmployeeSearch />;
             case 'users': return <UserManagement />;
             case 'settings': return <Settings />;
             default: return <Dashboard />;
         }
     };
     
+    // The loading check has been removed from here and centralized in App.tsx
+    // to prevent any rendering race conditions that cause flickering.
     if (!userData) {
+        // This is a safety net, but should ideally not be reached if App.tsx works correctly.
         return null; 
     }
 
-    const UserAvatar = ({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) => {
-        const sizeClasses = {
-            sm: 'w-8 h-8',
-            md: 'w-10 h-10',
-            lg: 'w-12 h-12',
-        };
-        const textSizeClasses = {
-            sm: 'text-sm',
-            md: 'text-base',
-            lg: 'text-lg',
-        };
-
+    const UserAvatar = () => {
         if (userData?.photoURL) {
-            return <img src={userData.photoURL} alt={userData.nama} className={`${sizeClasses[size]} rounded-full object-cover flex-shrink-0`} />;
+            return <img src={userData.photoURL} alt={userData.nama} className="w-10 h-10 rounded-full object-cover" />;
         }
         const initials = userData.nama.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
         return (
-            <div className={`${sizeClasses[size]} rounded-full bg-primary-100 dark:bg-primary-900/50 flex items-center justify-center font-bold text-primary-600 dark:text-primary-400 flex-shrink-0 ${textSizeClasses[size]}`}>
+            <div className="w-10 h-10 rounded-full bg-blue-200 dark:bg-blue-800 flex items-center justify-center font-bold text-blue-600 dark:text-blue-300 flex-shrink-0"
+                 style={{backgroundColor: `${themeSettings.accentColor}20`, color: themeSettings.accentColor}}
+            >
                 {initials}
             </div>
         );
     };
 
     return (
-        <div className="flex h-screen bg-neutral-100 dark:bg-neutral-900 text-neutral-800 dark:text-neutral-200">
+        <div className="flex h-screen bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
             {/* Overlay for mobile nav */}
             <div 
                 className={`fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden transition-opacity duration-300 ${isSidebarVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
@@ -90,16 +88,21 @@ const MainLayout: React.FC = () => {
             ></div>
 
             {/* Sidebar */}
-            <aside className={`bg-white dark:bg-neutral-800 shadow-lg transition-transform duration-300 w-64 fixed md:relative h-full z-30 transform flex flex-col ${isSidebarVisible ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
-                <div className="p-4 flex items-center justify-between border-b border-neutral-200 dark:border-neutral-700">
+            <aside className={`bg-white dark:bg-gray-800 shadow-xl transition-transform duration-300 w-64 fixed md:relative h-full z-30 transform ${isSidebarVisible ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
+                <div className="p-4 flex items-center justify-between">
                     <h1 className="text-2xl font-bold" style={{ color: themeSettings.accentColor }}>{themeSettings.headerTitle}</h1>
-                    <button onClick={() => setSidebarVisible(false)} className="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700 md:hidden">
+                    <button onClick={() => setSidebarVisible(false)} className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 md:hidden">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                 </div>
-                <nav className="mt-4 flex-1">
+                <nav className="mt-8">
                     {menuItems.filter(item => item.roles.includes(userData.role)).map(item => {
                         const isActive = activeMenu === item.id;
+                        const activeStyle = {
+                            backgroundColor: `${themeSettings.accentColor}1A`, // 10% opacity
+                            color: themeSettings.accentColor,
+                            borderColor: themeSettings.accentColor,
+                        };
                         return (
                             <a
                                 key={item.id}
@@ -111,7 +114,8 @@ const MainLayout: React.FC = () => {
                                         setSidebarVisible(false);
                                     }
                                 }}
-                                className={`flex items-center py-3 px-6 mx-2 my-1 rounded-lg transition-all duration-200 ${isActive ? 'bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-300 font-semibold' : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700/50 hover:text-neutral-900 dark:hover:text-neutral-100'}`}
+                                className={`flex items-center py-3 px-6 my-1 transition-colors duration-200 ${!isActive ? 'hover:bg-gray-100 dark:hover:bg-gray-700' : 'border-r-4'}`}
+                                style={isActive ? activeStyle : {}}
                             >
                                 {item.icon}
                                 <span className="mx-4 font-medium whitespace-nowrap">{item.label}</span>
@@ -119,18 +123,11 @@ const MainLayout: React.FC = () => {
                         );
                     })}
                 </nav>
-                <div className="p-4 border-t border-neutral-200 dark:border-neutral-700">
-                     <div className="flex items-center space-x-3 p-2 rounded-lg">
-                       <UserAvatar size="md" />
-                       <div className="flex-1 min-w-0">
-                           <p className="font-semibold truncate">{userData.nama}</p>
-                           <p className="text-sm text-neutral-500 dark:text-neutral-400 capitalize">{userData.role}</p>
-                       </div>
-                    </div>
+                <div className="absolute bottom-0 w-full">
                      <a
                         href="#"
                         onClick={(e) => { e.preventDefault(); handleLogout(); }}
-                        className="flex items-center py-3 px-4 mt-2 rounded-lg transition-colors duration-200 hover:bg-danger-bg dark:hover:bg-danger-bg/20 text-danger-text font-semibold"
+                        className="flex items-center py-3 px-6 my-1 transition-colors duration-200 hover:bg-red-100 dark:hover:bg-red-900 text-red-500"
                     >
                         {ICONS.logout}
                         <span className="mx-4 font-medium whitespace-nowrap">Logout</span>
@@ -139,21 +136,27 @@ const MainLayout: React.FC = () => {
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col overflow-hidden relative">
+            <main className="flex-1 flex flex-col overflow-hidden">
                  <NotificationBanner />
-                 <header className="flex flex-col sm:flex-row justify-between sm:items-center p-4 sm:p-6 bg-white/80 dark:bg-neutral-800/80 backdrop-blur-sm z-10 border-b border-neutral-200 dark:border-neutral-700">
+                 <header className="flex flex-col sm:flex-row justify-between sm:items-center p-4 sm:p-6 md:p-10 gap-4 bg-gray-100/80 dark:bg-gray-900/80 backdrop-blur-sm z-10 border-b border-gray-200 dark:border-gray-700">
                     <div className="flex items-center">
-                        <button onClick={() => setSidebarVisible(true)} className="md:hidden p-2 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-700 mr-4">
+                        <button onClick={() => setSidebarVisible(true)} className="md:hidden p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 mr-4">
                             {ICONS.drag}
                         </button>
                         <div>
-                            <h2 className="text-2xl md:text-3xl font-bold text-neutral-900 dark:text-neutral-100">Halo, {userData.nama.split(' ')[0]}!</h2>
-                            <p className="text-neutral-500 dark:text-neutral-400">Selamat datang kembali.</p>
+                            <h2 className="text-2xl md:text-3xl font-bold">Halo, {userData.nama.split(' ')[0]}!</h2>
+                            <p className="text-gray-500 dark:text-gray-400">Selamat datang kembali.</p>
                         </div>
                     </div>
-                    {/* User info moved to sidebar bottom for a cleaner header */}
+                    <div className="flex items-center space-x-4 self-end sm:self-center">
+                       <UserAvatar />
+                       <div>
+                           <p className="font-semibold">{userData.nama}</p>
+                           <p className="text-sm text-gray-500 capitalize">{userData.role}</p>
+                       </div>
+                    </div>
                 </header>
-                <div className="flex-1 p-4 sm:p-6 md:p-8 overflow-y-auto">
+                <div className="flex-1 p-4 sm:p-6 md:p-10 overflow-y-auto">
                     {renderContent()}
                 </div>
             </main>

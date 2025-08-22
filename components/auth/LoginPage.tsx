@@ -116,28 +116,23 @@ const LoginPage: React.FC = () => {
 
     return (
         <div 
-            className="min-h-screen bg-neutral-100 dark:bg-neutral-900 flex items-center justify-center p-4 transition-colors duration-500 bg-cover bg-center"
+            className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center p-4 transition-colors duration-500 bg-cover bg-center"
             style={loginPageStyle}
         >
-            <div className="absolute inset-0 bg-neutral-950 bg-opacity-60"></div>
+            <div className="absolute inset-0 bg-black bg-opacity-50"></div>
             <div className="w-full max-w-md z-10">
-                <div className="bg-white/80 dark:bg-neutral-900/80 shadow-xl rounded-2xl p-8 backdrop-blur-lg">
+                <div className="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl p-8 transform transition-all hover:scale-105 duration-500 bg-opacity-90 dark:bg-opacity-90 backdrop-blur-sm">
                     <div className="text-center mb-8">
-                        <div className="inline-block p-3 rounded-full bg-primary-100 dark:bg-primary-900/50 mb-4">
-                             <svg className="h-8 w-8 text-primary-600 dark:text-primary-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-                            </svg>
-                        </div>
-                        <h1 className="text-3xl font-bold text-neutral-800 dark:text-white">{themeSettings.headerTitle}</h1>
-                        <p className="text-neutral-500 dark:text-neutral-400 mt-2">Manajemen Proyek Generasi Berikutnya</p>
+                        <h1 className="text-3xl font-bold text-gray-800 dark:text-white">{themeSettings.headerTitle}</h1>
+                        <p className="text-gray-500 dark:text-gray-400 mt-2">Manajemen Proyek Generasi Berikutnya</p>
                     </div>
                     <form onSubmit={handleLogin}>
                         <div className="mb-4">
-                            <label className="block text-neutral-700 dark:text-neutral-300 text-sm font-bold mb-2" htmlFor="username">
+                            <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="username">
                                 Email atau Username 'admin'
                             </label>
                             <input
-                                className="appearance-none border border-neutral-300 dark:border-neutral-700 rounded-lg w-full py-3 px-4 text-neutral-700 dark:text-neutral-200 bg-white/50 dark:bg-neutral-800/50 leading-tight focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                className="shadow-inner appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 dark:text-gray-200 dark:bg-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 id="username"
                                 type="text"
                                 placeholder="e.g., user@example.com atau admin"
@@ -147,11 +142,11 @@ const LoginPage: React.FC = () => {
                             />
                         </div>
                         <div className="mb-6 relative">
-                            <label className="block text-neutral-700 dark:text-neutral-300 text-sm font-bold mb-2" htmlFor="password">
+                            <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="password">
                                 Password
                             </label>
                             <input
-                                className="appearance-none border border-neutral-300 dark:border-neutral-700 rounded-lg w-full py-3 px-4 text-neutral-700 dark:text-neutral-200 bg-white/50 dark:bg-neutral-800/50 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                className="shadow-inner appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 dark:text-gray-200 dark:bg-gray-700 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 id="password"
                                 type={showPassword ? "text" : "password"}
                                 placeholder="Masukkan password Anda"
@@ -159,14 +154,14 @@ const LoginPage: React.FC = () => {
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
                             />
-                            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 top-7 pr-3 flex items-center text-sm leading-5 text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300">
-                                {showPassword ? ICONS.eyeOff : ICONS.eye}
+                            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 top-7 pr-3 flex items-center text-sm leading-5">
+                                {showPassword ? <span className="text-gray-500">{ICONS.eyeOff}</span> : <span className="text-gray-500">{ICONS.eye}</span>}
                             </button>
                         </div>
-                        {error && <p className="bg-danger-bg border border-danger text-danger-text px-4 py-3 rounded-lg relative mb-4 text-center animate-shake">{error}</p>}
+                        {error && <p className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-4 text-center animate-shake">{error}</p>}
                         <div className="flex items-center justify-between">
                             <button
-                                className={`w-full text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                className={`w-full text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition-all duration-300 transform hover:-translate-y-1 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 type="submit"
                                 disabled={loading}
                                 style={{ backgroundColor: themeSettings.accentColor }}
@@ -179,13 +174,13 @@ const LoginPage: React.FC = () => {
                          <button
                             onClick={handleInitialAdminSetup}
                             disabled={setupLoading}
-                            className="text-sm text-neutral-500 hover:text-primary-600 dark:hover:text-primary-400 disabled:opacity-50"
+                            className="text-sm text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 disabled:opacity-50"
                         >
                             {setupLoading ? 'Membuat admin...' : 'Setup Akun Admin Awal (Hanya untuk pertama kali)'}
                         </button>
                     </div>
                 </div>
-                <p className="text-center text-neutral-400 text-xs mt-6">
+                <p className="text-center text-gray-200 text-xs mt-6">
                     &copy;2025 Your Company. All rights reserved.
                 </p>
             </div>

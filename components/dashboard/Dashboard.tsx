@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { collection, onSnapshot, query, where } from '@firebase/firestore';
 import { db, getFirestoreErrorMessage } from '../../services/firebase';
@@ -18,28 +19,13 @@ const isTaskLate = (task: Task): boolean => {
     return new Date(task.dueDate) < today && task.status !== 'Completed';
 };
 
-const StatCard: React.FC<{ title: string; value: string | number; icon: React.ReactNode; color: string; onClick: () => void }> = ({ title, value, icon, color, onClick }) => (
-    <div 
-        className="bg-white dark:bg-neutral-800 p-6 rounded-xl shadow-md transform transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg cursor-pointer flex items-center space-x-4"
-        onClick={onClick}
-    >
-        <div className={`p-3 rounded-full bg-${color}-100 dark:bg-${color}-900/50 text-${color}-600 dark:text-${color}-400`}>
-            {icon}
-        </div>
-        <div>
-            <h3 className="text-neutral-500 dark:text-neutral-400 font-medium text-sm uppercase tracking-wider">{title}</h3>
-            <p className="text-3xl font-bold text-neutral-800 dark:text-neutral-100 mt-1">{value}</p>
-        </div>
-    </div>
-);
-
 const Dashboard: React.FC = () => {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [trainings, setTrainings] = useState<Training[]>([]);
     const [users, setUsers] = useState<UserData[]>([]);
     const [loadingTasks, setLoadingTasks] = useState(true);
     const [loadingTrainings, setLoadingTrainings] = useState(true);
-    const [viewMode, setViewMode] = useState('chart');
+    const [viewMode, setViewMode] = useState('table');
     const { userData } = useAuth();
     const { showNotification } = useNotification();
     
@@ -106,13 +92,13 @@ const Dashboard: React.FC = () => {
     // Task stats
     const completedTasks = tasks.filter(task => task.status === 'Completed').length;
     const inProgressTasks = tasks.filter(task => task.status === 'On Progress').length;
-    const lateTasksCount = tasks.filter(isTaskLate).length;
+    const lateTasks = tasks.filter(isTaskLate).length;
     
     const taskStats = [
-        { title: 'Total Pekerjaan', value: tasks.length, color: 'primary', icon: ICONS.tasks, filter: 'All' },
-        { title: 'Completed', value: completedTasks, color: 'green', icon: ICONS.star, filter: 'Completed' },
-        { title: 'On Progress', value: inProgressTasks, color: 'yellow', icon: ICONS.chart, filter: 'On Progress' },
-        { title: 'Late', value: lateTasksCount, color: 'red', icon: ICONS.bell, filter: 'Late' },
+        { title: 'Total Pekerjaan', value: tasks.length, color: 'blue', filter: 'All' },
+        { title: 'Completed', value: completedTasks, color: 'green', filter: 'Completed' },
+        { title: 'On Progress', value: inProgressTasks, color: 'yellow', filter: 'On Progress' },
+        { title: 'Late', value: lateTasks, color: 'red', filter: 'Late' },
     ];
 
     // Training stats
@@ -122,13 +108,13 @@ const Dashboard: React.FC = () => {
     const pastTrainings = trainings.filter(t => new Date(t.tanggalSelesai) < today).length;
 
     const trainingStats = [
-        { title: 'Total Training', value: trainings.length, color: 'purple', icon: ICONS.training, filter: 'All' },
-        { title: 'Akan Datang', value: upcomingTrainings, color: 'indigo', icon: ICONS.calendar, filter: 'Upcoming' },
-        { title: 'Telah Lewat', value: pastTrainings, color: 'gray', icon: ICONS.logout, filter: 'Past' },
+        { title: 'Total Training', value: trainings.length, color: 'purple', filter: 'All' },
+        { title: 'Akan Datang', value: upcomingTrainings, color: 'indigo', filter: 'Upcoming' },
+        { title: 'Telah Lewat', value: pastTrainings, color: 'gray', filter: 'Past' },
     ];
     
     const employeeOfTheMonth = () => {
-        if (users.length === 0 || tasks.length === 0) return { nama: 'N/A', completed: 0, photoURL: '' };
+        if (users.length === 0 || tasks.length === 0) return { nama: 'N/A', completed: 0 };
         const employeeStats = users.map(user => ({
             ...user,
             completed: tasks.filter(task => task.assignedTo === user.uid && task.status === 'Completed').length
@@ -152,7 +138,7 @@ const Dashboard: React.FC = () => {
                         `- Total Pekerjaan: *${tasks.length}*\n` +
                         `- Selesai: *${completedTasks}*\n` +
                         `- Dalam Proses: *${inProgressTasks}*\n` +
-                        `- Terlambat: *${lateTasksCount}*`;
+                        `- Terlambat: *${lateTasks}*`;
         
         if (bestEmployee.nama !== 'N/A') {
             message += `\n\n*Pegawai Terbaik Bulan Ini*: ${bestEmployee.nama} (${bestEmployee.completed} pekerjaan selesai)`;
@@ -194,61 +180,56 @@ const Dashboard: React.FC = () => {
         <div className="animate-fade-in-up space-y-8">
             {/* Task Stat Cards */}
             <div>
-                 <h2 className="text-xl font-bold text-neutral-700 dark:text-neutral-300 mb-4">Ringkasan Pekerjaan</h2>
+                 <h2 className="text-xl font-bold text-gray-700 dark:text-gray-300 mb-4">Ringkasan Pekerjaan</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     {taskStats.map(stat => (
-                        <StatCard 
+                        <div 
                             key={stat.title} 
-                            title={stat.title}
-                            value={stat.value}
-                            icon={stat.icon}
-                            color={stat.color}
+                            className={`bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border-l-4 border-${stat.color}-500 transform transition-transform duration-300 hover:-translate-y-2 hover:shadow-xl cursor-pointer`}
                             onClick={() => handleTaskStatCardClick(stat.filter, stat.title)}
-                        />
+                        >
+                            <h3 className="text-gray-500 dark:text-gray-400 font-medium">{stat.title}</h3>
+                            <p className="text-4xl font-bold mt-2">{stat.value}</p>
+                        </div>
                     ))}
                 </div>
             </div>
 
             {/* Training Stat Cards */}
              <div>
-                 <h2 className="text-xl font-bold text-neutral-700 dark:text-neutral-300 mb-4">Ringkasan Training</h2>
+                 <h2 className="text-xl font-bold text-gray-700 dark:text-gray-300 mb-4">Ringkasan Training</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                     {trainingStats.map(stat => (
-                        <StatCard 
+                    {trainingStats.map(stat => (
+                        <div 
                             key={stat.title} 
-                            title={stat.title}
-                            value={stat.value}
-                            icon={stat.icon}
-                            color={stat.color}
+                            className={`bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border-l-4 border-${stat.color}-500 transform transition-transform duration-300 hover:-translate-y-2 hover:shadow-xl cursor-pointer`}
                             onClick={() => handleTrainingStatCardClick(stat.filter, stat.title)}
-                        />
+                        >
+                            <h3 className="text-gray-500 dark:text-gray-400 font-medium">{stat.title}</h3>
+                            <p className="text-4xl font-bold mt-2">{stat.value}</p>
+                        </div>
                     ))}
                 </div>
             </div>
 
             {['admin', 'pimpinan', 'pegawai'].includes(userData.role) && (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div className="lg:col-span-1 bg-white dark:bg-neutral-800 p-6 rounded-xl shadow-md flex flex-col items-center justify-center text-center">
-                        <h3 className="text-lg font-bold text-neutral-700 dark:text-neutral-200 mb-4">Pegawai Terbaik Bulan Ini</h3>
-                        <div className="relative">
-                            <img className="h-24 w-24 rounded-full object-cover ring-4 ring-yellow-400 dark:ring-yellow-500 mb-4" src={bestEmployee.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(bestEmployee.nama)}&background=random&color=fff`} alt="Best Employee" />
-                            <span className="absolute bottom-4 -right-1 bg-yellow-400 p-1.5 rounded-full text-white">
-                                {ICONS.star}
-                            </span>
-                        </div>
-                        <p className="text-xl font-semibold text-neutral-800 dark:text-neutral-100">{bestEmployee.nama}</p>
-                        <p className="text-neutral-500 dark:text-neutral-400">{bestEmployee.completed} pekerjaan selesai</p>
+                    <div className="lg:col-span-1 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg flex flex-col items-center justify-center text-center">
+                        <h3 className="text-xl font-bold mb-4">Pegawai Terbaik Bulan Ini</h3>
+                        <img className="h-24 w-24 rounded-full object-cover ring-4 ring-yellow-400 mb-4" src={`https://ui-avatars.com/api/?name=${bestEmployee.nama}&background=random&color=fff`} alt="Best Employee" />
+                        <p className="text-2xl font-semibold">{bestEmployee.nama}</p>
+                        <p className="text-gray-500 dark:text-gray-400">{bestEmployee.completed} pekerjaan selesai</p>
                     </div>
 
-                    <div className="lg:col-span-2 bg-white dark:bg-neutral-800 p-6 rounded-xl shadow-md">
+                    <div className="lg:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg">
                         <div className="flex flex-wrap gap-4 justify-between items-center mb-4">
-                            <h3 className="text-xl font-bold text-neutral-800 dark:text-neutral-100">Overview Pekerjaan Pegawai</h3>
+                            <h3 className="text-xl font-bold">Overview Pekerjaan Pegawai</h3>
                             <div className="flex items-center space-x-2">
-                                <button onClick={() => setViewMode('table')} className={`p-2 rounded-lg ${viewMode === 'table' ? 'bg-primary-500 text-white' : 'bg-neutral-200 dark:bg-neutral-700'}`}>{ICONS.table}</button>
-                                <button onClick={() => setViewMode('chart')} className={`p-2 rounded-lg ${viewMode === 'chart' ? 'bg-primary-500 text-white' : 'bg-neutral-200 dark:bg-neutral-700'}`}>{ICONS.chart}</button>
+                                <button onClick={() => setViewMode('table')} className={`p-2 rounded-lg ${viewMode === 'table' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700'}`}>{ICONS.table}</button>
+                                <button onClick={() => setViewMode('chart')} className={`p-2 rounded-lg ${viewMode === 'chart' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700'}`}>{ICONS.chart}</button>
                                 <button onClick={handleWhatsAppExport} className="flex items-center space-x-2 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">
                                     {ICONS.whatsapp}
-                                    <span className="hidden sm:inline">Export</span>
+                                    <span>Export</span>
                                 </button>
                             </div>
                         </div>
@@ -257,13 +238,13 @@ const Dashboard: React.FC = () => {
                             <div style={{ width: '100%', height: 300 }}>
                                 <ResponsiveContainer>
                                     <BarChart data={chartData}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke={document.documentElement.classList.contains('dark') ? '#475569' : '#e2e8f0'} />
-                                        <XAxis dataKey="name" tick={{ fill: document.documentElement.classList.contains('dark') ? '#cbd5e1' : '#64748b' }} />
-                                        <YAxis tick={{ fill: document.documentElement.classList.contains('dark') ? '#cbd5e1' : '#64748b' }}/>
-                                        <Tooltip contentStyle={{ backgroundColor: document.documentElement.classList.contains('dark') ? '#1e293b' : '#fff', border: '1px solid #334155', borderRadius: '0.5rem' }} />
+                                        <CartesianGrid strokeDasharray="3 3" />
+                                        <XAxis dataKey="name" />
+                                        <YAxis />
+                                        <Tooltip contentStyle={{ backgroundColor: document.documentElement.classList.contains('dark') ? '#374151' : '#fff', border: 'none', borderRadius: '0.5rem' }} />
                                         <Legend />
                                         <Bar dataKey="On Progress" stackId="a" fill="#f59e0b" />
-                                        <Bar dataKey="Completed" stackId="a" fill="#22c55e" />
+                                        <Bar dataKey="Completed" stackId="a" fill="#10b981" />
                                         <Bar dataKey="Late" stackId="a" fill="#ef4444" />
                                     </BarChart>
                                 </ResponsiveContainer>
@@ -272,16 +253,16 @@ const Dashboard: React.FC = () => {
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left">
                                     <thead>
-                                        <tr className="border-b dark:border-neutral-700">
-                                            <th className="p-3 font-semibold text-neutral-600 dark:text-neutral-300">Nama Pegawai</th>
-                                            <th className="p-3 text-center font-semibold text-neutral-600 dark:text-neutral-300">On Progress</th>
-                                            <th className="p-3 text-center font-semibold text-neutral-600 dark:text-neutral-300">Completed</th>
-                                            <th className="p-3 text-center font-semibold text-neutral-600 dark:text-neutral-300">Late</th>
+                                        <tr className="border-b dark:border-gray-700">
+                                            <th className="p-3">Nama Pegawai</th>
+                                            <th className="p-3 text-center">On Progress</th>
+                                            <th className="p-3 text-center">Completed</th>
+                                            <th className="p-3 text-center">Late</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {users.filter(u => u.role !== 'admin').map(user => (
-                                            <tr key={user.id} className="border-b dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-700/50">
+                                            <tr key={user.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
                                                 <td className="p-3 font-medium">{user.nama}</td>
                                                 <td className="p-3 text-center">{tasks.filter(t => t.assignedTo === user.uid && t.status === 'On Progress').length}</td>
                                                 <td className="p-3 text-center">{tasks.filter(t => t.assignedTo === user.uid && t.status === 'Completed').length}</td>

@@ -1,12 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { AIParsedData } from '../types';
 
-if (!process.env.API_KEY) {
-    throw new Error("API_KEY environment variable not set");
-}
-
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 const responseSchema = {
     type: Type.OBJECT,
     properties: {
@@ -51,6 +45,13 @@ const systemInstruction = `You are an intelligent assistant for a project manage
 
 
 export const analyzeTextForEntry = async (text: string): Promise<AIParsedData> => {
+    if (!process.env.API_KEY) {
+        console.error("Gemini API key is not configured.");
+        throw new Error("Layanan AI tidak dapat digunakan karena tidak terkonfigurasi. Silakan hubungi administrator.");
+    }
+
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    
     try {
         const response = await ai.models.generateContent({
             model: "gemini-2.5-flash",

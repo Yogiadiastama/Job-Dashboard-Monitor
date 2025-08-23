@@ -46,8 +46,8 @@ const systemInstruction = `You are an intelligent assistant for a project manage
 
 export const analyzeTextForEntry = async (text: string): Promise<AIParsedData> => {
     if (!process.env.API_KEY) {
-        console.error("Gemini API key is not configured.");
-        throw new Error("Layanan AI tidak dapat digunakan karena tidak terkonfigurasi. Silakan hubungi administrator.");
+        console.error("Gemini API key is not configured in environment variables.");
+        throw new Error("Konfigurasi Layanan AI Gagal: 'API_KEY' tidak ditemukan. Harap atur variabel lingkungan 'API_KEY' di pengaturan proyek Anda.");
     }
 
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });

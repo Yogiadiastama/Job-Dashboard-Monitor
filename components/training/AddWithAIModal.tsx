@@ -11,6 +11,7 @@ interface AIInputModalProps {
 const AIInputModal: React.FC<AIInputModalProps> = ({ isOpen, onClose, onProcess, title, prompt }) => {
     const [inputText, setInputText] = useState('');
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
 
     if (!isOpen) return null;
 
@@ -20,12 +21,16 @@ const AIInputModal: React.FC<AIInputModalProps> = ({ isOpen, onClose, onProcess,
             return;
         }
         setLoading(true);
+        setError(''); // Clear previous error
         try {
             await onProcess(inputText);
-            // Don't close automatically, let the parent component decide
-            // based on the success of the operation.
+            // On success, the parent component is expected to close the modal.
         } catch (e) {
-            // Error is handled by parent and shown via notification
+            if (e instanceof Error) {
+                setError(e.message);
+            } else {
+                setError("Terjadi kesalahan yang tidak diketahui.");
+            }
         } finally {
             setLoading(false);
         }
@@ -39,6 +44,11 @@ const AIInputModal: React.FC<AIInputModalProps> = ({ isOpen, onClose, onProcess,
                 </div>
                 <div className="p-6 space-y-4">
                     <p className="text-gray-600 dark:text-gray-400">{prompt}</p>
+                    {error && (
+                        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg text-sm" role="alert">
+                            {error}
+                        </div>
+                    )}
                     <textarea
                         value={inputText}
                         onChange={(e) => setInputText(e.target.value)}

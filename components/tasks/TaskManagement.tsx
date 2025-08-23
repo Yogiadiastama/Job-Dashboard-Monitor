@@ -160,8 +160,7 @@ const TaskManagement: React.FC = () => {
         try {
             const result = await analyzeTextForEntry(text);
             if (result.entryType !== 'task' || !result.taskDetails) {
-                showNotification("Teks yang Anda masukkan sepertinya bukan permintaan pekerjaan. Coba lagi.", "error");
-                return;
+                throw new Error("Teks yang Anda masukkan sepertinya bukan permintaan pekerjaan. Coba lagi.");
             }
 
             const { title, description, assignedTo, dueDate, priority } = result.taskDetails;
@@ -189,9 +188,8 @@ const TaskManagement: React.FC = () => {
             openModal(partialTask);
 
         } catch (error) {
-            const err = error as Error;
-            showNotification(err.message, 'error');
-            console.error(err);
+            console.error("AI Text Processing Error:", error);
+            throw error; // Re-throw for the modal to catch and display.
         }
     };
 

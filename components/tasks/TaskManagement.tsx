@@ -29,7 +29,6 @@ const TaskManagement: React.FC = () => {
     const { showNotification } = useNotification();
     const { setOffline } = useConnectivity();
     const [sortConfig, setSortConfig] = useState<{ key: SortableTaskKeys; direction: 'ascending' | 'descending' }>({ key: 'createdAt', direction: 'descending' });
-    const [isFabMenuOpen, setFabMenuOpen] = useState(false);
     
     useEffect(() => {
         if (!userData) return;
@@ -107,7 +106,6 @@ const TaskManagement: React.FC = () => {
     const openModal = (task: Task | Partial<Task> | null = null) => {
         setEditingTask(task);
         setIsModalOpen(true);
-        setFabMenuOpen(false);
     };
 
     const closeModal = () => {
@@ -223,21 +221,33 @@ const TaskManagement: React.FC = () => {
     };
 
     return (
-        <div className="relative min-h-[calc(100vh-200px)]">
-            <div className="p-6 rounded-2xl shadow-lg mb-6" style={{backgroundColor: 'var(--card-bg)'}}>
-                 <EditableText 
-                    as="h3"
-                    contentKey="tasks.title"
-                    defaultText={defaultTextContent['tasks.title']}
-                    className="text-2xl font-bold"
-                />
-                <EditableText 
-                    as="p"
-                    contentKey="tasks.description"
-                    defaultText={defaultTextContent['tasks.description']}
-                    className=""
-                    style={{color: 'var(--text-secondary)'}}
-                />
+        <div className="space-y-6">
+            <div className="p-6 rounded-2xl shadow-lg flex justify-between items-start" style={{backgroundColor: 'var(--card-bg)'}}>
+                 <div>
+                    <EditableText 
+                        as="h3"
+                        contentKey="tasks.title"
+                        defaultText={defaultTextContent['tasks.title']}
+                        className="text-2xl font-bold"
+                    />
+                    <EditableText 
+                        as="p"
+                        contentKey="tasks.description"
+                        defaultText={defaultTextContent['tasks.description']}
+                        className=""
+                        style={{color: 'var(--text-secondary)'}}
+                    />
+                </div>
+                <div className="flex space-x-2 flex-shrink-0">
+                    <button onClick={() => setIsAIModalOpen(true)} className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+                        {ICONS.magic}
+                        <span>Tambah AI</span>
+                    </button>
+                    <button onClick={() => openModal()} className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        {ICONS.add}
+                        <span>Tambah Manual</span>
+                    </button>
+                </div>
             </div>
             
             {loading ? <LoadingSpinner text="Memuat data pekerjaan..." /> : (
@@ -288,37 +298,6 @@ const TaskManagement: React.FC = () => {
                 title="Tambah dari Teks (AI)"
                 prompt="Tempelkan teks dari WhatsApp atau catatan Anda di sini untuk membuat pekerjaan atau training baru secara otomatis."
             />}
-
-            {/* Floating Action Button */}
-            <div className="absolute bottom-4 right-4 z-30">
-                <div className="relative">
-                     {isFabMenuOpen && (
-                        <div className="flex flex-col items-center space-y-2 mb-2 animate-fade-in-up">
-                            <div className="flex items-center space-x-2 group" onClick={() => { setIsAIModalOpen(true); setFabMenuOpen(false); }}>
-                                <span className="hidden group-hover:block bg-white dark:bg-gray-700 text-sm px-2 py-1 rounded-md shadow-lg">Tambah dari Teks (AI)</span>
-                                <button className="bg-white dark:bg-gray-700 p-3 rounded-full shadow-lg hover:bg-gray-100 dark:hover:bg-gray-600">
-                                    {ICONS.magic}
-                                </button>
-                            </div>
-                            <div className="flex items-center space-x-2 group" onClick={() => openModal()}>
-                                <span className="hidden group-hover:block bg-white dark:bg-gray-700 text-sm px-2 py-1 rounded-md shadow-lg">Tambah Manual</span>
-                                <button className="bg-white dark:bg-gray-700 p-3 rounded-full shadow-lg hover:bg-gray-100 dark:hover:bg-gray-600">
-                                    {ICONS.add}
-                                </button>
-                            </div>
-                        </div>
-                    )}
-                    <button 
-                        onClick={() => setFabMenuOpen(!isFabMenuOpen)} 
-                        className="bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-transform transform hover:scale-110"
-                        aria-label="Tambah Pekerjaan"
-                    >
-                        {isFabMenuOpen ? (
-                             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                        ) : ICONS.addLarge}
-                    </button>
-                </div>
-            </div>
         </div>
     );
 };

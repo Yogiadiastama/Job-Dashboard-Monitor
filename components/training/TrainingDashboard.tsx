@@ -212,7 +212,6 @@ const TrainingDashboard: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingTraining, setEditingTraining] = useState<Training | Partial<Training> | null>(null);
     const [isAIModalOpen, setIsAIModalOpen] = useState(false);
-    const [isFabMenuOpen, setFabMenuOpen] = useState(false);
 
     useEffect(() => {
         const q = query(collection(db, 'trainings'), orderBy('tanggalMulai', 'asc'));
@@ -252,7 +251,6 @@ const TrainingDashboard: React.FC = () => {
     const handleOpenModal = (training: Training | Partial<Training> | null = null) => {
         setEditingTraining(training);
         setIsModalOpen(true);
-        setFabMenuOpen(false);
     };
 
     const handleSaveTraining = async (trainingData: Omit<Training, 'id'>) => {
@@ -319,20 +317,32 @@ const TrainingDashboard: React.FC = () => {
     };
 
     return (
-        <div className="space-y-6 relative min-h-[calc(100vh-200px)]">
-            <header>
-                <EditableText 
-                    as="h1"
-                    contentKey="training.title"
-                    defaultText={defaultTextContent['training.title']}
-                    className="text-3xl font-bold"
-                />
-                <EditableText 
-                    as="p"
-                    contentKey="training.description"
-                    defaultText={defaultTextContent['training.description']}
-                    style={{color: 'var(--text-secondary)'}}
-                />
+        <div className="space-y-6">
+            <header className="flex justify-between items-start">
+                <div>
+                    <EditableText 
+                        as="h1"
+                        contentKey="training.title"
+                        defaultText={defaultTextContent['training.title']}
+                        className="text-3xl font-bold"
+                    />
+                    <EditableText 
+                        as="p"
+                        contentKey="training.description"
+                        defaultText={defaultTextContent['training.description']}
+                        style={{color: 'var(--text-secondary)'}}
+                    />
+                </div>
+                 <div className="flex space-x-2 flex-shrink-0">
+                    <button onClick={() => setIsAIModalOpen(true)} className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+                        {ICONS.magic}
+                        <span>Tambah AI</span>
+                    </button>
+                    <button onClick={() => handleOpenModal()} className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        {ICONS.add}
+                        <span>Tambah Manual</span>
+                    </button>
+                </div>
             </header>
 
             <div className="p-4 rounded-lg shadow-md" style={{backgroundColor: 'var(--card-bg)'}}>
@@ -377,36 +387,6 @@ const TrainingDashboard: React.FC = () => {
                 )
             )}
             
-            <div className="absolute bottom-4 right-4 z-30">
-                <div className="relative">
-                     {isFabMenuOpen && (
-                        <div className="flex flex-col items-center space-y-2 mb-2 animate-fade-in-up">
-                            <div className="flex items-center space-x-2 group" onClick={() => { setIsAIModalOpen(true); setFabMenuOpen(false); }}>
-                                <span className="hidden group-hover:block bg-white dark:bg-gray-700 text-sm px-2 py-1 rounded-md shadow-lg">Tambah dari Teks (AI)</span>
-                                <button className="bg-white dark:bg-gray-700 p-3 rounded-full shadow-lg hover:bg-gray-100 dark:hover:bg-gray-600">
-                                    {ICONS.magic}
-                                </button>
-                            </div>
-                            <div className="flex items-center space-x-2 group" onClick={() => { handleOpenModal(); setFabMenuOpen(false); }}>
-                                <span className="hidden group-hover:block bg-white dark:bg-gray-700 text-sm px-2 py-1 rounded-md shadow-lg">Tambah Manual</span>
-                                <button className="bg-white dark:bg-gray-700 p-3 rounded-full shadow-lg hover:bg-gray-100 dark:hover:bg-gray-600">
-                                    {ICONS.add}
-                                </button>
-                            </div>
-                        </div>
-                    )}
-                    <button 
-                        onClick={() => setFabMenuOpen(!isFabMenuOpen)} 
-                        className="bg-brand-purple text-white p-4 rounded-full shadow-lg hover:bg-opacity-90 transition-transform transform hover:scale-110"
-                        aria-label="Tambah Training"
-                    >
-                        {isFabMenuOpen ? (
-                             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                        ) : ICONS.addLarge}
-                    </button>
-                </div>
-            </div>
-
             <TrainingModal 
                 isOpen={isModalOpen} 
                 onClose={() => setIsModalOpen(false)}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, LabelList } from 'recharts';
 import { EmployeeProfile } from '../../types';
 import LoadingSpinner from '../common/LoadingSpinner';
 
@@ -44,6 +44,22 @@ const parseSheetData = (csvText: string): EmployeeProfile[] => {
 
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088FE', '#00C49F', '#FFBB28'];
 
+const RADIAN = Math.PI / 180;
+const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+    if (percent < 0.05) return null; // Hide label if too small
+
+    return (
+        <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={14} fontWeight="bold">
+            {`${(percent * 100).toFixed(0)}%`}
+        </text>
+    );
+};
+
+
 const ChartCard: React.FC<{ title: string, children: React.ReactNode }> = ({ title, children }) => (
     <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg animate-fade-in-up">
         <h3 className="text-xl font-bold mb-4">{title}</h3>
@@ -52,6 +68,14 @@ const ChartCard: React.FC<{ title: string, children: React.ReactNode }> = ({ tit
         </div>
     </div>
 );
+
+const getGeneration = (birthYear: number): string => {
+    if (birthYear >= 1997 && birthYear <= 2012) return 'Gen Z';
+    if (birthYear >= 1981 && birthYear <= 1996) return 'Milenial';
+    if (birthYear >= 1965 && birthYear <= 1980) return 'Gen X';
+    if (birthYear >= 1946 && birthYear <= 1964) return 'Baby Boomer';
+    return 'Lainnya';
+};
 
 const EmployeeAnalyticsDashboard: React.FC = () => {
     const [employeeData, setEmployeeData] = useState<EmployeeProfile[]>([]);
@@ -80,7 +104,9 @@ const EmployeeAnalyticsDashboard: React.FC = () => {
         
         const countBy = (key: keyof EmployeeProfile) => employeeData.reduce((acc, emp) => {
             const value = emp[key] || 'N/A';
-            acc[value] = (acc[value] || 0) + 1;
+            if (value !== 'N/A') {
+                acc[value] = (acc[value] || 0) + 1;
+            }
             return acc;
         }, {} as Record<string, number>);
 
@@ -90,27 +116,26 @@ const EmployeeAnalyticsDashboard: React.FC = () => {
         const unitDistribution = Object.entries(countBy('unitKerja')).map(([name, value]) => ({ name, value })).sort((a,b) => b.value - a.value);
         const topUnits = unitDistribution.slice(0, 10);
 
-        const ageDistribution = employeeData.reduce((acc, emp) => {
-            if (!emp.birthDate || !/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(emp.birthDate)) return acc;
+        const generationDistribution = employeeData.reduce((acc, emp) => {
+            if (!emp.birthDate || !/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(emp.birthDate)) {
+                return acc;
+            }
             const parts = emp.birthDate.split('/');
-            const birthDate = new Date(+parts[2], +parts[1] - 1, +parts[0]);
-            const age = new Date().getFullYear() - birthDate.getFullYear();
-            
-            let group = '50+';
-            if (age < 30) group = '20-29';
-            else if (age < 40) group = '30-39';
-            else if (age < 50) group = '40-49';
-            
-            acc[group] = (acc[group] || 0) + 1;
+            const birthYear = parseInt(parts[2], 10);
+            if (isNaN(birthYear)) return acc;
+
+            const generation = getGeneration(birthYear);
+            acc[generation] = (acc[generation] || 0) + 1;
             return acc;
         }, {} as Record<string, number>);
-        const ageData = Object.entries(ageDistribution).map(([name, value]) => ({name, value})).sort((a,b) => a.name.localeCompare(b.name));
+        const generationData = Object.entries(generationDistribution).map(([name, value]) => ({name, value}));
         
         const tenureDistribution = employeeData.reduce((acc, emp) => {
-            const yearsMatch = emp.masaKerja?.match(/(\d+)\s*Tahun/);
+            if (!emp.masaKerja) return acc;
+            const yearsMatch = emp.masaKerja.match(/(\d+)\s*Tahun/);
             if (!yearsMatch) return acc;
+            
             const years = parseInt(yearsMatch[1], 10);
-
             let group = '20+ Tahun';
             if (years <= 5) group = '0-5 Tahun';
             else if (years <= 10) group = '6-10 Tahun';
@@ -122,8 +147,7 @@ const EmployeeAnalyticsDashboard: React.FC = () => {
         }, {} as Record<string, number>);
         const tenureData = Object.entries(tenureDistribution).map(([name, value]) => ({name, value})).sort((a,b) => a.name.localeCompare(b.name));
 
-
-        return { levelDistribution, gradeDistribution, topUnits, ageData, tenureData };
+        return { levelDistribution, gradeDistribution, topUnits, generationData, tenureData };
     }, [employeeData]);
     
     if (loading) return <div className="text-center p-10"><LoadingSpinner text="Memuat data analitik..." /></div>;
@@ -140,24 +164,26 @@ const EmployeeAnalyticsDashboard: React.FC = () => {
             <ChartCard title="Distribusi Pegawai per Level">
                 <ResponsiveContainer>
                     <PieChart>
-                        <Pie data={analyticsData.levelDistribution} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label>
+                        <Pie data={analyticsData.levelDistribution} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} labelLine={false} label={renderCustomizedLabel}>
                             {analyticsData.levelDistribution.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                         </Pie>
                         <Tooltip contentStyle={tooltipStyle} />
-                        <Legend />
+                        <Legend wrapperStyle={{ fontSize: '14px' }}/>
                     </PieChart>
                 </ResponsiveContainer>
             </ChartCard>
 
              <ChartCard title="Jumlah Pegawai per Grade">
                 <ResponsiveContainer>
-                    <BarChart data={analyticsData.gradeDistribution} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                    <BarChart data={analyticsData.gradeDistribution} margin={{ top: 20, right: 20, left: -10, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#4B5563' : '#E5E7EB'} />
-                        <XAxis dataKey="name" tick={{ fill: axisColor }} />
-                        <YAxis tick={{ fill: axisColor }} />
+                        <XAxis dataKey="name" tick={{ fill: axisColor, fontSize: 12 }} />
+                        <YAxis tick={{ fill: axisColor, fontSize: 12 }} />
                         <Tooltip contentStyle={tooltipStyle} cursor={{fill: 'rgba(128, 128, 128, 0.1)'}} />
-                        <Legend />
-                        <Bar dataKey="value" name="Jumlah" fill="#8884d8" />
+                        <Legend wrapperStyle={{ fontSize: '14px' }}/>
+                        <Bar dataKey="value" name="Jumlah" fill="#8884d8">
+                            <LabelList dataKey="value" position="top" fill={axisColor} fontSize={12} />
+                        </Bar>
                     </BarChart>
                 </ResponsiveContainer>
             </ChartCard>
@@ -165,37 +191,41 @@ const EmployeeAnalyticsDashboard: React.FC = () => {
             <div className="lg:col-span-2">
                 <ChartCard title="Komposisi Unit Kerja (Top 10)">
                     <ResponsiveContainer>
-                        <BarChart data={analyticsData.topUnits} layout="vertical" margin={{ top: 5, right: 30, left: 50, bottom: 5 }}>
+                        <BarChart data={analyticsData.topUnits} layout="vertical" margin={{ top: 20, right: 40, left: 50, bottom: 5 }}>
                              <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#4B5563' : '#E5E7EB'} />
-                            <XAxis type="number" tick={{ fill: axisColor }} />
+                            <XAxis type="number" tick={{ fill: axisColor, fontSize: 12 }} />
                             <YAxis dataKey="name" type="category" width={120} tick={{ fill: axisColor, fontSize: 12 }} />
                             <Tooltip contentStyle={tooltipStyle} cursor={{fill: 'rgba(128, 128, 128, 0.1)'}} />
-                            <Bar dataKey="value" name="Jumlah" fill="#82ca9d" barSize={20} />
+                            <Bar dataKey="value" name="Jumlah" fill="#82ca9d" barSize={20}>
+                                <LabelList dataKey="value" position="right" fill={axisColor} fontSize={12} />
+                            </Bar>
                         </BarChart>
                     </ResponsiveContainer>
                 </ChartCard>
             </div>
 
-            <ChartCard title="Distribusi Usia Pegawai">
-                <ResponsiveContainer>
-                    <BarChart data={analyticsData.ageData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#4B5563' : '#E5E7EB'} />
-                        <XAxis dataKey="name" tick={{ fill: axisColor }} />
-                        <YAxis tick={{ fill: axisColor }} />
-                        <Tooltip contentStyle={tooltipStyle} cursor={{fill: 'rgba(128, 128, 128, 0.1)'}} />
-                        <Bar dataKey="value" name="Jumlah" fill="#ffc658" />
-                    </BarChart>
+            <ChartCard title="Distribusi Usia Pegawai (Generasi)">
+                 <ResponsiveContainer>
+                    <PieChart>
+                        <Pie data={analyticsData.generationData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} labelLine={false} label={renderCustomizedLabel}>
+                            {analyticsData.generationData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                        </Pie>
+                        <Tooltip contentStyle={tooltipStyle} />
+                        <Legend wrapperStyle={{ fontSize: '14px' }}/>
+                    </PieChart>
                 </ResponsiveContainer>
             </ChartCard>
             
             <ChartCard title="Distribusi Masa Kerja">
                 <ResponsiveContainer>
-                    <BarChart data={analyticsData.tenureData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                    <BarChart data={analyticsData.tenureData} margin={{ top: 20, right: 20, left: -10, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#4B5563' : '#E5E7EB'} />
-                        <XAxis dataKey="name" tick={{ fill: axisColor }} />
-                        <YAxis tick={{ fill: axisColor }} />
+                        <XAxis dataKey="name" tick={{ fill: axisColor, fontSize: 12 }} />
+                        <YAxis tick={{ fill: axisColor, fontSize: 12 }} />
                         <Tooltip contentStyle={tooltipStyle} cursor={{fill: 'rgba(128, 128, 128, 0.1)'}} />
-                        <Bar dataKey="value" name="Jumlah" fill="#ff8042" />
+                        <Bar dataKey="value" name="Jumlah" fill="#ff8042">
+                             <LabelList dataKey="value" position="top" fill={axisColor} fontSize={12} />
+                        </Bar>
                     </BarChart>
                 </ResponsiveContainer>
             </ChartCard>

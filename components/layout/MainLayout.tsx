@@ -30,7 +30,7 @@ const MainLayout: React.FC = () => {
         { id: 'dashboard', label: 'Dashboard', icon: ICONS.dashboard, roles: ['pegawai', 'pimpinan', 'admin'] },
         { id: 'tasks', label: 'Pekerjaan', icon: ICONS.tasks, roles: ['pegawai', 'pimpinan', 'admin'] },
         { id: 'training', label: 'Training', icon: ICONS.training, roles: ['pimpinan', 'admin'] },
-        { id: 'analytics', label: 'Info Grafik Pegawai', icon: ICONS.chartPie, roles: ['pimpinan', 'admin'] },
+        { id: 'analytics', label: 'Info Grafik Pegawai', icon: ICONS.chartPie, roles: ['pegawai', 'pimpinan', 'admin'] },
         { id: 'search', label: 'Pencarian Pegawai', icon: ICONS.search, roles: ['pimpinan', 'admin'] },
         { id: 'users', label: 'Manajemen Pegawai', icon: ICONS.users, roles: ['admin'] },
         { id: 'settings', label: 'Pengaturan', icon: ICONS.settings, roles: ['admin'] },

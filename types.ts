@@ -1,8 +1,4 @@
 
-
-
-
-
 export type UserRole = 'pegawai' | 'pimpinan' | 'admin';
 export type TaskStatus = 'Pending' | 'On Progress' | 'Completed';
 export type TaskPriority = 'Low' | 'Mid' | 'High';
@@ -29,6 +25,7 @@ export interface Task {
   fileUrl?: string;
   rating?: number;
   createdAt?: string; // YYYY-MM-DDTHH:mm:ss.sssZ format
+  updatedAt?: string; // YYYY-MM-DDTHH:mm:ss.sssZ format
 }
 
 export interface CalendarEvent {
@@ -49,6 +46,8 @@ export interface ThemeSettings {
 export type TrainingStatus = 'Belum Dikonfirmasi' | 'Terkonfirmasi' | 'Menunggu Jawaban';
 
 export const ALL_STATUSES: TrainingStatus[] = ['Belum Dikonfirmasi', 'Terkonfirmasi', 'Menunggu Jawaban'];
+export const ALL_TASK_STATUSES: TaskStatus[] = ['Pending', 'On Progress', 'Completed'];
+
 
 export interface Training {
   id: string;

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { addDoc, collection, doc, updateDoc } from '@firebase/firestore';
 import { getDownloadURL, ref, uploadBytes } from '@firebase/storage';
@@ -36,8 +37,10 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, users, closeModal }) => {
                 fileUrl = await getDownloadURL(snapshot.ref);
             }
 
+            const now = new Date().toISOString();
+
             if (task && 'id' in task && task.id) {
-                const taskData = { title, description, assignedTo, dueDate, priority, status, fileUrl, rating };
+                const taskData = { title, description, assignedTo, dueDate, priority, status, fileUrl, rating, updatedAt: now };
                 await updateDoc(doc(db, "tasks", task.id), taskData);
                 sendNotification(task.assignedTo, `Task "${title}" has been updated.`);
             } else {
@@ -50,7 +53,8 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, users, closeModal }) => {
                     status, 
                     fileUrl, 
                     rating, 
-                    createdAt: new Date().toISOString() 
+                    createdAt: now,
+                    updatedAt: now,
                 };
                 await addDoc(collection(db, "tasks"), taskData);
                 sendNotification(assignedTo, `You have a new task: "${title}".`);

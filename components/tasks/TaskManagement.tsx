@@ -222,7 +222,7 @@ const TaskManagement: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            <div className="p-6 rounded-2xl shadow-lg flex justify-between items-start" style={{backgroundColor: 'var(--card-bg)'}}>
+            <div className="sticky top-0 z-10 p-6 rounded-b-2xl shadow-lg flex justify-between items-start" style={{backgroundColor: 'var(--card-bg)'}}>
                  <div>
                     <EditableText 
                         as="h3"

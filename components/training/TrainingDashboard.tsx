@@ -318,51 +318,53 @@ const TrainingDashboard: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            <header className="flex justify-between items-start">
-                <div>
-                    <EditableText 
-                        as="h1"
-                        contentKey="training.title"
-                        defaultText={defaultTextContent['training.title']}
-                        className="text-3xl font-bold"
-                    />
-                    <EditableText 
-                        as="p"
-                        contentKey="training.description"
-                        defaultText={defaultTextContent['training.description']}
-                        style={{color: 'var(--text-secondary)'}}
-                    />
-                </div>
-                 <div className="flex space-x-2 flex-shrink-0">
-                    <button onClick={() => setIsAIModalOpen(true)} className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
-                        {ICONS.magic}
-                        <span>Tambah AI</span>
-                    </button>
-                    <button onClick={() => handleOpenModal()} className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                        {ICONS.add}
-                        <span>Tambah Manual</span>
-                    </button>
-                </div>
-            </header>
+            <div className="sticky top-0 z-10 py-1" style={{backgroundColor: 'var(--app-bg)'}}>
+                <header className="flex justify-between items-start">
+                    <div>
+                        <EditableText 
+                            as="h1"
+                            contentKey="training.title"
+                            defaultText={defaultTextContent['training.title']}
+                            className="text-3xl font-bold"
+                        />
+                        <EditableText 
+                            as="p"
+                            contentKey="training.description"
+                            defaultText={defaultTextContent['training.description']}
+                            style={{color: 'var(--text-secondary)'}}
+                        />
+                    </div>
+                     <div className="flex space-x-2 flex-shrink-0">
+                        <button onClick={() => setIsAIModalOpen(true)} className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+                            {ICONS.magic}
+                            <span>Tambah AI</span>
+                        </button>
+                        <button onClick={() => handleOpenModal()} className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                            {ICONS.add}
+                            <span>Tambah Manual</span>
+                        </button>
+                    </div>
+                </header>
 
-            <div className="p-4 rounded-lg shadow-md" style={{backgroundColor: 'var(--card-bg)'}}>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <input 
-                        type="text" 
-                        placeholder="Cari Nama Training..." 
-                        value={searchTerm}
-                        onChange={e => setSearchTerm(e.target.value)}
-                        className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md"
-                        style={{backgroundColor: 'var(--app-bg)', color: 'var(--text-primary)'}}
-                    />
-                    <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md" style={{backgroundColor: 'var(--app-bg)', color: 'var(--text-primary)'}}>
-                        <option>Semua Status</option>
-                        {ALL_STATUSES.map(s => <option key={s}>{s}</option>)}
-                    </select>
-                     <select value={sortOrder} onChange={e => setSortOrder(e.target.value)} className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md" style={{backgroundColor: 'var(--app-bg)', color: 'var(--text-primary)'}}>
-                        <option value="Terdekat">Urutkan: Terdekat</option>
-                        <option value="Terjauh">Urutkan: Terjauh</option>
-                    </select>
+                <div className="mt-6 p-4 rounded-lg shadow-md" style={{backgroundColor: 'var(--card-bg)'}}>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <input 
+                            type="text" 
+                            placeholder="Cari Nama Training..." 
+                            value={searchTerm}
+                            onChange={e => setSearchTerm(e.target.value)}
+                            className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md"
+                            style={{backgroundColor: 'var(--app-bg)', color: 'var(--text-primary)'}}
+                        />
+                        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md" style={{backgroundColor: 'var(--app-bg)', color: 'var(--text-primary)'}}>
+                            <option>Semua Status</option>
+                            {ALL_STATUSES.map(s => <option key={s}>{s}</option>)}
+                        </select>
+                         <select value={sortOrder} onChange={e => setSortOrder(e.target.value)} className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md" style={{backgroundColor: 'var(--app-bg)', color: 'var(--text-primary)'}}>
+                            <option value="Terdekat">Urutkan: Terdekat</option>
+                            <option value="Terjauh">Urutkan: Terjauh</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 

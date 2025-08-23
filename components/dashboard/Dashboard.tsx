@@ -12,6 +12,7 @@ import DashboardTaskModal from './DashboardTaskModal';
 import DashboardTrainingModal from './DashboardTrainingModal';
 import EditableText from '../common/EditableText';
 import { defaultTextContent } from '../../hooks/useCustomization';
+import AIWeeklySummary from './AIWeeklySummary';
 
 
 const isTaskLate = (task: Task): boolean => {
@@ -247,6 +248,7 @@ const Dashboard: React.FC = () => {
 
     return (
         <div className="animate-fade-in-down space-y-8">
+            <AIWeeklySummary tasks={tasks} users={users} />
             <div>
                  <EditableText as="h2" contentKey="dashboard.tasks.title" defaultText={defaultTextContent['dashboard.tasks.title']} className="text-2xl font-bold mb-4 text-slate-800 dark:text-slate-100" />
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

@@ -46,3 +46,43 @@ export const analyzeTextForEntry = async (text: string): Promise<AIParsedData> =
         throw new Error(`Gagal menganalisis teks. ${message}`);
     }
 };
+
+/**
+ * Generates a summary by sending a detailed prompt to a secure backend function.
+ * @param prompt The detailed prompt for the AI.
+ * @returns A promise that resolves to the generated summary text (string).
+ */
+export const generateAISummary = async (prompt: string): Promise<string> => {
+    try {
+        const response = await fetch('/.netlify/functions/gemini', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ prompt, requestType: 'summary' }),
+        });
+
+        if (!response.ok) {
+            let errorMsg = `Server error: ${response.status}`;
+            try {
+                const errorData = await response.json();
+                errorMsg = errorData.error || errorMsg;
+            } catch (e) {
+                errorMsg = response.statusText;
+            }
+            throw new Error(errorMsg);
+        }
+
+        const data = await response.json();
+        if (!data.summary || typeof data.summary !== 'string') {
+            throw new Error("AI response has an invalid format for summary.");
+        }
+
+        return data.summary;
+
+    } catch (error) {
+        console.error("Error calling Gemini summary service proxy:", error);
+        const message = error instanceof Error ? error.message : "Silakan coba lagi.";
+        throw new Error(`Gagal menghasilkan ringkasan. ${message}`);
+    }
+};

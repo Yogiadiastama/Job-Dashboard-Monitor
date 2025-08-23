@@ -4,6 +4,8 @@ import { collection, getDocs, setDoc, doc } from '@firebase/firestore';
 import { auth, db } from '../../services/firebase';
 import { ICONS } from '../../constants';
 import { useTheme } from '../../hooks/useTheme';
+import EditableText from '../common/EditableText';
+import { defaultTextContent } from '../../hooks/useCustomization';
 
 const LoginPage: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -116,43 +118,57 @@ const LoginPage: React.FC = () => {
 
     return (
         <div 
-            className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center p-4 transition-colors duration-500 bg-cover bg-center"
-            style={loginPageStyle}
+            className="min-h-screen flex items-center justify-center p-4 transition-colors duration-500 bg-cover bg-center"
+            style={{ ...loginPageStyle, backgroundColor: 'var(--app-bg)' }}
         >
             <div className="absolute inset-0 bg-black bg-opacity-50"></div>
             <div className="w-full max-w-md z-10">
-                <div className="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl p-8 transform transition-all hover:scale-105 duration-500 bg-opacity-90 dark:bg-opacity-90 backdrop-blur-sm">
+                <div className="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl p-8 transform transition-all hover:scale-105 duration-500 bg-opacity-90 dark:bg-opacity-90 backdrop-blur-sm" style={{backgroundColor: 'var(--card-bg)'}}>
                     <div className="text-center mb-8">
-                        <h1 className="text-3xl font-bold text-gray-800 dark:text-white">{themeSettings.headerTitle}</h1>
-                        <p className="text-gray-500 dark:text-gray-400 mt-2">Manajemen Proyek Generasi Berikutnya</p>
+                         <EditableText 
+                            as="h1" 
+                            contentKey="login.title" 
+                            defaultText={defaultTextContent['login.title']} 
+                            className="text-3xl font-bold" 
+                            style={{color: 'var(--text-primary)'}}
+                        />
+                        <EditableText 
+                            as="p" 
+                            contentKey="login.subtitle" 
+                            defaultText={defaultTextContent['login.subtitle']}
+                            className="mt-2"
+                            style={{color: 'var(--text-secondary)'}}
+                        />
                     </div>
                     <form onSubmit={handleLogin}>
                         <div className="mb-4">
-                            <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="username">
+                            <label className="block text-sm font-bold mb-2" htmlFor="username" style={{color: 'var(--text-primary)'}}>
                                 Email atau Username 'admin'
                             </label>
                             <input
-                                className="shadow-inner appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 dark:text-gray-200 dark:bg-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="shadow-inner appearance-none border rounded-lg w-full py-3 px-4 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 id="username"
                                 type="text"
                                 placeholder="e.g., user@example.com atau admin"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
+                                style={{backgroundColor: 'var(--app-bg)', color: 'var(--text-primary)'}}
                             />
                         </div>
                         <div className="mb-6 relative">
-                            <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="password">
+                            <label className="block text-sm font-bold mb-2" htmlFor="password" style={{color: 'var(--text-primary)'}}>
                                 Password
                             </label>
                             <input
-                                className="shadow-inner appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 dark:text-gray-200 dark:bg-gray-700 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="shadow-inner appearance-none border rounded-lg w-full py-3 px-4 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 id="password"
                                 type={showPassword ? "text" : "password"}
                                 placeholder="Masukkan password Anda"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
+                                style={{backgroundColor: 'var(--app-bg)', color: 'var(--text-primary)'}}
                             />
                             <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 top-7 pr-3 flex items-center text-sm leading-5">
                                 {showPassword ? <span className="text-gray-500">{ICONS.eyeOff}</span> : <span className="text-gray-500">{ICONS.eye}</span>}

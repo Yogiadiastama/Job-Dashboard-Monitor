@@ -1,3 +1,5 @@
+
+
 import React, { useState, useEffect, useCallback, useMemo, FC, ReactNode } from 'react';
 import { signOut } from '@firebase/auth';
 import { doc, updateDoc } from '@firebase/firestore';
@@ -5,6 +7,7 @@ import { auth, db } from '../../services/firebase';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
 import { useConnectivity } from '../../hooks/useNotification';
+import { useCustomization, defaultTextContent } from '../../hooks/useCustomization';
 import { ICONS } from '../../constants';
 import Dashboard from '../dashboard/Dashboard';
 import TaskManagement from '../tasks/TaskManagement';
@@ -15,6 +18,8 @@ import EmployeeSearch from '../search/EmployeeSearch';
 import NotificationBanner from '../common/NotificationBanner';
 import EmployeeAnalyticsDashboard from '../analytics/EmployeeAnalyticsDashboard';
 import DraggableMenuItem from './DraggableMenuItem';
+import EditableText from '../common/EditableText';
+
 
 interface MenuItem {
     id: string;
@@ -27,16 +32,17 @@ const MainLayout: React.FC = () => {
     const { user, userData } = useAuth();
     const { themeSettings } = useTheme();
     const { isOffline } = useConnectivity();
+    const { isEditMode, getText } = useCustomization();
     
     const allMenuItems = useMemo<MenuItem[]>(() => [
-        { id: 'dashboard', label: 'Dashboard', icon: ICONS.dashboard, roles: ['pegawai', 'pimpinan', 'admin'] },
-        { id: 'tasks', label: 'Pekerjaan', icon: ICONS.tasks, roles: ['pegawai', 'pimpinan', 'admin'] },
-        { id: 'training', label: 'Training', icon: ICONS.training, roles: ['pimpinan', 'admin'] },
-        { id: 'analytics', label: 'Info Grafik Pegawai', icon: ICONS.chartPie, roles: ['pegawai', 'pimpinan', 'admin'] },
-        { id: 'search', label: 'Pencarian Pegawai', icon: ICONS.search, roles: ['pimpinan', 'admin'] },
-        { id: 'users', label: 'Manajemen Pegawai', icon: ICONS.users, roles: ['admin'] },
-        { id: 'settings', label: 'Pengaturan', icon: ICONS.settings, roles: ['admin'] },
-    ], []);
+        { id: 'dashboard', label: getText('dashboard.title', defaultTextContent['dashboard.title']), icon: ICONS.dashboard, roles: ['pegawai', 'pimpinan', 'admin'] },
+        { id: 'tasks', label: getText('tasks.title', defaultTextContent['tasks.title']), icon: ICONS.tasks, roles: ['pegawai', 'pimpinan', 'admin'] },
+        { id: 'training', label: getText('training.title', defaultTextContent['training.title']), icon: ICONS.training, roles: ['pimpinan', 'admin'] },
+        { id: 'analytics', label: getText('analytics.title', defaultTextContent['analytics.title']), icon: ICONS.chartPie, roles: ['pegawai', 'pimpinan', 'admin'] },
+        { id: 'search', label: getText('search.title', defaultTextContent['search.title']), icon: ICONS.search, roles: ['pimpinan', 'admin'] },
+        { id: 'users', label: getText('users.title', defaultTextContent['users.title']), icon: ICONS.users, roles: ['admin'] },
+        { id: 'settings', label: getText('settings.title', defaultTextContent['settings.title']), icon: ICONS.settings, roles: ['admin'] },
+    ], [getText]);
 
     const initialMenuItems = useMemo(() => {
         const userRole = userData?.role || 'pegawai';
@@ -110,11 +116,25 @@ const MainLayout: React.FC = () => {
     }
 
     return (
-        <div className="flex h-screen bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+        <div className="flex h-screen" style={{ backgroundColor: 'var(--app-bg)', color: 'var(--text-primary)'}}>
+            {isEditMode && (
+                <div className="fixed top-0 left-0 w-full bg-blue-600 text-white text-center py-2 z-50">
+                    UI Edit Mode is ON. Click any text with a blue dashed border to edit.
+                </div>
+            )}
             {/* Sidebar */}
-            <aside className={`absolute md:relative z-20 md:z-auto bg-white dark:bg-gray-800 w-64 p-4 space-y-4 transform ${isSidebarVisible ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition-transform duration-300 ease-in-out shadow-lg`}>
-                <div className="text-center py-2">
-                    <h1 className="text-2xl font-bold" style={{ color: themeSettings.accentColor }}>{themeSettings.headerTitle}</h1>
+            <aside 
+                className={`absolute md:relative z-20 md:z-auto w-64 p-4 space-y-4 transform ${isSidebarVisible ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition-transform duration-300 ease-in-out shadow-lg`}
+                style={{ backgroundColor: 'var(--sidebar-bg)' }}
+            >
+                <div className="text-center py-2" style={{ paddingTop: isEditMode ? '2rem' : '' }}>
+                     <EditableText
+                        as="h1"
+                        contentKey="app.headerTitle"
+                        defaultText={defaultTextContent['app.headerTitle']}
+                        className="text-2xl font-bold"
+                        style={{ color: themeSettings.accentColor }}
+                    />
                 </div>
                 <nav className="flex-grow">
                     <ul>
@@ -161,7 +181,10 @@ const MainLayout: React.FC = () => {
             {/* Main Content */}
             <div className="flex-1 flex flex-col overflow-hidden">
                 <NotificationBanner />
-                <header className="bg-white dark:bg-gray-800 shadow-md p-4 flex justify-between items-center">
+                <header 
+                    className="shadow-md p-4 flex justify-between items-center" 
+                    style={{ backgroundColor: 'var(--header-bg)', paddingTop: isEditMode ? '2.5rem' : '' }}
+                >
                     <button className="md:hidden" onClick={() => setSidebarVisible(!isSidebarVisible)}>
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" /></svg>
                     </button>
@@ -177,7 +200,7 @@ const MainLayout: React.FC = () => {
                         )}
                         <div className="text-right">
                             <p className="font-semibold">{userData.nama}</p>
-                            <p className="text-sm text-gray-500 capitalize">{userData.role}</p>
+                            <p className="text-sm capitalize" style={{color: 'var(--text-secondary)'}}>{userData.role}</p>
                         </div>
                         {userData.photoURL ? (
                             <img src={userData.photoURL} alt={userData.nama} className="w-12 h-12 rounded-full object-cover" />
@@ -191,7 +214,7 @@ const MainLayout: React.FC = () => {
                         </button>
                     </div>
                 </header>
-                <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 dark:bg-gray-900 p-6">
+                <main className="flex-1 overflow-x-hidden overflow-y-auto p-6" style={{ backgroundColor: 'var(--app-bg)'}}>
                     {renderContent()}
                 </main>
             </div>

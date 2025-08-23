@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, LabelList } from 'recharts';
 import { EmployeeProfile } from '../../types';
 import LoadingSpinner from '../common/LoadingSpinner';
+import EditableText from '../common/EditableText';
 
 const SHEET_URL = `https://docs.google.com/spreadsheets/d/e/2PACX-1vT7wdYuXPw-6RCvXKSjK5xMwGLWc3eHYbaqpoY4PYSYm6NJOvCnU7iQUk33yAMtHTeKeD8T-x8Ful2l/pub?gid=0&single=true&output=csv`;
 
@@ -60,9 +61,9 @@ const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, per
 };
 
 
-const ChartCard: React.FC<{ title: string, children: React.ReactNode }> = ({ title, children }) => (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg animate-fade-in-up">
-        <h3 className="text-xl font-bold mb-4">{title}</h3>
+const ChartCard: React.FC<{ title: string, titleKey: string, children: React.ReactNode }> = ({ title, titleKey, children }) => (
+    <div className="p-6 rounded-2xl shadow-lg animate-fade-in-up" style={{backgroundColor: 'var(--card-bg)'}}>
+        <EditableText as="h3" contentKey={titleKey} defaultText={title} className="text-xl font-bold mb-4" />
         <div style={{ width: '100%', height: 300 }}>
             {children}
         </div>
@@ -164,32 +165,32 @@ const EmployeeAnalyticsDashboard: React.FC = () => {
     if (!analyticsData) return <p>Tidak ada data untuk ditampilkan.</p>;
 
     const isDark = document.documentElement.classList.contains('dark');
-    const tooltipStyle = { backgroundColor: isDark ? '#374151' : '#fff', border: '1px solid #ccc', borderRadius: '0.5rem' };
+    const tooltipStyle = { backgroundColor: 'var(--card-bg)', color: 'var(--text-primary)', border: '1px solid #ccc', borderRadius: '0.5rem' };
     const axisColor = isDark ? '#9CA3AF' : '#6B7280';
 
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <ChartCard title="Distribusi Pegawai per Level">
+            <ChartCard title="Distribusi Pegawai per Level" titleKey="analytics.levelDistribution.title">
                 <ResponsiveContainer>
                     <PieChart>
                         <Pie data={analyticsData.levelDistribution} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} labelLine={false} label={renderCustomizedLabel}>
                             {analyticsData.levelDistribution.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                         </Pie>
                         <Tooltip contentStyle={tooltipStyle} />
-                        <Legend wrapperStyle={{ fontSize: '14px' }}/>
+                        <Legend wrapperStyle={{ fontSize: '14px', color: 'var(--text-primary)' }}/>
                     </PieChart>
                 </ResponsiveContainer>
             </ChartCard>
 
-             <ChartCard title="Jumlah Pegawai per Grade">
+             <ChartCard title="Jumlah Pegawai per Grade" titleKey="analytics.gradeDistribution.title">
                 <ResponsiveContainer>
                     <BarChart data={analyticsData.gradeDistribution} margin={{ top: 20, right: 20, left: -10, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#4B5563' : '#E5E7EB'} />
                         <XAxis dataKey="name" tick={{ fill: axisColor, fontSize: 12 }} />
                         <YAxis tick={{ fill: axisColor, fontSize: 12 }} />
                         <Tooltip contentStyle={tooltipStyle} cursor={{fill: 'rgba(128, 128, 128, 0.1)'}} />
-                        <Legend wrapperStyle={{ fontSize: '14px' }}/>
+                        <Legend wrapperStyle={{ fontSize: '14px', color: 'var(--text-primary)' }}/>
                         <Bar dataKey="value" name="Jumlah" fill="#8884d8">
                             <LabelList dataKey="value" position="top" fill={axisColor} fontSize={12} />
                         </Bar>
@@ -198,7 +199,7 @@ const EmployeeAnalyticsDashboard: React.FC = () => {
             </ChartCard>
             
             <div className="lg:col-span-2">
-                <ChartCard title="Komposisi Unit Kerja (Top 10)">
+                <ChartCard title="Komposisi Unit Kerja (Top 10)" titleKey="analytics.topUnits.title">
                     <ResponsiveContainer>
                         <BarChart data={analyticsData.topUnits} layout="vertical" margin={{ top: 20, right: 40, left: 50, bottom: 5 }}>
                              <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#4B5563' : '#E5E7EB'} />
@@ -213,19 +214,19 @@ const EmployeeAnalyticsDashboard: React.FC = () => {
                 </ChartCard>
             </div>
 
-            <ChartCard title="Distribusi Usia Pegawai (Generasi)">
+            <ChartCard title="Distribusi Usia Pegawai (Generasi)" titleKey="analytics.generation.title">
                  <ResponsiveContainer>
                     <PieChart>
                         <Pie data={analyticsData.generationData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} labelLine={false} label={renderCustomizedLabel}>
                             {analyticsData.generationData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                         </Pie>
                         <Tooltip contentStyle={tooltipStyle} />
-                        <Legend wrapperStyle={{ fontSize: '14px' }}/>
+                        <Legend wrapperStyle={{ fontSize: '14px', color: 'var(--text-primary)' }}/>
                     </PieChart>
                 </ResponsiveContainer>
             </ChartCard>
             
-            <ChartCard title="Distribusi Masa Kerja">
+            <ChartCard title="Distribusi Masa Kerja" titleKey="analytics.tenure.title">
                 <ResponsiveContainer>
                     <BarChart data={analyticsData.tenureData} margin={{ top: 20, right: 20, left: -10, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#4B5563' : '#E5E7EB'} />

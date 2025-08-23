@@ -1,3 +1,5 @@
+
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { collection, query, where, onSnapshot, deleteDoc, doc, addDoc } from '@firebase/firestore';
 import { ref, deleteObject } from '@firebase/storage';
@@ -10,6 +12,8 @@ import TaskModal from './TaskModal';
 import LoadingSpinner from '../common/LoadingSpinner';
 import { analyzeTextForEntry } from '../../services/geminiService';
 import AIInputModal from '../training/AddWithAIModal';
+import EditableText from '../common/EditableText';
+import { defaultTextContent } from '../../hooks/useCustomization';
 
 
 type SortableTaskKeys = keyof Pick<Task, 'title' | 'dueDate' | 'priority' | 'status' | 'createdAt'>;
@@ -220,13 +224,24 @@ const TaskManagement: React.FC = () => {
 
     return (
         <div className="relative min-h-[calc(100vh-200px)]">
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg mb-6">
-                <h3 className="text-2xl font-bold">Manajemen Pekerjaan</h3>
-                <p className="text-gray-500 dark:text-gray-400">Kelola semua pekerjaan yang ditugaskan di sini.</p>
+            <div className="p-6 rounded-2xl shadow-lg mb-6" style={{backgroundColor: 'var(--card-bg)'}}>
+                 <EditableText 
+                    as="h3"
+                    contentKey="tasks.title"
+                    defaultText={defaultTextContent['tasks.title']}
+                    className="text-2xl font-bold"
+                />
+                <EditableText 
+                    as="p"
+                    contentKey="tasks.description"
+                    defaultText={defaultTextContent['tasks.description']}
+                    className=""
+                    style={{color: 'var(--text-secondary)'}}
+                />
             </div>
             
             {loading ? <LoadingSpinner text="Memuat data pekerjaan..." /> : (
-                <div className="overflow-x-auto bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg">
+                <div className="overflow-x-auto p-6 rounded-2xl shadow-lg" style={{backgroundColor: 'var(--card-bg)'}}>
                     <table className="w-full text-left">
                         <thead>
                             <tr className="border-b-2 dark:border-gray-700">

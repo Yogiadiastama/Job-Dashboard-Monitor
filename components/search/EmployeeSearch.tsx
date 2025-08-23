@@ -1,9 +1,12 @@
 
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { EmployeeProfile } from '../../types';
 import LoadingSpinner from '../common/LoadingSpinner';
 import EmployeeProfileCard from './EmployeeProfileCard';
 import { ICONS } from '../../constants';
+import EditableText from '../common/EditableText';
+import { defaultTextContent } from '../../hooks/useCustomization';
 
 // The URL is taken from the user's prompt. It points to the published CSV version of the sheet.
 const SHEET_URL = `https://docs.google.com/spreadsheets/d/e/2PACX-1vT7wdYuXPw-6RCvXKSjK5xMwGLWc3eHYbaqpoY4PYSYm6NJOvCnU7iQUk33yAMtHTeKeD8T-x8Ful2l/pub?gid=0&single=true&output=csv`;
@@ -144,8 +147,18 @@ const EmployeeSearch: React.FC = () => {
     return (
         <div className="space-y-6 animate-fade-in-up">
             <header>
-                <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Pencarian Database Pegawai</h1>
-                <p className="text-gray-500 dark:text-gray-400">Akses informasi detail pegawai secara instan.</p>
+                <EditableText 
+                    as="h1"
+                    contentKey="search.title"
+                    defaultText={defaultTextContent['search.title']}
+                    className="text-3xl font-bold"
+                />
+                <EditableText 
+                    as="p"
+                    contentKey="search.description"
+                    defaultText={defaultTextContent['search.description']}
+                    style={{color: 'var(--text-secondary)'}}
+                />
             </header>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -158,7 +171,8 @@ const EmployeeSearch: React.FC = () => {
                             setSearchTerm(e.target.value);
                             setSelectedEmployee(null); // Clear selection when typing
                         }}
-                        className="w-full p-4 pl-12 text-lg border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                        className="w-full p-4 pl-12 text-lg border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                        style={{backgroundColor: 'var(--card-bg)', color: 'var(--text-primary)'}}
                     />
                     <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
                         {ICONS.search}
@@ -167,8 +181,9 @@ const EmployeeSearch: React.FC = () => {
                 <div className="relative">
                      <select 
                         onChange={handleDropdownChange}
-                        className="w-full p-4 pl-4 text-lg border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all appearance-none"
+                        className="w-full p-4 pl-4 text-lg border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all appearance-none"
                         defaultValue=""
+                        style={{backgroundColor: 'var(--card-bg)', color: 'var(--text-primary)'}}
                      >
                         <option value="" disabled>Atau pilih pegawai dari daftar...</option>
                         {employeeData.sort((a,b) => (a.fullName || "").localeCompare(b.fullName || "")).map(emp => (
@@ -192,8 +207,8 @@ const EmployeeSearch: React.FC = () => {
                             />
                         ) : searchTerm && searchResults.length > 0 ? (
                             <>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">Menampilkan {searchResults.length} hasil untuk "{searchTerm}"</p>
-                                <ul className="bg-white dark:bg-gray-800 rounded-lg shadow-md divide-y dark:divide-gray-700">
+                                <p className="text-sm" style={{color: 'var(--text-secondary)'}}>Menampilkan {searchResults.length} hasil untuk "{searchTerm}"</p>
+                                <ul className="rounded-lg shadow-md divide-y dark:divide-gray-700" style={{backgroundColor: 'var(--card-bg)'}}>
                                 {searchResults.map(employee => (
                                     <li 
                                         key={employee.nip || Math.random()} 
@@ -204,8 +219,8 @@ const EmployeeSearch: React.FC = () => {
                                             {((employee.fullName || '').split(' ').map(n => n[0]).join('') || '??').substring(0, 2).toUpperCase()}
                                         </div>
                                         <div>
-                                            <p className="font-semibold text-gray-800 dark:text-white">{employee.fullName}</p>
-                                            <p className="text-sm text-gray-500 dark:text-gray-400">{employee.jabatan || 'Jabatan tidak tersedia'}</p>
+                                            <p className="font-semibold" style={{color: 'var(--text-primary)'}}>{employee.fullName}</p>
+                                            <p className="text-sm" style={{color: 'var(--text-secondary)'}}>{employee.jabatan || 'Jabatan tidak tersedia'}</p>
                                             <p className="text-xs text-gray-400 dark:text-gray-500">NIP: {employee.nip || '-'}</p>
                                         </div>
                                     </li>
@@ -213,14 +228,14 @@ const EmployeeSearch: React.FC = () => {
                                 </ul>
                             </>
                         ) : searchTerm && searchResults.length === 0 ? (
-                             <div className="text-center py-16 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-                                <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300">Pegawai Tidak Ditemukan</h3>
-                                <p className="text-gray-500 dark:text-gray-400 mt-2">Tidak ada data pegawai yang cocok dengan nama "{searchTerm}".</p>
+                             <div className="text-center py-16 rounded-lg shadow-md" style={{backgroundColor: 'var(--card-bg)'}}>
+                                <h3 className="text-xl font-semibold" style={{color: 'var(--text-primary)'}}>Pegawai Tidak Ditemukan</h3>
+                                <p className="mt-2" style={{color: 'var(--text-secondary)'}}>Tidak ada data pegawai yang cocok dengan nama "{searchTerm}".</p>
                             </div>
                         ) : (
-                             <div className="text-center py-16 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-                                <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300">Mulai Mencari</h3>
-                                <p className="text-gray-500 dark:text-gray-400 mt-2">Gunakan bilah pencarian atau dropdown di atas untuk menemukan data pegawai.</p>
+                             <div className="text-center py-16 rounded-lg shadow-md" style={{backgroundColor: 'var(--card-bg)'}}>
+                                <h3 className="text-xl font-semibold" style={{color: 'var(--text-primary)'}}>Mulai Mencari</h3>
+                                <p className="mt-2" style={{color: 'var(--text-secondary)'}}>Gunakan bilah pencarian atau dropdown di atas untuk menemukan data pegawai.</p>
                             </div>
                         )}
                     </div>

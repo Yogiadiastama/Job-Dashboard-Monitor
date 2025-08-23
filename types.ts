@@ -2,6 +2,7 @@
 
 
 
+
 export type UserRole = 'pegawai' | 'pimpinan' | 'admin';
 export type TaskStatus = 'Pending' | 'On Progress' | 'Completed';
 export type TaskPriority = 'Low' | 'Mid' | 'High';
@@ -112,4 +113,24 @@ export interface AIParsedData {
   entryType: 'task' | 'training' | 'unknown';
   taskDetails?: AIParsedTask;
   trainingDetails?: AIParsedTraining;
+}
+
+// Types for UI Customization
+export interface CustomTextContent {
+  [key: string]: string;
+}
+
+export interface CustomColors {
+  [key: string]: string; // CSS variable name -> hex code
+}
+
+export interface CustomizationContextType {
+  isEditMode: boolean;
+  setIsEditMode: (isEditing: boolean) => void;
+  textContent: CustomTextContent;
+  colors: CustomColors;
+  getText: (key: string, defaultText: string) => string;
+  updateText: (key: string, value: string) => Promise<void>;
+  updateColor: (key: string, value: string) => Promise<void>;
+  resetColors: () => Promise<void>;
 }

@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { collection, onSnapshot, query, where } from '@firebase/firestore';
 import { db, getFirestoreErrorMessage } from '../../services/firebase';
@@ -10,6 +11,8 @@ import { ICONS } from '../../constants';
 import LoadingSpinner from '../common/LoadingSpinner';
 import DashboardTaskModal from './DashboardTaskModal';
 import DashboardTrainingModal from './DashboardTrainingModal';
+import EditableText from '../common/EditableText';
+import { defaultTextContent } from '../../hooks/useCustomization';
 
 
 const isTaskLate = (task: Task): boolean => {
@@ -196,16 +199,23 @@ const Dashboard: React.FC = () => {
         <div className="animate-fade-in-up space-y-8">
             {/* Task Stat Cards */}
             <div>
-                 <h2 className="text-xl font-bold text-gray-700 dark:text-gray-300 mb-4">Ringkasan Pekerjaan</h2>
+                 <EditableText 
+                    as="h2"
+                    contentKey="dashboard.tasks.title"
+                    defaultText={defaultTextContent['dashboard.tasks.title']}
+                    className="text-xl font-bold mb-4"
+                    style={{color: 'var(--text-primary)'}}
+                 />
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     {taskStats.map(stat => (
                         <div 
                             key={stat.title} 
-                            className={`bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border-l-4 border-${stat.color}-500 transform transition-transform duration-300 hover:-translate-y-2 hover:shadow-xl cursor-pointer`}
+                            className={`p-6 rounded-2xl shadow-lg border-l-4 border-${stat.color}-500 transform transition-transform duration-300 hover:-translate-y-2 hover:shadow-xl cursor-pointer`}
+                            style={{backgroundColor: 'var(--card-bg)'}}
                             onClick={() => handleTaskStatCardClick(stat.filter, stat.title)}
                         >
-                            <h3 className="text-gray-500 dark:text-gray-400 font-medium">{stat.title}</h3>
-                            <p className="text-4xl font-bold mt-2">{stat.value}</p>
+                            <h3 className="font-medium" style={{color: 'var(--text-secondary)'}}>{stat.title}</h3>
+                            <p className="text-4xl font-bold mt-2" style={{color: 'var(--text-primary)'}}>{stat.value}</p>
                         </div>
                     ))}
                 </div>
@@ -213,16 +223,23 @@ const Dashboard: React.FC = () => {
 
             {/* Training Stat Cards */}
              <div>
-                 <h2 className="text-xl font-bold text-gray-700 dark:text-gray-300 mb-4">Ringkasan Training</h2>
+                 <EditableText 
+                    as="h2"
+                    contentKey="dashboard.trainings.title"
+                    defaultText={defaultTextContent['dashboard.trainings.title']}
+                    className="text-xl font-bold mb-4"
+                    style={{color: 'var(--text-primary)'}}
+                 />
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     {trainingStats.map(stat => (
                         <div 
                             key={stat.title} 
-                            className={`bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border-l-4 border-${stat.color}-500 transform transition-transform duration-300 hover:-translate-y-2 hover:shadow-xl cursor-pointer`}
+                            className={`p-6 rounded-2xl shadow-lg border-l-4 border-${stat.color}-500 transform transition-transform duration-300 hover:-translate-y-2 hover:shadow-xl cursor-pointer`}
+                            style={{backgroundColor: 'var(--card-bg)'}}
                             onClick={() => handleTrainingStatCardClick(stat.filter, stat.title)}
                         >
-                            <h3 className="text-gray-500 dark:text-gray-400 font-medium">{stat.title}</h3>
-                            <p className="text-4xl font-bold mt-2">{stat.value}</p>
+                            <h3 className="font-medium" style={{color: 'var(--text-secondary)'}}>{stat.title}</h3>
+                            <p className="text-4xl font-bold mt-2" style={{color: 'var(--text-primary)'}}>{stat.value}</p>
                         </div>
                     ))}
                 </div>
@@ -230,16 +247,21 @@ const Dashboard: React.FC = () => {
 
             {['admin', 'pimpinan', 'pegawai'].includes(userData.role) && (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div className="lg:col-span-1 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg flex flex-col items-center justify-center text-center">
+                    <div className="lg:col-span-1 p-6 rounded-2xl shadow-lg flex flex-col items-center justify-center text-center" style={{backgroundColor: 'var(--card-bg)'}}>
                         <h3 className="text-xl font-bold mb-4">Pegawai Terbaik Bulan Ini</h3>
                         <img className="h-24 w-24 rounded-full object-cover ring-4 ring-yellow-400 mb-4" src={`https://ui-avatars.com/api/?name=${bestEmployee.nama}&background=random&color=fff`} alt="Best Employee" />
                         <p className="text-2xl font-semibold">{bestEmployee.nama}</p>
-                        <p className="text-gray-500 dark:text-gray-400">{bestEmployee.completed} pekerjaan selesai</p>
+                        <p style={{color: 'var(--text-secondary)'}}>{bestEmployee.completed} pekerjaan selesai</p>
                     </div>
 
-                    <div className="lg:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg">
+                    <div className="lg:col-span-2 p-6 rounded-2xl shadow-lg" style={{backgroundColor: 'var(--card-bg)'}}>
                         <div className="flex flex-wrap gap-4 justify-between items-center mb-4">
-                            <h3 className="text-xl font-bold">Overview Pekerjaan Pegawai</h3>
+                            <EditableText 
+                                as="h3"
+                                contentKey="dashboard.employeeStats.title"
+                                defaultText={defaultTextContent['dashboard.employeeStats.title']}
+                                className="text-xl font-bold"
+                            />
                             <div className="flex items-center space-x-2">
                                 <button onClick={() => setViewMode('table')} className={`p-2 rounded-lg ${viewMode === 'table' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700'}`}>{ICONS.table}</button>
                                 <button onClick={() => setViewMode('chart')} className={`p-2 rounded-lg ${viewMode === 'chart' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700'}`}>{ICONS.chart}</button>
@@ -257,7 +279,7 @@ const Dashboard: React.FC = () => {
                                         <CartesianGrid strokeDasharray="3 3" />
                                         <XAxis dataKey="name" />
                                         <YAxis />
-                                        <Tooltip contentStyle={{ backgroundColor: document.documentElement.classList.contains('dark') ? '#374151' : '#fff', border: 'none', borderRadius: '0.5rem' }} />
+                                        <Tooltip contentStyle={{ backgroundColor: 'var(--card-bg)', border: 'none', borderRadius: '0.5rem' }} />
                                         <Legend />
                                         <Bar dataKey="On Progress" stackId="a" fill="#f59e0b" />
                                         <Bar dataKey="Completed" stackId="a" fill="#10b981" />

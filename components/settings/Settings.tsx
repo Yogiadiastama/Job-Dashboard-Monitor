@@ -4,12 +4,15 @@ import { ref, uploadBytes, getDownloadURL } from '@firebase/storage';
 import { db, storage } from '../../services/firebase';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
+import { useCustomization } from '../../hooks/useCustomization';
 import { ICONS } from '../../constants';
 import LoadingSpinner from '../common/LoadingSpinner';
+import ThemeEditor from './ThemeEditor';
 
 const Settings: React.FC = () => {
     const { userData } = useAuth();
     const { themeSettings, loading: themeLoading } = useTheme();
+    const { isEditMode, setIsEditMode } = useCustomization();
 
     // Local theme state for UI
     const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
@@ -92,7 +95,7 @@ const Settings: React.FC = () => {
 
     return (
         <div className="space-y-12">
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg">
+            <div className="p-6 rounded-2xl shadow-lg" style={{backgroundColor: 'var(--card-bg)'}}>
                 <h3 className="text-2xl font-bold mb-4">Pengaturan Tampilan</h3>
                 <div className="space-y-4">
                     <div>
@@ -106,19 +109,33 @@ const Settings: React.FC = () => {
             </div>
 
             {userData?.role === 'admin' && (
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg animate-fade-in-up">
-                    <h3 className="text-2xl font-bold mb-6">Kustomisasi Tampilan Aplikasi</h3>
+                <>
+                <div className="p-6 rounded-2xl shadow-lg animate-fade-in-up" style={{backgroundColor: 'var(--card-bg)'}}>
+                     <h3 className="text-2xl font-bold mb-4">Mode Kustomisasi</h3>
+                     <div className="flex items-center space-x-4 p-4 bg-blue-50 dark:bg-blue-900/50 border border-blue-200 dark:border-blue-800 rounded-lg">
+                        <label htmlFor="edit-mode-toggle" className="flex items-center cursor-pointer">
+                            <div className="relative">
+                                <input type="checkbox" id="edit-mode-toggle" className="sr-only" checked={isEditMode} onChange={() => setIsEditMode(!isEditMode)} />
+                                <div className="block bg-gray-600 w-14 h-8 rounded-full"></div>
+                                <div className={`dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition ${isEditMode ? 'transform translate-x-full bg-blue-500' : ''}`}></div>
+                            </div>
+                        </label>
+                        <div>
+                            <p className="font-bold">UI Edit Mode</p>
+                            <p className="text-sm" style={{color: 'var(--text-secondary)'}}>Aktifkan untuk mengedit teks langsung di halaman mana pun.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div className="p-6 rounded-2xl shadow-lg animate-fade-in-up" style={{backgroundColor: 'var(--card-bg)'}}>
+                    <ThemeEditor />
+                </div>
+                
+                <div className="p-6 rounded-2xl shadow-lg animate-fade-in-up" style={{backgroundColor: 'var(--card-bg)'}}>
+                    <h3 className="text-2xl font-bold mb-6">Kustomisasi Tampilan Aplikasi (Legacy)</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {/* Left Column: General Theme */}
                         <div className="space-y-6">
-                            <div>
-                                <label className="block text-sm font-bold mb-2">Nama Aplikasi di Header</label>
-                                <input type="text" value={headerTitle} onChange={e => setHeaderTitle(e.target.value)} className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-bold mb-2">Warna Aksen</label>
-                                <input type="color" value={accentColor} onChange={e => setAccentColor(e.target.value)} className="w-full h-12 p-1 border rounded-lg dark:bg-gray-700 dark:border-gray-600" />
-                            </div>
                             <div>
                                 <label className="block text-sm font-bold mb-2">Gambar Background Login</label>
                                 <input type="file" accept="image/*" onChange={e => setLoginBgFile(e.target.files ? e.target.files[0] : null)} className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
@@ -143,9 +160,10 @@ const Settings: React.FC = () => {
                         </div>
                     </div>
                 </div>
+                </>
             )}
             
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg">
+            <div className="p-6 rounded-2xl shadow-lg" style={{backgroundColor: 'var(--card-bg)'}}>
                 <h3 className="text-2xl font-bold mb-4">Ekspor Data</h3>
                 <button onClick={handleExportAllData} className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
                     {ICONS.download}

@@ -1,3 +1,5 @@
+
+
 import React, { useState, useEffect } from 'react';
 import { collection, onSnapshot, doc, deleteDoc } from '@firebase/firestore';
 import { ref, deleteObject } from '@firebase/storage';
@@ -7,6 +9,8 @@ import { ICONS } from '../../constants';
 import UserModal from './UserModal';
 import LoadingSpinner from '../common/LoadingSpinner';
 import { useNotification, useConnectivity } from '../../hooks/useNotification';
+import EditableText from '../common/EditableText';
+import { defaultTextContent } from '../../hooks/useCustomization';
 
 const UserManagement: React.FC = () => {
     const [users, setUsers] = useState<UserData[]>([]);
@@ -72,9 +76,14 @@ const UserManagement: React.FC = () => {
     };
     
     return (
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg">
+        <div className="p-6 rounded-2xl shadow-lg" style={{backgroundColor: 'var(--card-bg)'}}>
             <div className="flex justify-between items-center mb-6">
-                <h3 className="text-2xl font-bold">Manajemen Pegawai</h3>
+                 <EditableText 
+                    as="h3"
+                    contentKey="users.title"
+                    defaultText={defaultTextContent['users.title']}
+                    className="text-2xl font-bold"
+                />
                 <button onClick={() => openModal()} className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
                     {ICONS.add}
                     <span>Tambah Pegawai</span>

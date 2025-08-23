@@ -1,3 +1,5 @@
+
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { collection, onSnapshot, doc, deleteDoc, addDoc, updateDoc, query, orderBy } from '@firebase/firestore';
 import { db, getFirestoreErrorMessage } from '../../services/firebase';
@@ -7,6 +9,8 @@ import LoadingSpinner from '../common/LoadingSpinner';
 import { useNotification, useConnectivity } from '../../hooks/useNotification';
 import AIInputModal from '../training/AddWithAIModal';
 import { analyzeTextForEntry } from '../../services/geminiService';
+import EditableText from '../common/EditableText';
+import { defaultTextContent } from '../../hooks/useCustomization';
 
 // --- Helper Functions ---
 const formatDateRange = (start: string, end: string) => {
@@ -152,24 +156,24 @@ const TrainingCard: React.FC<{
     const { badge, border } = getStatusStyles(training.status);
 
     return (
-        <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-md border-l-4 ${border} flex flex-col animate-fade-in-up`}>
+        <div className={`rounded-lg shadow-md border-l-4 ${border} flex flex-col animate-fade-in-up`} style={{backgroundColor: 'var(--card-bg)'}}>
             <div className="p-5 flex-grow">
                 <div className="flex justify-between items-start">
-                    <h3 className="font-bold text-lg text-gray-800 dark:text-gray-100 pr-2">{training.nama}</h3>
+                    <h3 className="font-bold text-lg pr-2" style={{color: 'var(--text-primary)'}}>{training.nama}</h3>
                     <span className={`px-3 py-1 text-xs font-semibold rounded-full ${badge}`}>{training.status.toUpperCase()}</span>
                 </div>
-                <div className="mt-3 text-sm text-gray-600 dark:text-gray-400 space-y-2">
+                <div className="mt-3 text-sm space-y-2" style={{color: 'var(--text-secondary)'}}>
                     <p className="flex items-center">{ICONS.calendar} {formatDateRange(training.tanggalMulai, training.tanggalSelesai)}</p>
                     <p className="flex items-center">{ICONS.locationPin} {training.lokasi}</p>
                 </div>
                 <hr className="my-3 dark:border-gray-600"/>
                 <div>
-                    <h4 className="font-semibold text-xs text-gray-500 dark:text-gray-400 uppercase">Detail Kontak</h4>
-                    <p className="flex items-center text-sm mt-1 text-gray-700 dark:text-gray-300">{ICONS.person} {training.pic}</p>
+                    <h4 className="font-semibold text-xs uppercase" style={{color: 'var(--text-secondary)'}}>Detail Kontak</h4>
+                    <p className="flex items-center text-sm mt-1" style={{color: 'var(--text-primary)'}}>{ICONS.person} {training.pic}</p>
                 </div>
                 <div className="mt-3">
-                    <h4 className="font-semibold text-xs text-gray-500 dark:text-gray-400 uppercase">Catatan</h4>
-                    <p className="text-sm mt-1 text-gray-700 dark:text-gray-300">{training.catatan || '-'}</p>
+                    <h4 className="font-semibold text-xs uppercase" style={{color: 'var(--text-secondary)'}}>Catatan</h4>
+                    <p className="text-sm mt-1" style={{color: 'var(--text-primary)'}}>{training.catatan || '-'}</p>
                 </div>
             </div>
             <div className="bg-gray-50 dark:bg-gray-700/50 p-3 flex justify-between items-center rounded-b-lg">
@@ -177,6 +181,7 @@ const TrainingCard: React.FC<{
                     value={training.status} 
                     onChange={(e) => onStatusChange(training.id, e.target.value as TrainingStatus)}
                     className="text-sm bg-transparent font-semibold border-none focus:ring-0"
+                    style={{color: 'var(--text-primary)'}}
                 >
                     {ALL_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
@@ -218,6 +223,7 @@ const TrainingDashboard: React.FC = () => {
                 setLoading(false);
             },
             (error) => {
+                console.error("TrainingDashboard: Error fetching trainings:", error);
                 const firebaseError = error as { code?: string };
                 if (firebaseError.code === 'unavailable') {
                     setOffline(true, true);
@@ -315,24 +321,35 @@ const TrainingDashboard: React.FC = () => {
     return (
         <div className="space-y-6 relative min-h-[calc(100vh-200px)]">
             <header>
-                <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Dashboard Training</h1>
-                <p className="text-gray-500 dark:text-gray-400">Pantau semua jadwal dan status konfirmasi training.</p>
+                <EditableText 
+                    as="h1"
+                    contentKey="training.title"
+                    defaultText={defaultTextContent['training.title']}
+                    className="text-3xl font-bold"
+                />
+                <EditableText 
+                    as="p"
+                    contentKey="training.description"
+                    defaultText={defaultTextContent['training.description']}
+                    style={{color: 'var(--text-secondary)'}}
+                />
             </header>
 
-            <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
+            <div className="p-4 rounded-lg shadow-md" style={{backgroundColor: 'var(--card-bg)'}}>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <input 
                         type="text" 
                         placeholder="Cari Nama Training..." 
                         value={searchTerm}
                         onChange={e => setSearchTerm(e.target.value)}
-                        className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700"
+                        className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md"
+                        style={{backgroundColor: 'var(--app-bg)', color: 'var(--text-primary)'}}
                     />
-                    <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700">
+                    <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md" style={{backgroundColor: 'var(--app-bg)', color: 'var(--text-primary)'}}>
                         <option>Semua Status</option>
                         {ALL_STATUSES.map(s => <option key={s}>{s}</option>)}
                     </select>
-                     <select value={sortOrder} onChange={e => setSortOrder(e.target.value)} className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700">
+                     <select value={sortOrder} onChange={e => setSortOrder(e.target.value)} className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md" style={{backgroundColor: 'var(--app-bg)', color: 'var(--text-primary)'}}>
                         <option value="Terdekat">Urutkan: Terdekat</option>
                         <option value="Terjauh">Urutkan: Terjauh</option>
                     </select>
@@ -353,9 +370,9 @@ const TrainingDashboard: React.FC = () => {
                         ))}
                     </div>
                 ) : (
-                    <div className="text-center py-16 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-                        <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300">Tidak Ada Training</h3>
-                        <p className="text-gray-500 dark:text-gray-400 mt-2">Belum ada data training yang cocok dengan filter Anda.</p>
+                    <div className="text-center py-16 rounded-lg shadow-md" style={{backgroundColor: 'var(--card-bg)'}}>
+                        <h3 className="text-xl font-semibold" style={{color: 'var(--text-primary)'}}>Tidak Ada Training</h3>
+                        <p className="mt-2" style={{color: 'var(--text-secondary)'}}>Belum ada data training yang cocok dengan filter Anda.</p>
                     </div>
                 )
             )}

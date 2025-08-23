@@ -1,4 +1,3 @@
-
 import React, { useRef } from 'react';
 import { useDrag } from 'react-dnd';
 import { Task, UserData, Training } from '../../types';
@@ -24,6 +23,19 @@ const KanbanTaskCard: React.FC<KanbanTaskCardProps> = ({ task, user, onEditTask,
     }));
 
     drag(ref);
+
+    const handleWhatsAppExport = () => {
+        let message = `*Detail Tugas*\n\n` +
+            `*Judul:* ${task.title}\n` +
+            `*Deskripsi:* ${task.description || '-'}\n` +
+            `*Ditugaskan Kepada:* ${user?.nama || 'N/A'}\n` +
+            `*Batas Waktu:* ${new Date(task.dueDate).toLocaleDateString('id-ID')}\n` +
+            `*Prioritas:* ${task.priority}\n` +
+            `*Status:* ${task.status}\n`;
+    
+        const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, '_blank');
+    };
 
     const handleCreateTrainingFromTask = () => {
         const trainingDetails: Partial<Training> = {
@@ -51,6 +63,7 @@ const KanbanTaskCard: React.FC<KanbanTaskCardProps> = ({ task, user, onEditTask,
             <div className="flex justify-between items-start">
                 <p className="font-semibold text-slate-800 dark:text-slate-100 pr-2">{task.title}</p>
                  <div className="flex items-center flex-shrink-0">
+                    <button onClick={handleWhatsAppExport} className="p-1 text-slate-400 hover:text-green-600 dark:hover:text-green-400" title="Export to WhatsApp">{ICONS.whatsapp}</button>
                     <button onClick={handleCreateTrainingFromTask} className="p-1 text-slate-400 hover:text-purple-600 dark:hover:text-purple-400" title="Create Training">{ICONS.graduationCap}</button>
                     <button onClick={() => onEditTask(task)} className="p-1 text-slate-400 hover:text-primary-600 dark:hover:text-primary-400" title="Edit">{ICONS.edit}</button>
                 </div>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { collection, query, onSnapshot, deleteDoc, doc } from '@firebase/firestore';
 import { ref, deleteObject } from '@firebase/storage';
@@ -100,6 +99,24 @@ const TaskManagement: React.FC<TaskManagementProps> = ({ onEditTask, onEditTrain
         onEditTraining(trainingDetails);
     };
 
+    const handleWhatsAppExport = (task: Task) => {
+        const assignedUserName = users.find(u => u.uid === task.assignedTo)?.nama || 'N/A';
+        let message = `*Detail Tugas*\n\n` +
+            `*Judul:* ${task.title}\n` +
+            `*Deskripsi:* ${task.description || '-'}\n` +
+            `*Ditugaskan Kepada:* ${assignedUserName}\n` +
+            `*Batas Waktu:* ${new Date(task.dueDate).toLocaleDateString('id-ID')}\n` +
+            `*Prioritas:* ${task.priority}\n` +
+            `*Status:* ${task.status}\n`;
+            
+        if (task.fileUrl) {
+            message += `*Lampiran:* Tersedia (tidak dapat dilampirkan via teks)\n`;
+        }
+    
+        const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, '_blank');
+    };
+
     const getUserName = (userId: string) => users.find(u => u.uid === userId)?.nama || 'Unknown';
     
     const priorityClass: { [key in TaskPriority]: string } = {
@@ -143,6 +160,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({ onEditTask, onEditTrain
                                             <td className="p-4"><span className={`px-3 py-1 text-xs font-semibold rounded-full ${statusClass[task.status]}`}>{task.status}</span></td>
                                             <td className="p-4">
                                                 <div className="flex items-center space-x-1 text-slate-500">
+                                                    <button onClick={() => handleWhatsAppExport(task)} className="p-2 rounded-full hover:bg-green-100 dark:hover:bg-green-400/20 text-green-600 dark:text-green-400" title="Export to WhatsApp">{ICONS.whatsapp}</button>
                                                     <button onClick={() => handleCreateTrainingFromTask(task)} className="p-2 rounded-full hover:bg-purple-100 dark:hover:bg-purple-400/20 text-purple-600 dark:text-purple-400" title="Create Training from Task">{ICONS.graduationCap}</button>
                                                     <button onClick={() => onEditTask(task)} className="p-2 rounded-full hover:bg-yellow-100 dark:hover:bg-yellow-400/20 text-yellow-600 dark:text-yellow-400" title="Edit">{ICONS.edit}</button>
                                                     <button onClick={() => handleDelete(task.id, task.fileUrl)} className="p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-400/20 text-red-600 dark:text-red-400" title="Delete">{ICONS.delete}</button>

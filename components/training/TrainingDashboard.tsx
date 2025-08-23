@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { collection, onSnapshot, doc, deleteDoc, addDoc, updateDoc, query, orderBy } from '@firebase/firestore';
 import { db, getFirestoreErrorMessage } from '../../services/firebase';
@@ -91,6 +90,8 @@ interface TrainingDashboardProps {
     onEditTraining: (training: Training | Partial<Training>) => void;
 }
 
+type SortableTrainingKeys = keyof Pick<Training, 'nama' | 'tanggalMulai' | 'lokasi' | 'pic' | 'status'>;
+
 const TrainingDashboard: React.FC<TrainingDashboardProps> = ({ onEditTraining }) => {
     const [trainings, setTrainings] = useState<Training[]>([]);
     const [loading, setLoading] = useState(true);
@@ -99,8 +100,9 @@ const TrainingDashboard: React.FC<TrainingDashboardProps> = ({ onEditTraining })
     
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('Semua Status');
-    const [sortOrder, setSortOrder] = useState('Terdekat');
-    const [viewMode, setViewMode] = useState<'cards' | 'calendar'>('cards');
+    const [sortOrder, setSortOrder] = useState('Terdekat'); // For cards view
+    const [viewMode, setViewMode] = useState<'cards' | 'list' | 'calendar'>('cards');
+    const [sortConfig, setSortConfig] = useState<{ key: SortableTrainingKeys; direction: 'ascending' | 'descending' }>({ key: 'tanggalMulai', direction: 'ascending' });
 
     useEffect(() => {
         const q = query(collection(db, 'trainings'), orderBy('tanggalMulai', 'asc'));
@@ -122,17 +124,31 @@ const TrainingDashboard: React.FC<TrainingDashboardProps> = ({ onEditTraining })
     }, [showNotification, setOffline]);
 
     const filteredAndSortedTrainings = useMemo(() => {
-        return trainings
+        let sorted = [...trainings]
             .filter(t => 
-                (t.nama.toLowerCase().includes(searchTerm.toLowerCase())) &&
+                (t.nama.toLowerCase().includes(searchTerm.toLowerCase()) || t.pic.toLowerCase().includes(searchTerm.toLowerCase())) &&
                 (statusFilter === 'Semua Status' || t.status === statusFilter)
-            )
-            .sort((a, b) => {
+            );
+
+        if (viewMode === 'list') {
+            sorted.sort((a, b) => {
+                const valA = a[sortConfig.key];
+                const valB = b[sortConfig.key];
+                if (valA === undefined || valA === null) return 1;
+                if (valB === undefined || valB === null) return -1;
+                if (valA < valB) return sortConfig.direction === 'ascending' ? -1 : 1;
+                if (valA > valB) return sortConfig.direction === 'ascending' ? 1 : -1;
+                return 0;
+            });
+        } else { // For cards/calendar view
+            sorted.sort((a, b) => {
                 const dateA = new Date(a.tanggalMulai).getTime();
                 const dateB = new Date(b.tanggalMulai).getTime();
                 return sortOrder === 'Terdekat' ? dateA - dateB : dateB - dateA;
             });
-    }, [trainings, searchTerm, statusFilter, sortOrder]);
+        }
+        return sorted;
+    }, [trainings, searchTerm, statusFilter, sortOrder, viewMode, sortConfig]);
     
     const handleStatusChange = async (id: string, status: TrainingStatus) => {
         try {
@@ -149,25 +165,41 @@ const TrainingDashboard: React.FC<TrainingDashboardProps> = ({ onEditTraining })
         }
     };
 
+    const requestSort = (key: SortableTrainingKeys) => {
+        let direction: 'ascending' | 'descending' = 'ascending';
+        if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+            direction = 'descending';
+        }
+        setSortConfig({ key, direction });
+    };
+
+    const getSortIndicator = (key: SortableTrainingKeys) => {
+        if (sortConfig.key !== key) return ' ▲▼';
+        return sortConfig.direction === 'ascending' ? ' ▲' : ' ▼';
+    };
+
     return (
         <div className="space-y-6 animate-fade-in-down">
              <div className="p-4 rounded-lg shadow-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
                     <input 
-                        type="text" placeholder="Cari Nama Training..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
+                        type="text" placeholder="Cari Nama Training atau PIC..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
                         className="md:col-span-2 w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 focus:ring-primary-500 focus:border-primary-500"
                     />
                     <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 focus:ring-primary-500 focus:border-primary-500">
                         <option>Semua Status</option>
                         {ALL_STATUSES.map(s => <option key={s}>{s}</option>)}
                     </select>
-                     <select value={sortOrder} onChange={e => setSortOrder(e.target.value)} className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 focus:ring-primary-500 focus:border-primary-500">
-                        <option value="Terdekat">Urutkan: Terdekat</option>
-                        <option value="Terjauh">Urutkan: Terjauh</option>
-                    </select>
+                     {viewMode === 'cards' && (
+                        <select value={sortOrder} onChange={e => setSortOrder(e.target.value)} className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 focus:ring-primary-500 focus:border-primary-500">
+                           <option value="Terdekat">Urutkan: Terdekat</option>
+                           <option value="Terjauh">Urutkan: Terjauh</option>
+                       </select>
+                     )}
                      <div className="md:col-span-4 flex justify-end">
                         <div className="flex items-center p-1 bg-slate-200 dark:bg-slate-700 rounded-lg">
                             <button onClick={() => setViewMode('cards')} className={`px-4 py-1 rounded-md text-sm font-semibold ${viewMode === 'cards' ? 'bg-white dark:bg-slate-800 shadow' : 'text-slate-600 dark:text-slate-300'}`}>Cards</button>
+                            <button onClick={() => setViewMode('list')} className={`px-4 py-1 rounded-md text-sm font-semibold ${viewMode === 'list' ? 'bg-white dark:bg-slate-800 shadow' : 'text-slate-600 dark:text-slate-300'}`}>List</button>
                             <button onClick={() => setViewMode('calendar')} className={`px-4 py-1 rounded-md text-sm font-semibold ${viewMode === 'calendar' ? 'bg-white dark:bg-slate-800 shadow' : 'text-slate-600 dark:text-slate-300'}`}>Calendar</button>
                         </div>
                     </div>
@@ -181,6 +213,53 @@ const TrainingDashboard: React.FC<TrainingDashboardProps> = ({ onEditTraining })
                             {filteredAndSortedTrainings.map(training => (
                                 <TrainingCard key={training.id} training={training} onStatusChange={handleStatusChange} onEdit={() => onEditTraining(training)} onDelete={handleDelete} />
                             ))}
+                        </div>
+                    ) : viewMode === 'list' ? (
+                         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm text-left">
+                                    <thead className="bg-slate-50 dark:bg-slate-700/50">
+                                        <tr>
+                                            <th className="p-4"><button className="font-semibold flex items-center gap-1" onClick={() => requestSort('nama')}>Nama Training<span className="text-slate-400">{getSortIndicator('nama')}</span></button></th>
+                                            <th className="p-4"><button className="font-semibold flex items-center gap-1" onClick={() => requestSort('tanggalMulai')}>Tanggal<span className="text-slate-400">{getSortIndicator('tanggalMulai')}</span></button></th>
+                                            <th className="p-4"><button className="font-semibold flex items-center gap-1" onClick={() => requestSort('lokasi')}>Lokasi<span className="text-slate-400">{getSortIndicator('lokasi')}</span></button></th>
+                                            <th className="p-4"><button className="font-semibold flex items-center gap-1" onClick={() => requestSort('pic')}>PIC<span className="text-slate-400">{getSortIndicator('pic')}</span></button></th>
+                                            <th className="p-4"><button className="font-semibold flex items-center gap-1" onClick={() => requestSort('status')}>Status<span className="text-slate-400">{getSortIndicator('status')}</span></button></th>
+                                            <th className="p-4 font-semibold">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                                        {filteredAndSortedTrainings.map(training => {
+                                            const { badge } = getStatusStyles(training.status);
+                                            return (
+                                                <tr key={training.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                                                    <td className="p-4 font-medium text-slate-900 dark:text-slate-50">{training.nama}</td>
+                                                    <td className="p-4">{formatDateRange(training.tanggalMulai, training.tanggalSelesai)}</td>
+                                                    <td className="p-4">{training.lokasi}</td>
+                                                    <td className="p-4">{training.pic}</td>
+                                                    <td className="p-4"><span className={`px-3 py-1 text-xs font-semibold rounded-full ${badge}`}>{training.status}</span></td>
+                                                    <td className="p-4">
+                                                        <div className="flex items-center space-x-1 text-slate-500">
+                                                            <button onClick={() => {
+                                                                let message = `*Pelatihan / Training*\n\n` +
+                                                                    `*Nama:* ${training.nama}\n` +
+                                                                    `*Tanggal:* ${formatDateRange(training.tanggalMulai, training.tanggalSelesai)}\n` +
+                                                                    `*Lokasi:* ${training.lokasi}\n` +
+                                                                    `*PIC:* ${training.pic}\n` +
+                                                                    `*Status:* ${training.status}\n`;
+                                                                const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+                                                                window.open(whatsappUrl, '_blank');
+                                                            }} className="p-2 rounded-full hover:bg-green-100 dark:hover:bg-green-400/20 text-green-600 dark:text-green-400" title="Export to WhatsApp">{ICONS.whatsapp}</button>
+                                                            <button onClick={() => onEditTraining(training)} className="p-2 rounded-full hover:bg-yellow-100 dark:hover:bg-yellow-400/20 text-yellow-600 dark:text-yellow-400" title="Edit">{ICONS.edit}</button>
+                                                            <button onClick={() => handleDelete(training.id)} className="p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-400/20 text-red-600 dark:text-red-400" title="Delete">{ICONS.delete}</button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     ) : (
                         <TrainingCalendar trainings={filteredAndSortedTrainings} onEditTraining={onEditTraining} />

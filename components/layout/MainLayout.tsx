@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useCallback, useMemo, FC, ReactNode } from 'react';
 import { signOut } from '@firebase/auth';
 import { doc, updateDoc, collection, onSnapshot } from '@firebase/firestore';
@@ -198,16 +199,28 @@ const MainLayout: React.FC = () => {
                     </div>
                     <div className="flex items-center space-x-2">
                         {showAddButtons && (
-                             <div className="hidden sm:flex items-center space-x-2">
-                                <button onClick={() => setIsAIModalOpen(true)} className="flex items-center space-x-2 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 px-3 py-2 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-900 transition-colors text-sm font-semibold">
-                                    {ICONS.magic}
-                                    <span>Tambah AI</span>
-                                </button>
-                                <button onClick={activeMenu === 'tasks' ? () => handleOpenTaskModal() : () => handleOpenTrainingModal()} className="flex items-center space-x-2 bg-primary-600 text-white px-3 py-2 rounded-lg hover:bg-primary-700 transition-colors text-sm font-semibold">
-                                    {ICONS.add}
-                                    <span>Tambah Manual</span>
-                                </button>
-                            </div>
+                             <>
+                                {/* Desktop Buttons */}
+                                <div className="hidden sm:flex items-center space-x-2">
+                                    <button onClick={() => setIsAIModalOpen(true)} className="flex items-center space-x-2 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 px-3 py-2 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-900 transition-colors text-sm font-semibold" title="Tambah dengan AI">
+                                        {ICONS.magic}
+                                        <span>Tambah AI</span>
+                                    </button>
+                                    <button onClick={activeMenu === 'tasks' ? () => handleOpenTaskModal() : () => handleOpenTrainingModal()} className="flex items-center space-x-2 bg-primary-600 text-white px-3 py-2 rounded-lg hover:bg-primary-700 transition-colors text-sm font-semibold" title="Tambah Manual">
+                                        {ICONS.add}
+                                        <span>Tambah Manual</span>
+                                    </button>
+                                </div>
+                                {/* Mobile Buttons */}
+                                <div className="flex sm:hidden items-center space-x-2">
+                                    <button onClick={() => setIsAIModalOpen(true)} className="p-2 rounded-full bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-900 transition-colors" title="Tambah dengan AI">
+                                        {ICONS.magic}
+                                    </button>
+                                    <button onClick={activeMenu === 'tasks' ? () => handleOpenTaskModal() : () => handleOpenTrainingModal()} className="p-2 rounded-full bg-primary-600 text-white hover:bg-primary-700 transition-colors" title="Tambah Manual">
+                                        {ICONS.add}
+                                    </button>
+                                </div>
+                            </>
                         )}
                         <div className="flex items-center space-x-4 pl-2">
                              <div className="text-right hidden sm:block">

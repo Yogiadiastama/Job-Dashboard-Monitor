@@ -6,7 +6,7 @@ import { UserData } from '../../types';
 import { ICONS } from '../../constants';
 import UserModal from './UserModal';
 import LoadingSpinner from '../common/LoadingSpinner';
-import { useNotification } from '../../hooks/useNotification';
+import { useNotification, useConnectivity } from '../../hooks/useNotification';
 
 const UserManagement: React.FC = () => {
     const [users, setUsers] = useState<UserData[]>([]);
@@ -14,6 +14,7 @@ const UserManagement: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<UserData | null>(null);
     const { showNotification } = useNotification();
+    const { setOffline } = useConnectivity();
 
     useEffect(() => {
         const unsub = onSnapshot(collection(db, "users"), 
@@ -25,12 +26,16 @@ const UserManagement: React.FC = () => {
             (error) => {
                 console.error("UserManagement: Error fetching users:", error);
                 const firebaseError = error as { code?: string };
-                showNotification(getFirestoreErrorMessage(firebaseError), "warning");
+                if (firebaseError.code === 'unavailable') {
+                    setOffline(true, true);
+                } else {
+                    showNotification(getFirestoreErrorMessage(firebaseError), "warning");
+                }
                 setLoading(false);
             }
         );
         return () => unsub();
-    }, [showNotification]);
+    }, [showNotification, setOffline]);
 
     const openModal = (user: UserData | null = null) => {
         setEditingUser(user);

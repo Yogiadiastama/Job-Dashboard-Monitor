@@ -4,7 +4,7 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import { ThemeProvider, useTheme } from './hooks/useTheme';
-import { NotificationProvider } from './hooks/useNotification';
+import { NotificationProvider, ConnectivityProvider } from './hooks/useNotification';
 import { isConfigured } from './services/firebase';
 import LoginPage from './components/auth/LoginPage';
 import MainLayout from './components/layout/MainLayout';
@@ -63,11 +63,13 @@ export default function App() {
     // If configured, provide the authentication context to the rest of the app.
     return (
         <NotificationProvider>
-            <AuthProvider>
-                <ThemeProvider>
-                    <AppContent />
-                </ThemeProvider>
-            </AuthProvider>
+            <ConnectivityProvider>
+                <AuthProvider>
+                    <ThemeProvider>
+                        <AppContent />
+                    </ThemeProvider>
+                </AuthProvider>
+            </ConnectivityProvider>
         </NotificationProvider>
     );
 }

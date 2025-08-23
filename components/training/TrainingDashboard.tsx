@@ -4,7 +4,9 @@ import { db, getFirestoreErrorMessage } from '../../services/firebase';
 import { Training, TrainingStatus, ALL_STATUSES } from '../../types';
 import { ICONS } from '../../constants';
 import LoadingSpinner from '../common/LoadingSpinner';
-import { useNotification } from '../../hooks/useNotification';
+import { useNotification, useConnectivity } from '../../hooks/useNotification';
+import AIInputModal from '../training/AddWithAIModal';
+import { analyzeTextForEntry } from '../../services/geminiService';
 
 // --- Helper Functions ---
 const formatDateRange = (start: string, end: string) => {
@@ -194,6 +196,7 @@ const TrainingDashboard: React.FC = () => {
     const [trainings, setTrainings] = useState<Training[]>([]);
     const [loading, setLoading] = useState(true);
     const { showNotification } = useNotification();
+    const { setOffline } = useConnectivity();
     
     // Filter and Sort State
     const [searchTerm, setSearchTerm] = useState('');
@@ -203,6 +206,8 @@ const TrainingDashboard: React.FC = () => {
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingTraining, setEditingTraining] = useState<Training | Partial<Training> | null>(null);
+    const [isAIModalOpen, setIsAIModalOpen] = useState(false);
+    const [isFabMenuOpen, setFabMenuOpen] = useState(false);
 
     useEffect(() => {
         const q = query(collection(db, 'trainings'), orderBy('tanggalMulai', 'asc'));
@@ -214,12 +219,16 @@ const TrainingDashboard: React.FC = () => {
             },
             (error) => {
                 const firebaseError = error as { code?: string };
-                showNotification(getFirestoreErrorMessage(firebaseError), "warning");
+                if (firebaseError.code === 'unavailable') {
+                    setOffline(true, true);
+                } else {
+                    showNotification(getFirestoreErrorMessage(firebaseError), "warning");
+                }
                 setLoading(false);
             }
         );
         return () => unsub();
-    }, [showNotification]);
+    }, [showNotification, setOffline]);
 
     const filteredAndSortedTrainings = useMemo(() => {
         return trainings
@@ -237,11 +246,12 @@ const TrainingDashboard: React.FC = () => {
     const handleOpenModal = (training: Training | Partial<Training> | null = null) => {
         setEditingTraining(training);
         setIsModalOpen(true);
+        setFabMenuOpen(false);
     };
 
     const handleSaveTraining = async (trainingData: Omit<Training, 'id'>) => {
         try {
-            if (editingTraining && 'id' in editingTraining) {
+            if (editingTraining && 'id' in editingTraining && editingTraining.id) {
                 await updateDoc(doc(db, 'trainings', editingTraining.id), trainingData);
                 showNotification('Training berhasil diperbarui.', 'success');
             } else {
@@ -273,20 +283,40 @@ const TrainingDashboard: React.FC = () => {
         }
     };
 
+    const handleProcessAIText = async (text: string) => {
+        try {
+            const result = await analyzeTextForEntry(text);
+            if (result.entryType !== 'training' || !result.trainingDetails) {
+                throw new Error("Teks yang Anda masukkan sepertinya bukan permintaan training. Coba lagi.");
+            }
+
+            const { nama, tanggalMulai, tanggalSelesai, lokasi, pic } = result.trainingDetails;
+            const today = new Date().toISOString().split('T')[0];
+
+            const partialTraining: Partial<Training> = {
+                nama: nama || '',
+                tanggalMulai: tanggalMulai || today,
+                tanggalSelesai: tanggalSelesai || tanggalMulai || today,
+                lokasi: lokasi || '',
+                pic: pic || '',
+                status: 'Belum Dikonfirmasi',
+                catatan: `Dibuat dari teks via AI.`,
+            };
+            
+            setIsAIModalOpen(false);
+            handleOpenModal(partialTraining);
+
+        } catch (error) {
+            console.error("AI Text Processing Error:", error);
+            throw error; // Re-throw for the modal to catch and display.
+        }
+    };
+
     return (
-        <div className="space-y-6">
-            <header className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Dashboard Training</h1>
-                    <p className="text-gray-500 dark:text-gray-400">Pantau semua jadwal dan status konfirmasi training.</p>
-                </div>
-                <button
-                    onClick={() => handleOpenModal()}
-                    className="flex items-center space-x-2 bg-brand-purple text-white px-4 py-2 rounded-lg hover:bg-opacity-90 transition-colors"
-                >
-                    {ICONS.add}
-                    <span>Tambah Training</span>
-                </button>
+        <div className="space-y-6 relative min-h-[calc(100vh-200px)]">
+            <header>
+                <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Dashboard Training</h1>
+                <p className="text-gray-500 dark:text-gray-400">Pantau semua jadwal dan status konfirmasi training.</p>
             </header>
 
             <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
@@ -330,11 +360,49 @@ const TrainingDashboard: React.FC = () => {
                 )
             )}
             
+            <div className="absolute bottom-4 right-4 z-30">
+                <div className="relative">
+                     {isFabMenuOpen && (
+                        <div className="flex flex-col items-center space-y-2 mb-2 animate-fade-in-up">
+                            <div className="flex items-center space-x-2 group" onClick={() => { setIsAIModalOpen(true); setFabMenuOpen(false); }}>
+                                <span className="hidden group-hover:block bg-white dark:bg-gray-700 text-sm px-2 py-1 rounded-md shadow-lg">Tambah dari Teks (AI)</span>
+                                <button className="bg-white dark:bg-gray-700 p-3 rounded-full shadow-lg hover:bg-gray-100 dark:hover:bg-gray-600">
+                                    {ICONS.magic}
+                                </button>
+                            </div>
+                            <div className="flex items-center space-x-2 group" onClick={() => { handleOpenModal(); setFabMenuOpen(false); }}>
+                                <span className="hidden group-hover:block bg-white dark:bg-gray-700 text-sm px-2 py-1 rounded-md shadow-lg">Tambah Manual</span>
+                                <button className="bg-white dark:bg-gray-700 p-3 rounded-full shadow-lg hover:bg-gray-100 dark:hover:bg-gray-600">
+                                    {ICONS.add}
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                    <button 
+                        onClick={() => setFabMenuOpen(!isFabMenuOpen)} 
+                        className="bg-brand-purple text-white p-4 rounded-full shadow-lg hover:bg-opacity-90 transition-transform transform hover:scale-110"
+                        aria-label="Tambah Training"
+                    >
+                        {isFabMenuOpen ? (
+                             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                        ) : ICONS.addLarge}
+                    </button>
+                </div>
+            </div>
+
             <TrainingModal 
                 isOpen={isModalOpen} 
                 onClose={() => setIsModalOpen(false)}
                 onSave={handleSaveTraining}
                 trainingToEdit={editingTraining}
+            />
+
+            <AIInputModal 
+                isOpen={isAIModalOpen}
+                onClose={() => setIsAIModalOpen(false)}
+                onProcess={handleProcessAIText}
+                title="Tambah Training dari Teks (AI)"
+                prompt="Tempelkan teks dari WhatsApp atau catatan Anda di sini untuk membuat training baru secara otomatis."
             />
         </div>
     );

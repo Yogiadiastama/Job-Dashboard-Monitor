@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { collection, onSnapshot, query, where } from '@firebase/firestore';
 import { db, getFirestoreErrorMessage } from '../../services/firebase';
 import { useAuth } from '../../hooks/useAuth';
-import { useNotification } from '../../hooks/useNotification';
+import { useNotification, useConnectivity } from '../../hooks/useNotification';
 import { Task, UserData, Training } from '../../types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { ICONS } from '../../constants';
@@ -28,6 +28,7 @@ const Dashboard: React.FC = () => {
     const [viewMode, setViewMode] = useState('table');
     const { userData } = useAuth();
     const { showNotification } = useNotification();
+    const { setOffline } = useConnectivity();
     
     // State for Task Modal
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -51,7 +52,12 @@ const Dashboard: React.FC = () => {
             },
             (error) => {
                 console.error("Dashboard: Error fetching tasks:", error);
-                showNotification(getFirestoreErrorMessage(error as { code?: string }), "warning");
+                const firebaseError = error as { code?: string };
+                if (firebaseError.code === 'unavailable') {
+                    setOffline(true, true);
+                } else {
+                    showNotification(getFirestoreErrorMessage(firebaseError), "warning");
+                }
                 setLoadingTasks(false);
             }
         );
@@ -64,7 +70,12 @@ const Dashboard: React.FC = () => {
             },
             (error) => {
                 console.error("Dashboard: Error fetching trainings:", error);
-                showNotification(getFirestoreErrorMessage(error as { code?: string }), "warning");
+                 const firebaseError = error as { code?: string };
+                if (firebaseError.code === 'unavailable') {
+                    setOffline(true, true);
+                } else {
+                    showNotification(getFirestoreErrorMessage(firebaseError), "warning");
+                }
                 setLoadingTrainings(false);
             }
         );
@@ -77,7 +88,12 @@ const Dashboard: React.FC = () => {
                 },
                 (error) => {
                      console.error("Dashboard: Error fetching users:", error);
-                     showNotification(getFirestoreErrorMessage(error as { code?: string }), "warning");
+                     const firebaseError = error as { code?: string };
+                     if (firebaseError.code === 'unavailable') {
+                         setOffline(true, true);
+                     } else {
+                         showNotification(getFirestoreErrorMessage(firebaseError), "warning");
+                     }
                 }
             );
         }
@@ -87,7 +103,7 @@ const Dashboard: React.FC = () => {
             trainingsUnsub();
             usersUnsub();
         };
-    }, [userData, showNotification]);
+    }, [userData, showNotification, setOffline]);
 
     // Task stats
     const completedTasks = tasks.filter(task => task.status === 'Completed').length;

@@ -3,7 +3,7 @@ import React, { useState, useEffect, createContext, useContext, ReactNode } from
 import { doc, onSnapshot } from '@firebase/firestore';
 import { db, getFirestoreErrorMessage } from '../services/firebase';
 import { ThemeSettings } from '../types';
-import { useNotification } from './useNotification';
+import { useNotification, useConnectivity } from './useNotification';
 
 interface ThemeContextType {
     themeSettings: ThemeSettings;
@@ -25,6 +25,7 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const [themeSettings, setThemeSettings] = useState<ThemeSettings>(defaultTheme);
     const [loading, setLoading] = useState(true);
     const { showNotification } = useNotification();
+    const { setOffline } = useConnectivity();
 
     useEffect(() => {
         const docRef = doc(db, "settings", "theme");
@@ -40,14 +41,18 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             (error) => {
                 console.error("Error fetching theme settings (might be offline):", error);
                 const firebaseError = error as { code?: string };
-                showNotification(getFirestoreErrorMessage(firebaseError), "warning");
+                if (firebaseError.code === 'unavailable') {
+                    setOffline(true, true);
+                } else {
+                    showNotification(getFirestoreErrorMessage(firebaseError), "warning");
+                }
                 setThemeSettings(defaultTheme);
                 setLoading(false);
             }
         );
 
         return () => unsubscribe();
-    }, [showNotification]);
+    }, [showNotification, setOffline]);
 
     const value = { themeSettings, loading };
 

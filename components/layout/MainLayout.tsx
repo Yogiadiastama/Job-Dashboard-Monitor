@@ -4,6 +4,7 @@ import { doc, updateDoc } from '@firebase/firestore';
 import { auth, db } from '../../services/firebase';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
+import { useConnectivity } from '../../hooks/useNotification';
 import { ICONS } from '../../constants';
 import Dashboard from '../dashboard/Dashboard';
 import TaskManagement from '../tasks/TaskManagement';
@@ -25,6 +26,7 @@ interface MenuItem {
 const MainLayout: React.FC = () => {
     const { user, userData } = useAuth();
     const { themeSettings } = useTheme();
+    const { isOffline } = useConnectivity();
     
     const allMenuItems = useMemo<MenuItem[]>(() => [
         { id: 'dashboard', label: 'Dashboard', icon: ICONS.dashboard, roles: ['pegawai', 'pimpinan', 'admin'] },
@@ -165,6 +167,14 @@ const MainLayout: React.FC = () => {
                     </button>
                     <h2 className="text-xl font-semibold hidden md:block">{menuItems.find(m => m.id === activeMenu)?.label}</h2>
                     <div className="flex items-center space-x-4">
+                        {isOffline && (
+                            <div title="Anda sedang dalam mode offline. Perubahan akan disinkronkan saat koneksi pulih." className="flex items-center space-x-2 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-3 py-1 rounded-full text-sm font-semibold animate-pulse">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15zM21 21l-18-18" />
+                                </svg>
+                                <span>Offline</span>
+                            </div>
+                        )}
                         <div className="text-right">
                             <p className="font-semibold">{userData.nama}</p>
                             <p className="text-sm text-gray-500 capitalize">{userData.role}</p>

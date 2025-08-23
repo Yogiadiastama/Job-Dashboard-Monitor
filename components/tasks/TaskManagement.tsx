@@ -3,7 +3,7 @@ import { collection, query, where, onSnapshot, deleteDoc, doc, addDoc } from '@f
 import { ref, deleteObject } from '@firebase/storage';
 import { db, storage, getFirestoreErrorMessage } from '../../services/firebase';
 import { useAuth } from '../../hooks/useAuth';
-import { useNotification } from '../../hooks/useNotification';
+import { useNotification, useConnectivity } from '../../hooks/useNotification';
 import { Task, UserData, TrainingStatus, TaskPriority, TaskStatus, AIParsedTask } from '../../types';
 import { ICONS } from '../../constants';
 import TaskModal from './TaskModal';
@@ -23,6 +23,7 @@ const TaskManagement: React.FC = () => {
     const [editingTask, setEditingTask] = useState<Task | Partial<Task> | null>(null);
     const { userData } = useAuth();
     const { showNotification } = useNotification();
+    const { setOffline } = useConnectivity();
     const [sortConfig, setSortConfig] = useState<{ key: SortableTaskKeys; direction: 'ascending' | 'descending' }>({ key: 'createdAt', direction: 'descending' });
     const [isFabMenuOpen, setFabMenuOpen] = useState(false);
     
@@ -37,7 +38,12 @@ const TaskManagement: React.FC = () => {
             },
             (error) => {
                 console.error("TaskManagement: Error fetching tasks:", error);
-                showNotification(getFirestoreErrorMessage(error as { code?: string }), "warning");
+                const firebaseError = error as { code?: string };
+                if (firebaseError.code === 'unavailable') {
+                    setOffline(true, true);
+                } else {
+                    showNotification(getFirestoreErrorMessage(firebaseError), "warning");
+                }
                 setLoading(false);
             }
         );
@@ -48,7 +54,12 @@ const TaskManagement: React.FC = () => {
             },
             (error) => {
                 console.error("TaskManagement: Error fetching users:", error);
-                showNotification(getFirestoreErrorMessage(error as { code?: string }), "warning");
+                const firebaseError = error as { code?: string };
+                if (firebaseError.code === 'unavailable') {
+                    setOffline(true, true);
+                } else {
+                    showNotification(getFirestoreErrorMessage(firebaseError), "warning");
+                }
             }
         );
         
@@ -56,7 +67,7 @@ const TaskManagement: React.FC = () => {
             tasksUnsub();
             usersUnsub();
         };
-    }, [userData, showNotification]);
+    }, [userData, showNotification, setOffline]);
 
     const sortedTasks = useMemo(() => {
         let sortableItems = [...tasks];

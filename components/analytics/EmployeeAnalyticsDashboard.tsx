@@ -116,13 +116,16 @@ const EmployeeAnalyticsDashboard: React.FC = () => {
         const unitDistribution = Object.entries(countBy('unitKerja')).map(([name, value]) => ({ name, value })).sort((a,b) => b.value - a.value);
         const topUnits = unitDistribution.slice(0, 10);
 
+        // Robust Age/Generation Calculation
         const generationDistribution = employeeData.reduce((acc, emp) => {
-            if (!emp.birthDate || !/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(emp.birthDate)) {
-                return acc;
-            }
-            const parts = emp.birthDate.split('/');
-            const birthYear = parseInt(parts[2], 10);
-            if (isNaN(birthYear)) return acc;
+            if (!emp.birthDate || typeof emp.birthDate !== 'string') return acc;
+            
+            // Matches DD/MM/YYYY, D/M/YYYY, DD-MM-YYYY etc.
+            const match = emp.birthDate.match(/(\d{1,2})[/-](\d{1,2})[/-](\d{4})/);
+            if (!match || !match[3]) return acc;
+
+            const birthYear = parseInt(match[3], 10);
+            if (isNaN(birthYear) || birthYear < 1920 || birthYear > new Date().getFullYear()) return acc;
 
             const generation = getGeneration(birthYear);
             acc[generation] = (acc[generation] || 0) + 1;
@@ -130,12 +133,18 @@ const EmployeeAnalyticsDashboard: React.FC = () => {
         }, {} as Record<string, number>);
         const generationData = Object.entries(generationDistribution).map(([name, value]) => ({name, value}));
         
+        // Robust Tenure/Masa Kerja Calculation
         const tenureDistribution = employeeData.reduce((acc, emp) => {
-            if (!emp.masaKerja) return acc;
-            const yearsMatch = emp.masaKerja.match(/(\d+)\s*Tahun/);
-            if (!yearsMatch) return acc;
+            if (!emp.masaKerja || typeof emp.masaKerja !== 'string') return acc;
             
-            const years = parseInt(yearsMatch[1], 10);
+            // Looks for a number (integer or decimal with dot/comma) followed by "Tahun" or "Thn"
+            const yearsMatch = emp.masaKerja.match(/(\d+[,.]?\d*)\s*(Tahun|Thn)/i);
+            if (!yearsMatch || !yearsMatch[1]) return acc;
+            
+            // Replace comma with dot for float parsing
+            const years = parseFloat(yearsMatch[1].replace(',', '.'));
+            if (isNaN(years)) return acc;
+            
             let group = '20+ Tahun';
             if (years <= 5) group = '0-5 Tahun';
             else if (years <= 10) group = '6-10 Tahun';

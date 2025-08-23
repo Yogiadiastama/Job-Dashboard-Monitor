@@ -1,7 +1,7 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, FC, ReactNode } from 'react';
 import { signOut } from '@firebase/auth';
-import { auth } from '../../services/firebase';
+import { doc, updateDoc } from '@firebase/firestore';
+import { auth, db } from '../../services/firebase';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
 import { ICONS } from '../../constants';
@@ -12,154 +12,179 @@ import Settings from '../settings/Settings';
 import TrainingDashboard from '../training/TrainingDashboard';
 import EmployeeSearch from '../search/EmployeeSearch';
 import NotificationBanner from '../common/NotificationBanner';
+import EmployeeAnalyticsDashboard from '../analytics/EmployeeAnalyticsDashboard';
+import DraggableMenuItem from './DraggableMenuItem';
+
+interface MenuItem {
+    id: string;
+    label: string;
+    icon: ReactNode;
+    roles: string[];
+}
 
 const MainLayout: React.FC = () => {
-    const { userData } = useAuth();
+    const { user, userData } = useAuth();
     const { themeSettings } = useTheme();
-    const [activeMenu, setActiveMenu] = useState('dashboard');
+    
+    const allMenuItems = useMemo<MenuItem[]>(() => [
+        { id: 'dashboard', label: 'Dashboard', icon: ICONS.dashboard, roles: ['pegawai', 'pimpinan', 'admin'] },
+        { id: 'tasks', label: 'Pekerjaan', icon: ICONS.tasks, roles: ['pegawai', 'pimpinan', 'admin'] },
+        { id: 'training', label: 'Training', icon: ICONS.training, roles: ['pimpinan', 'admin'] },
+        { id: 'analytics', label: 'Info Grafik Pegawai', icon: ICONS.chartPie, roles: ['pimpinan', 'admin'] },
+        { id: 'search', label: 'Pencarian Pegawai', icon: ICONS.search, roles: ['pimpinan', 'admin'] },
+        { id: 'users', label: 'Manajemen Pegawai', icon: ICONS.users, roles: ['admin'] },
+        { id: 'settings', label: 'Pengaturan', icon: ICONS.settings, roles: ['admin'] },
+    ], []);
+
+    const initialMenuItems = useMemo(() => {
+        const userRole = userData?.role || 'pegawai';
+        const defaultFiltered = allMenuItems.filter(item => item.roles.includes(userRole));
+        if (userData?.role === 'admin' && userData.menuOrder) {
+            const ordered = userData.menuOrder
+                .map(id => defaultFiltered.find(item => item.id === id))
+                .filter((item): item is MenuItem => !!item);
+            const remaining = defaultFiltered.filter(item => !userData.menuOrder?.includes(item.id));
+            return [...ordered, ...remaining];
+        }
+        return defaultFiltered;
+    }, [userData, allMenuItems]);
+    
+    const [menuItems, setMenuItems] = useState<MenuItem[]>(initialMenuItems);
+    const [activeMenu, setActiveMenu] = useState(initialMenuItems[0]?.id || 'dashboard');
     const [isSidebarVisible, setSidebarVisible] = useState(false);
 
     useEffect(() => {
-        // Show sidebar by default on larger screens
-        if (window.innerWidth >= 768) {
-            setSidebarVisible(true);
+        setMenuItems(initialMenuItems);
+        if (!initialMenuItems.find(item => item.id === activeMenu)) {
+             setActiveMenu(initialMenuItems[0]?.id || 'dashboard');
         }
-    }, []);
-    
-    useEffect(() => {
-        // Apply accent color as CSS variable
-        if(themeSettings.accentColor) {
-            document.documentElement.style.setProperty('--accent-color', themeSettings.accentColor);
-        }
-    }, [themeSettings.accentColor]);
+    }, [initialMenuItems, activeMenu]);
 
     const handleLogout = async () => {
         await signOut(auth);
     };
-    
-    const menuItems = [
-        { id: 'dashboard', label: 'Dashboard', icon: ICONS.dashboard, roles: ['pegawai', 'pimpinan', 'admin'] },
-        { id: 'tasks', label: 'Pekerjaan', icon: ICONS.tasks, roles: ['pegawai', 'pimpinan', 'admin'] },
-        { id: 'training', label: 'Training', icon: ICONS.training, roles: ['pegawai', 'pimpinan', 'admin'] },
-        { id: 'employeeSearch', label: 'Pencarian Pegawai', icon: ICONS.search, roles: ['pimpinan', 'admin'] },
-        { id: 'users', label: 'Manajemen Pegawai', icon: ICONS.users, roles: ['admin'] },
-        { id: 'settings', label: 'Pengaturan', icon: ICONS.settings, roles: ['admin'] },
-    ];
 
     const renderContent = () => {
         switch (activeMenu) {
             case 'dashboard': return <Dashboard />;
             case 'tasks': return <TaskManagement />;
             case 'training': return <TrainingDashboard />;
-            case 'employeeSearch': return <EmployeeSearch />;
+            case 'analytics': return <EmployeeAnalyticsDashboard />;
+            case 'search': return <EmployeeSearch />;
             case 'users': return <UserManagement />;
             case 'settings': return <Settings />;
             default: return <Dashboard />;
         }
     };
     
-    // The loading check has been removed from here and centralized in App.tsx
-    // to prevent any rendering race conditions that cause flickering.
-    if (!userData) {
-        // This is a safety net, but should ideally not be reached if App.tsx works correctly.
-        return null; 
-    }
-
-    const UserAvatar = () => {
-        if (userData?.photoURL) {
-            return <img src={userData.photoURL} alt={userData.nama} className="w-10 h-10 rounded-full object-cover" />;
+    const saveMenuOrder = async (newOrder: string[]) => {
+        if (userData?.uid) {
+            try {
+                const userDocRef = doc(db, 'users', userData.uid);
+                await updateDoc(userDocRef, { menuOrder: newOrder });
+            } catch (error) {
+                console.error("Failed to save menu order:", error);
+            }
         }
-        const initials = userData.nama.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-        return (
-            <div className="w-10 h-10 rounded-full bg-blue-200 dark:bg-blue-800 flex items-center justify-center font-bold text-blue-600 dark:text-blue-300 flex-shrink-0"
-                 style={{backgroundColor: `${themeSettings.accentColor}20`, color: themeSettings.accentColor}}
-            >
-                {initials}
-            </div>
-        );
     };
+
+    const moveMenuItem = useCallback((dragIndex: number, hoverIndex: number) => {
+        setMenuItems(prevItems => {
+            const newItems = [...prevItems];
+            const [movedItem] = newItems.splice(dragIndex, 1);
+            newItems.splice(hoverIndex, 0, movedItem);
+            
+            if (userData?.role === 'admin') {
+                const newOrder = newItems.map(item => item.id);
+                saveMenuOrder(newOrder);
+            }
+            return newItems;
+        });
+    }, [userData?.role]);
+
+
+    if (!userData || !user) {
+        return <div>Loading user data...</div>;
+    }
 
     return (
         <div className="flex h-screen bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
-            {/* Overlay for mobile nav */}
-            <div 
-                className={`fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden transition-opacity duration-300 ${isSidebarVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-                onClick={() => setSidebarVisible(false)}
-            ></div>
-
             {/* Sidebar */}
-            <aside className={`bg-white dark:bg-gray-800 shadow-xl transition-transform duration-300 w-64 fixed md:relative h-full z-30 transform ${isSidebarVisible ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
-                <div className="p-4 flex items-center justify-between">
+            <aside className={`absolute md:relative z-20 md:z-auto bg-white dark:bg-gray-800 w-64 p-4 space-y-4 transform ${isSidebarVisible ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition-transform duration-300 ease-in-out shadow-lg`}>
+                <div className="text-center py-2">
                     <h1 className="text-2xl font-bold" style={{ color: themeSettings.accentColor }}>{themeSettings.headerTitle}</h1>
-                    <button onClick={() => setSidebarVisible(false)} className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 md:hidden">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                    </button>
                 </div>
-                <nav className="mt-8">
-                    {menuItems.filter(item => item.roles.includes(userData.role)).map(item => {
-                        const isActive = activeMenu === item.id;
-                        const activeStyle = {
-                            backgroundColor: `${themeSettings.accentColor}1A`, // 10% opacity
-                            color: themeSettings.accentColor,
-                            borderColor: themeSettings.accentColor,
-                        };
-                        return (
-                            <a
-                                key={item.id}
-                                href="#"
-                                onClick={(e) => { 
-                                    e.preventDefault(); 
-                                    setActiveMenu(item.id); 
-                                    if (window.innerWidth < 768) {
-                                        setSidebarVisible(false);
-                                    }
-                                }}
-                                className={`flex items-center py-3 px-6 my-1 transition-colors duration-200 ${!isActive ? 'hover:bg-gray-100 dark:hover:bg-gray-700' : 'border-r-4'}`}
-                                style={isActive ? activeStyle : {}}
-                            >
-                                {item.icon}
-                                <span className="mx-4 font-medium whitespace-nowrap">{item.label}</span>
-                            </a>
-                        );
-                    })}
+                <nav className="flex-grow">
+                    <ul>
+                        {menuItems.map((item, index) => {
+                            if (userData.role === 'admin') {
+                                return (
+                                    <DraggableMenuItem
+                                        key={item.id}
+                                        id={item.id}
+                                        index={index}
+                                        isActive={activeMenu === item.id}
+                                        onClick={() => {
+                                            setActiveMenu(item.id);
+                                            setSidebarVisible(false);
+                                        }}
+                                        moveMenuItem={moveMenuItem}
+                                    >
+                                        {item.icon}
+                                        <span>{item.label}</span>
+                                    </DraggableMenuItem>
+                                );
+                            }
+                            return (
+                                <li key={item.id}>
+                                    <a
+                                        href="#"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            setActiveMenu(item.id);
+                                            setSidebarVisible(false);
+                                        }}
+                                        className={`flex items-center space-x-3 p-3 rounded-lg transition-colors ${activeMenu === item.id ? 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 font-semibold' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                                    >
+                                        {item.icon}
+                                        <span>{item.label}</span>
+                                    </a>
+                                </li>
+                            );
+                        })}
+                    </ul>
                 </nav>
-                <div className="absolute bottom-0 w-full">
-                     <a
-                        href="#"
-                        onClick={(e) => { e.preventDefault(); handleLogout(); }}
-                        className="flex items-center py-3 px-6 my-1 transition-colors duration-200 hover:bg-red-100 dark:hover:bg-red-900 text-red-500"
-                    >
-                        {ICONS.logout}
-                        <span className="mx-4 font-medium whitespace-nowrap">Logout</span>
-                    </a>
-                </div>
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col overflow-hidden">
-                 <NotificationBanner />
-                 <header className="flex flex-col sm:flex-row justify-between sm:items-center p-4 sm:p-6 md:p-10 gap-4 bg-gray-100/80 dark:bg-gray-900/80 backdrop-blur-sm z-10 border-b border-gray-200 dark:border-gray-700">
-                    <div className="flex items-center">
-                        <button onClick={() => setSidebarVisible(true)} className="md:hidden p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 mr-4">
-                            {ICONS.drag}
-                        </button>
-                        <div>
-                            <h2 className="text-2xl md:text-3xl font-bold">Halo, {userData.nama.split(' ')[0]}!</h2>
-                            <p className="text-gray-500 dark:text-gray-400">Selamat datang kembali.</p>
+            <div className="flex-1 flex flex-col overflow-hidden">
+                <NotificationBanner />
+                <header className="bg-white dark:bg-gray-800 shadow-md p-4 flex justify-between items-center">
+                    <button className="md:hidden" onClick={() => setSidebarVisible(!isSidebarVisible)}>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" /></svg>
+                    </button>
+                    <h2 className="text-xl font-semibold hidden md:block">{menuItems.find(m => m.id === activeMenu)?.label}</h2>
+                    <div className="flex items-center space-x-4">
+                        <div className="text-right">
+                            <p className="font-semibold">{userData.nama}</p>
+                            <p className="text-sm text-gray-500 capitalize">{userData.role}</p>
                         </div>
-                    </div>
-                    <div className="flex items-center space-x-4 self-end sm:self-center">
-                       <UserAvatar />
-                       <div>
-                           <p className="font-semibold">{userData.nama}</p>
-                           <p className="text-sm text-gray-500 capitalize">{userData.role}</p>
-                       </div>
+                        {userData.photoURL ? (
+                            <img src={userData.photoURL} alt={userData.nama} className="w-12 h-12 rounded-full object-cover" />
+                        ) : (
+                            <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center font-bold text-gray-500">
+                                {userData.nama.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                            </div>
+                        )}
+                        <button onClick={handleLogout} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" title="Logout">
+                            {ICONS.logout}
+                        </button>
                     </div>
                 </header>
-                <div className="flex-1 p-4 sm:p-6 md:p-10 overflow-y-auto">
+                <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 dark:bg-gray-900 p-6">
                     {renderContent()}
-                </div>
-            </main>
+                </main>
+            </div>
         </div>
     );
 };

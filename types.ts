@@ -1,5 +1,6 @@
 
 
+
 export type UserRole = 'pegawai' | 'pimpinan' | 'admin';
 export type TaskStatus = 'Pending' | 'On Progress' | 'Completed';
 export type TaskPriority = 'Low' | 'Mid' | 'High';
@@ -12,6 +13,7 @@ export interface UserData {
   noWhatsapp: string;
   role: UserRole;
   photoURL?: string;
+  menuOrder?: string[];
 }
 
 export interface Task {

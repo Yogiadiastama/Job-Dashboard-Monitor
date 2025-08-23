@@ -179,11 +179,22 @@ const MainLayout: React.FC = () => {
                     className="h-20 bg-white dark:bg-slate-800 flex-shrink-0 flex justify-between items-center px-6 border-b border-slate-200 dark:border-slate-700" 
                     style={{ paddingTop: isEditMode ? '2.5rem' : '' }}
                 >
-                    <button className="md:hidden text-slate-500" onClick={() => setSidebarVisible(!isSidebarVisible)}>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" /></svg>
-                    </button>
-                    <h2 className="text-xl font-semibold hidden md:block text-slate-800 dark:text-slate-100">{menuItems.find(m => m.id === activeMenu)?.label}</h2>
+                    <div className="flex items-center gap-4">
+                        <button className="md:hidden text-slate-500" onClick={() => setSidebarVisible(!isSidebarVisible)}>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" /></svg>
+                        </button>
+                        <div>
+                             <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-100">{menuItems.find(m => m.id === activeMenu)?.label}</h2>
+                             <p className="text-sm text-slate-500 dark:text-slate-400 hidden md:block">
+                                {activeMenu === 'tasks' && getText('tasks.description', defaultTextContent['tasks.description'])}
+                                {activeMenu === 'training' && getText('training.description', defaultTextContent['training.description'])}
+                             </p>
+                        </div>
+                    </div>
                     <div className="flex items-center space-x-4">
+                        {/* This div is the target for the action buttons portal */}
+                        <div id="header-actions" className="flex items-center space-x-2"></div>
+
                         {isOffline && (
                             <div title="You are in offline mode. Changes will sync when connection is restored." className="flex items-center space-x-2 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-3 py-1 rounded-full text-sm font-medium animate-pulse">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">

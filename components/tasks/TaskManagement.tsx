@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import ReactDOM from 'react-dom';
 import { collection, query, where, onSnapshot, deleteDoc, doc, addDoc } from '@firebase/firestore';
 import { ref, deleteObject } from '@firebase/storage';
 import { db, storage, getFirestoreErrorMessage } from '../../services/firebase';
@@ -10,11 +11,28 @@ import TaskModal from './TaskModal';
 import LoadingSpinner from '../common/LoadingSpinner';
 import { analyzeTextForEntry } from '../../services/geminiService';
 import AIInputModal from '../training/AddWithAIModal';
-import EditableText from '../common/EditableText';
-import { defaultTextContent } from '../../hooks/useCustomization';
-
 
 type SortableTaskKeys = keyof Pick<Task, 'title' | 'dueDate' | 'priority' | 'status' | 'createdAt'>;
+
+const HeaderActions: React.FC<{ onAddManually: () => void; onAddWithAI: () => void }> = ({ onAddManually, onAddWithAI }) => {
+    const targetNode = document.getElementById('header-actions');
+    if (!targetNode) return null;
+
+    return ReactDOM.createPortal(
+        <>
+            <button onClick={onAddWithAI} className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
+                {ICONS.magic}
+                <span className="hidden sm:inline">Add with AI</span>
+            </button>
+            <button onClick={onAddManually} className="flex items-center space-x-2 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
+                {ICONS.add}
+                <span className="hidden sm:inline">Add Manually</span>
+            </button>
+        </>,
+        targetNode
+    );
+};
+
 
 const TaskManagement: React.FC = () => {
     const [tasks, setTasks] = useState<Task[]>([]);
@@ -220,33 +238,10 @@ const TaskManagement: React.FC = () => {
 
     return (
         <div className="space-y-6 animate-fade-in-down">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                 <div>
-                    <EditableText 
-                        as="h1"
-                        contentKey="tasks.title"
-                        defaultText={defaultTextContent['tasks.title']}
-                        className="text-3xl font-bold text-slate-800 dark:text-slate-100"
-                    />
-                    <EditableText 
-                        as="p"
-                        contentKey="tasks.description"
-                        defaultText={defaultTextContent['tasks.description']}
-                        className="text-slate-500 dark:text-slate-400 mt-1"
-                    />
-                </div>
-                <div className="flex space-x-2 flex-shrink-0">
-                    <button onClick={() => setIsAIModalOpen(true)} className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
-                        {ICONS.magic}
-                        <span>Add with AI</span>
-                    </button>
-                    <button onClick={() => openModal()} className="flex items-center space-x-2 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
-                        {ICONS.add}
-                        <span>Add Manually</span>
-                    </button>
-                </div>
-            </div>
-            
+            <HeaderActions 
+                onAddManually={() => openModal()} 
+                onAddWithAI={() => setIsAIModalOpen(true)}
+            />
             {loading ? <LoadingSpinner text="Loading tasks..." /> : (
                 <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
                     <div className="overflow-x-auto">

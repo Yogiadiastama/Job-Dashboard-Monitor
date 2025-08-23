@@ -7,19 +7,19 @@ import { useAuth } from '../../hooks/useAuth';
 import { Task, TaskPriority, TaskStatus, UserData } from '../../types';
 
 interface TaskModalProps {
-    task: Task | null;
+    task: Task | Partial<Task> | null;
     users: UserData[];
     closeModal: () => void;
 }
 
 const TaskModal: React.FC<TaskModalProps> = ({ task, users, closeModal }) => {
-    const [title, setTitle] = useState(task ? task.title : '');
-    const [description, setDescription] = useState(task ? task.description : '');
-    const [assignedTo, setAssignedTo] = useState(task ? task.assignedTo : '');
-    const [dueDate, setDueDate] = useState(task ? task.dueDate : '');
-    const [priority, setPriority] = useState<TaskPriority>(task ? task.priority : 'Mid');
-    const [status, setStatus] = useState<TaskStatus>(task ? task.status : 'On Progress');
-    const [rating, setRating] = useState(task ? task.rating || 0 : 0);
+    const [title, setTitle] = useState(task?.title || '');
+    const [description, setDescription] = useState(task?.description || '');
+    const [assignedTo, setAssignedTo] = useState(task?.assignedTo || '');
+    const [dueDate, setDueDate] = useState(task?.dueDate || '');
+    const [priority, setPriority] = useState<TaskPriority>(task?.priority || 'Mid');
+    const [status, setStatus] = useState<TaskStatus>(task?.status || 'Pending');
+    const [rating, setRating] = useState(task?.rating || 0);
     const [file, setFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
     const { userData } = useAuth();
@@ -30,14 +30,14 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, users, closeModal }) => {
         setLoading(true);
 
         try {
-            let fileUrl = task?.fileUrl || '';
+            let fileUrl = (task as Task)?.fileUrl || '';
             if (file) {
                 const storageRef = ref(storage, `task-files/${Date.now()}-${file.name}`);
                 const snapshot = await uploadBytes(storageRef, file);
                 fileUrl = await getDownloadURL(snapshot.ref);
             }
 
-            if (task) {
+            if (task && 'id' in task && task.id) {
                 const taskData = { title, description, assignedTo, dueDate, priority, status, fileUrl, rating };
                 await updateDoc(doc(db, "tasks", task.id), taskData);
                 sendNotification(task.assignedTo, `Pekerjaan "${title}" telah diperbarui.`);
@@ -81,7 +81,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, users, closeModal }) => {
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl p-8 max-h-screen overflow-y-auto animate-fade-in-up">
-                <h2 className="text-2xl font-bold mb-6">{task ? 'Edit Pekerjaan' : 'Tambah Pekerjaan Baru'}</h2>
+                <h2 className="text-2xl font-bold mb-6">{task && 'id' in task ? 'Edit Pekerjaan' : 'Tambah Pekerjaan Baru'}</h2>
                 <form onSubmit={handleSubmit}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
@@ -126,7 +126,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, users, closeModal }) => {
                                     <option>Completed</option>
                                 </select>
                             </div>
-                            {(['pimpinan', 'pegawai'].includes(userData.role)) && task && (
+                            {(['pimpinan', 'pegawai'].includes(userData.role)) && task && 'id' in task && (
                                 <div className="mb-4">
                                     <label className="block text-sm font-bold mb-2">Rating (1-5)</label>
                                     <div className="flex space-x-1">
@@ -139,7 +139,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, users, closeModal }) => {
                             <div className="mb-4">
                                 <label className="block text-sm font-bold mb-2">Upload File</label>
                                 <input type="file" onChange={e => setFile(e.target.files ? e.target.files[0] : null)} className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
-                                {task && task.fileUrl && <a href={task.fileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 text-sm mt-2 block">Lihat file saat ini</a>}
+                                {task && 'fileUrl' in task && task.fileUrl && <a href={task.fileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 text-sm mt-2 block">Lihat file saat ini</a>}
                             </div>
                         </div>
                     </div>

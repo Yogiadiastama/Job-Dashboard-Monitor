@@ -1,6 +1,7 @@
 
 
 
+
 export type UserRole = 'pegawai' | 'pimpinan' | 'admin';
 export type TaskStatus = 'Pending' | 'On Progress' | 'Completed';
 export type TaskPriority = 'Low' | 'Mid' | 'High';
@@ -88,4 +89,27 @@ export interface EmployeeProfile {
     tc2023: string;
     pl2024: string;
     tc2024: string;
+}
+
+// Types for AI Data Parsing
+export interface AIParsedTask {
+  title?: string;
+  description?: string;
+  assignedTo?: string; // This is a name, needs to be mapped to UID
+  dueDate?: string; // YYYY-MM-DD
+  priority?: TaskPriority;
+}
+
+export interface AIParsedTraining {
+  nama?: string;
+  tanggalMulai?: string; // YYYY-MM-DD
+  tanggalSelesai?: string; // YYYY-MM-DD
+  lokasi?: string;
+  pic?: string; // Person In Charge name
+}
+
+export interface AIParsedData {
+  entryType: 'task' | 'training' | 'unknown';
+  taskDetails?: AIParsedTask;
+  trainingDetails?: AIParsedTraining;
 }

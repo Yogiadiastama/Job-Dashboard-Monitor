@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from 'react';
 import { collection, onSnapshot, query, where } from '@firebase/firestore';
 import { db, getFirestoreErrorMessage } from '../../services/firebase';
@@ -22,23 +20,50 @@ const isTaskLate = (task: Task): boolean => {
     return new Date(task.dueDate) < today && task.status !== 'Completed';
 };
 
+const StatCard: React.FC<{ title: string; value: number | string; icon: React.ReactNode; color: string; onClick?: () => void }> = ({ title, value, icon, color, onClick }) => {
+    const colorClasses: { [key: string]: { bg: string, text: string } } = {
+        blue: { bg: 'bg-blue-100 dark:bg-blue-500/20', text: 'text-blue-600 dark:text-blue-400' },
+        green: { bg: 'bg-green-100 dark:bg-green-500/20', text: 'text-green-600 dark:text-green-400' },
+        yellow: { bg: 'bg-yellow-100 dark:bg-yellow-500/20', text: 'text-yellow-600 dark:text-yellow-400' },
+        red: { bg: 'bg-red-100 dark:bg-red-500/20', text: 'text-red-600 dark:text-red-400' },
+        purple: { bg: 'bg-purple-100 dark:bg-purple-500/20', text: 'text-purple-600 dark:text-purple-400' },
+        indigo: { bg: 'bg-indigo-100 dark:bg-indigo-500/20', text: 'text-indigo-600 dark:text-indigo-400' },
+        slate: { bg: 'bg-slate-100 dark:bg-slate-700', text: 'text-slate-600 dark:text-slate-400' },
+    };
+
+    const styles = colorClasses[color] || colorClasses.slate;
+
+    return (
+        <div
+            onClick={onClick}
+            className={`bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex items-center space-x-4 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 ${onClick ? 'cursor-pointer' : ''}`}
+        >
+            <div className={`flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-lg ${styles.bg}`}>
+                <span className={styles.text}>{icon}</span>
+            </div>
+            <div>
+                <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{title}</p>
+                <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">{value}</p>
+            </div>
+        </div>
+    );
+};
+
 const Dashboard: React.FC = () => {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [trainings, setTrainings] = useState<Training[]>([]);
     const [users, setUsers] = useState<UserData[]>([]);
     const [loadingTasks, setLoadingTasks] = useState(true);
     const [loadingTrainings, setLoadingTrainings] = useState(true);
-    const [viewMode, setViewMode] = useState('table');
+    const [viewMode, setViewMode] = useState('chart');
     const { userData } = useAuth();
     const { showNotification } = useNotification();
     const { setOffline } = useConnectivity();
     
-    // State for Task Modal
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
     const [modalTasks, setModalTasks] = useState<Task[]>([]);
     const [modalTaskTitle, setModalTaskTitle] = useState('');
 
-    // State for Training Modal
     const [isTrainingModalOpen, setIsTrainingModalOpen] = useState(false);
     const [modalTrainings, setModalTrainings] = useState<Training[]>([]);
     const [modalTrainingTitle, setModalTrainingTitle] = useState('');
@@ -108,32 +133,30 @@ const Dashboard: React.FC = () => {
         };
     }, [userData, showNotification, setOffline]);
 
-    // Task stats
     const completedTasks = tasks.filter(task => task.status === 'Completed').length;
     const inProgressTasks = tasks.filter(task => task.status === 'On Progress').length;
     const lateTasks = tasks.filter(isTaskLate).length;
     
     const taskStats = [
-        { title: 'Total Pekerjaan', value: tasks.length, color: 'blue', filter: 'All' },
-        { title: 'Completed', value: completedTasks, color: 'green', filter: 'Completed' },
-        { title: 'On Progress', value: inProgressTasks, color: 'yellow', filter: 'On Progress' },
-        { title: 'Late', value: lateTasks, color: 'red', filter: 'Late' },
+        { title: 'Total Tasks', value: tasks.length, color: 'blue', filter: 'All', icon: ICONS.tasks },
+        { title: 'Completed', value: completedTasks, color: 'green', filter: 'Completed', icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
+        { title: 'On Progress', value: inProgressTasks, color: 'yellow', filter: 'On Progress', icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h5M20 20v-5h-5M4 20h5v-5M20 4h-5v5" /></svg> },
+        { title: 'Late', value: lateTasks, color: 'red', filter: 'Late', icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
     ];
 
-    // Training stats
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const upcomingTrainings = trainings.filter(t => new Date(t.tanggalMulai) >= today).length;
     const pastTrainings = trainings.filter(t => new Date(t.tanggalSelesai) < today).length;
 
     const trainingStats = [
-        { title: 'Total Training', value: trainings.length, color: 'purple', filter: 'All' },
-        { title: 'Akan Datang', value: upcomingTrainings, color: 'indigo', filter: 'Upcoming' },
-        { title: 'Telah Lewat', value: pastTrainings, color: 'gray', filter: 'Past' },
+        { title: 'Total Trainings', value: trainings.length, color: 'purple', filter: 'All', icon: ICONS.training },
+        { title: 'Upcoming', value: upcomingTrainings, color: 'indigo', filter: 'Upcoming', icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg> },
+        { title: 'Past', value: pastTrainings, color: 'slate', filter: 'Past', icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
     ];
     
     const employeeOfTheMonth = () => {
-        if (users.length === 0 || tasks.length === 0) return { nama: 'N/A', completed: 0 };
+        if (users.length === 0 || tasks.length === 0) return { nama: 'N/A', completed: 0, photoURL: null };
         const employeeStats = users.map(user => ({
             ...user,
             completed: tasks.filter(task => task.assignedTo === user.uid && task.status === 'Completed').length
@@ -153,14 +176,14 @@ const Dashboard: React.FC = () => {
     }));
 
     const handleWhatsAppExport = () => {
-        let message = `*Ringkasan Pekerjaan ProjectFlow Pro*:\n\n` +
-                        `- Total Pekerjaan: *${tasks.length}*\n` +
-                        `- Selesai: *${completedTasks}*\n` +
-                        `- Dalam Proses: *${inProgressTasks}*\n` +
-                        `- Terlambat: *${lateTasks}*`;
+        let message = `*ProjectFlow Pro Task Summary*:\n\n` +
+                        `- Total Tasks: *${tasks.length}*\n` +
+                        `- Completed: *${completedTasks}*\n` +
+                        `- In Progress: *${inProgressTasks}*\n` +
+                        `- Late: *${lateTasks}*`;
         
         if (bestEmployee.nama !== 'N/A') {
-            message += `\n\n*Pegawai Terbaik Bulan Ini*: ${bestEmployee.nama} (${bestEmployee.completed} pekerjaan selesai)`;
+            message += `\n\n*Employee of the Month*: ${bestEmployee.nama} (${bestEmployee.completed} tasks completed)`;
         }
         
         const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
@@ -175,7 +198,7 @@ const Dashboard: React.FC = () => {
             default: filteredTasks = tasks.filter(task => task.status === filter); break;
         }
         setModalTasks(filteredTasks);
-        setModalTaskTitle(`Daftar Pekerjaan: ${title}`);
+        setModalTaskTitle(`Task List: ${title}`);
         setIsTaskModalOpen(true);
     };
     
@@ -187,87 +210,84 @@ const Dashboard: React.FC = () => {
             case 'Past': filteredTrainings = trainings.filter(t => new Date(t.tanggalSelesai) < today); break;
         }
         setModalTrainings(filteredTrainings);
-        setModalTrainingTitle(`Daftar Training: ${title}`);
+        setModalTrainingTitle(`Training List: ${title}`);
         setIsTrainingModalOpen(true);
     };
 
     if (loadingTasks || loadingTrainings || !userData) {
-        return <div className="text-center p-10"><LoadingSpinner text="Memuat dashboard..." /></div>;
+        return <div className="text-center p-10"><LoadingSpinner text="Loading dashboard..." /></div>;
     }
 
     return (
-        <div className="animate-fade-in-up space-y-8">
-            {/* Task Stat Cards */}
+        <div className="animate-fade-in-down space-y-8">
             <div>
                  <EditableText 
                     as="h2"
                     contentKey="dashboard.tasks.title"
                     defaultText={defaultTextContent['dashboard.tasks.title']}
-                    className="text-xl font-bold mb-4"
-                    style={{color: 'var(--text-primary)'}}
+                    className="text-2xl font-bold mb-4 text-slate-800 dark:text-slate-100"
                  />
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     {taskStats.map(stat => (
-                        <div 
+                        <StatCard 
                             key={stat.title} 
-                            className={`p-6 rounded-2xl shadow-lg border-l-4 border-${stat.color}-500 transform transition-transform duration-300 hover:-translate-y-2 hover:shadow-xl cursor-pointer`}
-                            style={{backgroundColor: 'var(--card-bg)'}}
+                            title={stat.title}
+                            value={stat.value}
+                            color={stat.color}
+                            icon={stat.icon}
                             onClick={() => handleTaskStatCardClick(stat.filter, stat.title)}
-                        >
-                            <h3 className="font-medium" style={{color: 'var(--text-secondary)'}}>{stat.title}</h3>
-                            <p className="text-4xl font-bold mt-2" style={{color: 'var(--text-primary)'}}>{stat.value}</p>
-                        </div>
+                        />
                     ))}
                 </div>
             </div>
 
-            {/* Training Stat Cards */}
              <div>
                  <EditableText 
                     as="h2"
                     contentKey="dashboard.trainings.title"
                     defaultText={defaultTextContent['dashboard.trainings.title']}
-                    className="text-xl font-bold mb-4"
-                    style={{color: 'var(--text-primary)'}}
+                    className="text-2xl font-bold mb-4 text-slate-800 dark:text-slate-100"
                  />
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     {trainingStats.map(stat => (
-                        <div 
+                         <StatCard 
                             key={stat.title} 
-                            className={`p-6 rounded-2xl shadow-lg border-l-4 border-${stat.color}-500 transform transition-transform duration-300 hover:-translate-y-2 hover:shadow-xl cursor-pointer`}
-                            style={{backgroundColor: 'var(--card-bg)'}}
+                            title={stat.title}
+                            value={stat.value}
+                            color={stat.color}
+                            icon={stat.icon}
                             onClick={() => handleTrainingStatCardClick(stat.filter, stat.title)}
-                        >
-                            <h3 className="font-medium" style={{color: 'var(--text-secondary)'}}>{stat.title}</h3>
-                            <p className="text-4xl font-bold mt-2" style={{color: 'var(--text-primary)'}}>{stat.value}</p>
-                        </div>
+                        />
                     ))}
                 </div>
             </div>
 
             {['admin', 'pimpinan', 'pegawai'].includes(userData.role) && (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div className="lg:col-span-1 p-6 rounded-2xl shadow-lg flex flex-col items-center justify-center text-center" style={{backgroundColor: 'var(--card-bg)'}}>
-                        <h3 className="text-xl font-bold mb-4">Pegawai Terbaik Bulan Ini</h3>
-                        <img className="h-24 w-24 rounded-full object-cover ring-4 ring-yellow-400 mb-4" src={`https://ui-avatars.com/api/?name=${bestEmployee.nama}&background=random&color=fff`} alt="Best Employee" />
-                        <p className="text-2xl font-semibold">{bestEmployee.nama}</p>
-                        <p style={{color: 'var(--text-secondary)'}}>{bestEmployee.completed} pekerjaan selesai</p>
+                    <div className="lg:col-span-1 bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center text-center">
+                        <h3 className="text-xl font-bold mb-4 text-slate-800 dark:text-slate-100">Employee of the Month</h3>
+                         <div className="relative">
+                             <img className="h-24 w-24 rounded-full object-cover ring-4 ring-yellow-400 mb-4" src={bestEmployee.photoURL || `https://ui-avatars.com/api/?name=${bestEmployee.nama}&background=random&color=fff`} alt="Best Employee" />
+                             <span className="absolute bottom-4 -right-1 bg-yellow-400 p-1.5 rounded-full text-white text-lg">{ICONS.star}</span>
+                         </div>
+                        <p className="text-2xl font-semibold text-slate-800 dark:text-slate-100">{bestEmployee.nama}</p>
+                        <p className="text-slate-500 dark:text-slate-400">{bestEmployee.completed} tasks completed</p>
                     </div>
 
-                    <div className="lg:col-span-2 p-6 rounded-2xl shadow-lg" style={{backgroundColor: 'var(--card-bg)'}}>
+                    <div className="lg:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
                         <div className="flex flex-wrap gap-4 justify-between items-center mb-4">
                             <EditableText 
                                 as="h3"
                                 contentKey="dashboard.employeeStats.title"
                                 defaultText={defaultTextContent['dashboard.employeeStats.title']}
-                                className="text-xl font-bold"
+                                className="text-xl font-bold text-slate-800 dark:text-slate-100"
                             />
                             <div className="flex items-center space-x-2">
-                                <button onClick={() => setViewMode('table')} className={`p-2 rounded-lg ${viewMode === 'table' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700'}`}>{ICONS.table}</button>
-                                <button onClick={() => setViewMode('chart')} className={`p-2 rounded-lg ${viewMode === 'chart' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700'}`}>{ICONS.chart}</button>
+                                <button onClick={() => setViewMode('table')} className={`p-2 rounded-lg ${viewMode === 'table' ? 'bg-primary-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}>{ICONS.table}</button>
+                                <button onClick={() => setViewMode('chart')} className={`p-2 rounded-lg ${viewMode === 'chart' ? 'bg-primary-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}>{ICONS.chart}</button>
                                 <button onClick={handleWhatsAppExport} className="flex items-center space-x-2 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">
                                     {ICONS.whatsapp}
-                                    <span>Export</span>
+                                    <span className="hidden sm:inline">Export</span>
                                 </button>
                             </div>
                         </div>
@@ -275,11 +295,11 @@ const Dashboard: React.FC = () => {
                         {viewMode === 'chart' ? (
                             <div style={{ width: '100%', height: 300 }}>
                                 <ResponsiveContainer>
-                                    <BarChart data={chartData}>
-                                        <CartesianGrid strokeDasharray="3 3" />
-                                        <XAxis dataKey="name" />
-                                        <YAxis />
-                                        <Tooltip contentStyle={{ backgroundColor: 'var(--card-bg)', border: 'none', borderRadius: '0.5rem' }} />
+                                    <BarChart data={chartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(128, 128, 128, 0.2)" />
+                                        <XAxis dataKey="name" stroke="rgba(128, 128, 128, 0.5)" />
+                                        <YAxis stroke="rgba(128, 128, 128, 0.5)" />
+                                        <Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #ccc', borderRadius: '0.5rem', color: '#333' }} />
                                         <Legend />
                                         <Bar dataKey="On Progress" stackId="a" fill="#f59e0b" />
                                         <Bar dataKey="Completed" stackId="a" fill="#10b981" />
@@ -291,17 +311,17 @@ const Dashboard: React.FC = () => {
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left">
                                     <thead>
-                                        <tr className="border-b dark:border-gray-700">
-                                            <th className="p-3">Nama Pegawai</th>
-                                            <th className="p-3 text-center">On Progress</th>
-                                            <th className="p-3 text-center">Completed</th>
-                                            <th className="p-3 text-center">Late</th>
+                                        <tr className="border-b border-slate-200 dark:border-slate-700">
+                                            <th className="p-3 font-semibold text-slate-600 dark:text-slate-300">Employee Name</th>
+                                            <th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-300">On Progress</th>
+                                            <th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-300">Completed</th>
+                                            <th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-300">Late</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {users.filter(u => u.role !== 'admin').map(user => (
-                                            <tr key={user.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
-                                                <td className="p-3 font-medium">{user.nama}</td>
+                                            <tr key={user.id} className="border-b border-slate-200 dark:border-slate-700 last:border-b-0 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                                                <td className="p-3 font-medium text-slate-800 dark:text-slate-100">{user.nama}</td>
                                                 <td className="p-3 text-center">{tasks.filter(t => t.assignedTo === user.uid && t.status === 'On Progress').length}</td>
                                                 <td className="p-3 text-center">{tasks.filter(t => t.assignedTo === user.uid && t.status === 'Completed').length}</td>
                                                 <td className="p-3 text-center">{tasks.filter(t => t.assignedTo === user.uid && isTaskLate(t)).length}</td>

@@ -7,40 +7,26 @@ import { CustomTextContent, CustomColors, CustomizationContextType } from '../ty
 // --- Defaults ---
 export const defaultTextContent: CustomTextContent = {
     'app.headerTitle': 'ProjectFlow Pro',
-    'login.title': 'ProjectFlow Pro',
-    'login.subtitle': 'Manajemen Proyek Generasi Berikutnya',
+    'login.title': 'Welcome Back',
+    'login.subtitle': 'Sign in to access your dashboard.',
     'dashboard.title': 'Dashboard',
-    'dashboard.tasks.title': 'Ringkasan Pekerjaan',
-    'dashboard.trainings.title': 'Ringkasan Training',
-    'dashboard.employeeStats.title': 'Overview Pekerjaan Pegawai',
-    'tasks.title': 'Manajemen Pekerjaan',
-    'tasks.description': 'Kelola semua pekerjaan yang ditugaskan di sini.',
-    'training.title': 'Dashboard Training',
-    'training.description': 'Pantau semua jadwal dan status konfirmasi training.',
-    'analytics.title': 'Info Grafik Pegawai',
-    'analytics.description': 'Visualisasi data sumber daya manusia.',
-    'search.title': 'Pencarian Pegawai',
-    'search.description': 'Akses informasi detail pegawai secara instan.',
-    'users.title': 'Manajemen Pegawai',
-    'settings.title': 'Pengaturan',
+    'dashboard.tasks.title': 'Task Overview',
+    'dashboard.trainings.title': 'Training Schedule',
+    'dashboard.employeeStats.title': 'Employee Performance',
+    'tasks.title': 'Task Management',
+    'tasks.description': 'Organize, assign, and track all team tasks.',
+    'training.title': 'Training Dashboard',
+    'training.description': 'Manage all upcoming and past training sessions.',
+    'analytics.title': 'Employee Analytics',
+    'analytics.description': 'Visualize human resources data and insights.',
+    'search.title': 'Employee Directory',
+    'search.description': 'Instantly access detailed employee profiles.',
+    'users.title': 'User Management',
+    'settings.title': 'Settings',
 };
 
-export const defaultColors: CustomColors = {
-    // Light Theme
-    '--app-bg': '#F3F4F6',
-    '--sidebar-bg': '#FFFFFF',
-    '--header-bg': '#FFFFFF',
-    '--card-bg': '#FFFFFF',
-    '--text-primary': '#111827',
-    '--text-secondary': '#6B7280',
-    // Dark Theme (prefixed with --dark-)
-    '--dark-app-bg': '#111827',
-    '--dark-sidebar-bg': '#1F2937',
-    '--dark-header-bg': '#1F2937',
-    '--dark-card-bg': '#1F2937',
-    '--dark-text-primary': '#F9FAFB',
-    '--dark-text-secondary': '#9CA3AF',
-};
+// Colors are now handled by tailwind.config.js and this is no longer needed.
+export const defaultColors: CustomColors = {};
 
 // --- Context ---
 const CustomizationContext = createContext<CustomizationContextType | undefined>(undefined);
@@ -50,7 +36,6 @@ export const CustomizationProvider: React.FC<{ children: ReactNode }> = ({ child
     const { userData } = useAuth();
     const [isEditMode, setIsEditMode] = useState(false);
     const [textContent, setTextContent] = useState<CustomTextContent>({});
-    const [colors, setColors] = useState<CustomColors>({});
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -58,14 +43,9 @@ export const CustomizationProvider: React.FC<{ children: ReactNode }> = ({ child
             setTextContent(docSnap.exists() ? docSnap.data() : {});
             setLoading(false);
         }, (error) => { console.error("Error fetching text content:", error); setLoading(false); });
-
-        const colorUnsub = onSnapshot(doc(db, "settings", "ui_colors"), (docSnap) => {
-            setColors(docSnap.exists() ? docSnap.data() : {});
-        }, (error) => { console.error("Error fetching colors:", error); });
-
+        
         return () => {
             textUnsub();
-            colorUnsub();
         };
     }, []);
 
@@ -75,27 +55,6 @@ export const CustomizationProvider: React.FC<{ children: ReactNode }> = ({ child
             setIsEditMode(false);
         }
     }, [userData]);
-
-    useEffect(() => {
-        const finalColors = { ...defaultColors, ...colors };
-        const styleId = 'custom-theme-styles';
-        let styleTag = document.getElementById(styleId);
-        if (!styleTag) {
-            styleTag = document.createElement('style');
-            styleTag.id = styleId;
-            document.head.appendChild(styleTag);
-        }
-        
-        const css = `
-        :root {
-            ${Object.entries(finalColors).filter(([k]) => !k.startsWith('--dark-')).map(([k, v]) => `${k}: ${v};`).join('\n')}
-        }
-        html.dark {
-            ${Object.entries(finalColors).filter(([k]) => k.startsWith('--dark-')).map(([k, v]) => `${k.replace('--dark-', '--')}: ${v};`).join('\n')}
-        }
-        `;
-        styleTag.innerHTML = css;
-    }, [colors]);
 
     const getText = useCallback((key: string, defaultText: string) => {
         return textContent[key] || defaultText;
@@ -107,22 +66,15 @@ export const CustomizationProvider: React.FC<{ children: ReactNode }> = ({ child
         await setDoc(doc(db, "settings", "ui_content"), { [key]: value }, { merge: true });
     }, [textContent]);
 
-    const updateColor = useCallback(async (key: string, value: string) => {
-        const newColors = { ...colors, [key]: value };
-        setColors(newColors);
-        await setDoc(doc(db, "settings", "ui_colors"), { [key]: value }, { merge: true });
-    }, [colors]);
-
-    const resetColors = useCallback(async () => {
-        setColors({}); // Revert to defaults by clearing customizations
-        await setDoc(doc(db, "settings", "ui_colors"), {}); // Clear in Firestore
-    }, []);
+    // Color update/reset functions are removed as this is now handled by Tailwind.
+    const updateColor = async (key: string, value: string) => Promise.resolve();
+    const resetColors = async () => Promise.resolve();
 
     const value = {
         isEditMode,
         setIsEditMode,
         textContent,
-        colors,
+        colors: {}, // Return empty object
         getText,
         updateText,
         updateColor,

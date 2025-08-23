@@ -7,19 +7,14 @@ import { useTheme } from '../../hooks/useTheme';
 import { useCustomization } from '../../hooks/useCustomization';
 import { ICONS } from '../../constants';
 import LoadingSpinner from '../common/LoadingSpinner';
-import ThemeEditor from './ThemeEditor';
 
 const Settings: React.FC = () => {
     const { userData } = useAuth();
     const { themeSettings, loading: themeLoading } = useTheme();
     const { isEditMode, setIsEditMode } = useCustomization();
 
-    // Local theme state for UI
     const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
     
-    // Admin customization states
-    const [headerTitle, setHeaderTitle] = useState('');
-    const [accentColor, setAccentColor] = useState('');
     const [loginBgFile, setLoginBgFile] = useState<File | null>(null);
     const [profilePicFile, setProfilePicFile] = useState<File | null>(null);
     const [isSavingTheme, setIsSavingTheme] = useState(false);
@@ -34,13 +29,6 @@ const Settings: React.FC = () => {
         localStorage.setItem('theme', theme);
     }, [theme]);
     
-    useEffect(() => {
-        if (themeSettings) {
-            setHeaderTitle(themeSettings.headerTitle);
-            setAccentColor(themeSettings.accentColor);
-        }
-    }, [themeSettings]);
-
     const handleSaveTheme = async () => {
         setIsSavingTheme(true);
         try {
@@ -51,13 +39,13 @@ const Settings: React.FC = () => {
                 loginBgUrl = await getDownloadURL(storageRef);
             }
 
-            const newThemeSettings = { headerTitle, accentColor, loginBgUrl };
+            const newThemeSettings = { ...themeSettings, loginBgUrl };
             await setDoc(doc(db, "settings", "theme"), newThemeSettings, { merge: true });
             
-            alert("Pengaturan tampilan berhasil disimpan!");
+            alert("Display settings saved successfully!");
         } catch (error) {
             console.error("Error saving theme settings: ", error);
-            alert("Gagal menyimpan pengaturan tampilan.");
+            alert("Failed to save display settings.");
         } finally {
             setIsSavingTheme(false);
         }
@@ -72,103 +60,102 @@ const Settings: React.FC = () => {
             const photoURL = await getDownloadURL(storageRef);
             
             await updateDoc(doc(db, "users", userData.uid), { photoURL });
-            alert("Foto profil berhasil diperbarui!");
+            alert("Profile picture updated successfully!");
         } catch (error) {
             console.error("Error saving profile picture: ", error);
-            alert("Gagal menyimpan foto profil.");
+            alert("Failed to save profile picture.");
         } finally {
             setIsSavingProfilePic(false);
         }
     };
 
-    const exportToCSV = <T extends object,>(data: T[], filename: string) => {
-        // Implementation remains the same
-    };
-
     const handleExportAllData = async () => {
-        // Implementation remains the same
+        alert("This feature is coming soon!");
     };
 
-    if (themeLoading) {
-        return <LoadingSpinner text="Memuat pengaturan..." />;
+    if (themeLoading || !userData) {
+        return <LoadingSpinner text="Loading settings..." />;
     }
+    
+    const renderSettingCard = (title: string, children: React.ReactNode) => (
+         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+            <h3 className="text-xl font-bold mb-4 text-slate-800 dark:text-slate-100">{title}</h3>
+            <div className="space-y-4">
+                {children}
+            </div>
+        </div>
+    );
 
     return (
-        <div className="space-y-12">
-            <div className="p-6 rounded-2xl shadow-lg" style={{backgroundColor: 'var(--card-bg)'}}>
-                <h3 className="text-2xl font-bold mb-4">Pengaturan Tampilan</h3>
-                <div className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-bold mb-2">Tema</label>
-                        <select value={theme} onChange={e => setTheme(e.target.value)} className="p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
-                            <option value="light">Light Mode</option>
-                            <option value="dark">Dark Mode</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            {userData?.role === 'admin' && (
-                <>
-                <div className="p-6 rounded-2xl shadow-lg animate-fade-in-up" style={{backgroundColor: 'var(--card-bg)'}}>
-                     <h3 className="text-2xl font-bold mb-4">Mode Kustomisasi</h3>
-                     <div className="flex items-center space-x-4 p-4 bg-blue-50 dark:bg-blue-900/50 border border-blue-200 dark:border-blue-800 rounded-lg">
-                        <label htmlFor="edit-mode-toggle" className="flex items-center cursor-pointer">
-                            <div className="relative">
-                                <input type="checkbox" id="edit-mode-toggle" className="sr-only" checked={isEditMode} onChange={() => setIsEditMode(!isEditMode)} />
-                                <div className="block bg-gray-600 w-14 h-8 rounded-full"></div>
-                                <div className={`dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition ${isEditMode ? 'transform translate-x-full bg-blue-500' : ''}`}></div>
-                            </div>
-                        </label>
-                        <div>
-                            <p className="font-bold">UI Edit Mode</p>
-                            <p className="text-sm" style={{color: 'var(--text-secondary)'}}>Aktifkan untuk mengedit teks langsung di halaman mana pun.</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div className="p-6 rounded-2xl shadow-lg animate-fade-in-up" style={{backgroundColor: 'var(--card-bg)'}}>
-                    <ThemeEditor />
-                </div>
-                
-                <div className="p-6 rounded-2xl shadow-lg animate-fade-in-up" style={{backgroundColor: 'var(--card-bg)'}}>
-                    <h3 className="text-2xl font-bold mb-6">Kustomisasi Tampilan Aplikasi (Legacy)</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        {/* Left Column: General Theme */}
-                        <div className="space-y-6">
-                            <div>
-                                <label className="block text-sm font-bold mb-2">Gambar Background Login</label>
-                                <input type="file" accept="image/*" onChange={e => setLoginBgFile(e.target.files ? e.target.files[0] : null)} className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
-                            </div>
-                             <button onClick={handleSaveTheme} disabled={isSavingTheme} className="w-full flex items-center justify-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50">
-                                {isSavingTheme ? <LoadingSpinner text="Menyimpan..." /> : <span>Simpan Pengaturan Tampilan</span>}
-                            </button>
-                        </div>
-                        {/* Right Column: Admin Profile */}
-                        <div className="space-y-6">
-                            <h4 className="text-lg font-bold">Pengaturan Profil Admin</h4>
-                             <div>
-                                <label className="block text-sm font-bold mb-2">Foto Profil Anda</label>
-                                <div className="flex items-center space-x-4">
-                                    <img src={userData.photoURL || `https://ui-avatars.com/api/?name=${userData.nama}&background=random`} alt="Profile" className="w-20 h-20 rounded-full object-cover" />
-                                    <input type="file" accept="image/*" onChange={e => setProfilePicFile(e.target.files ? e.target.files[0] : null)} className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
-                                </div>
-                            </div>
-                            <button onClick={handleSaveProfilePic} disabled={isSavingProfilePic || !profilePicFile} className="w-full flex items-center justify-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50">
-                                {isSavingProfilePic ? <LoadingSpinner text="Mengunggah..." /> : <span>Simpan Foto Profil</span>}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                </>
-            )}
+        <div className="space-y-8 animate-fade-in-down">
+            <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100">Settings</h1>
             
-            <div className="p-6 rounded-2xl shadow-lg" style={{backgroundColor: 'var(--card-bg)'}}>
-                <h3 className="text-2xl font-bold mb-4">Ekspor Data</h3>
-                <button onClick={handleExportAllData} className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
-                    {ICONS.download}
-                    <span>Export Semua Data (CSV)</span>
-                </button>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Left Column */}
+                <div className="space-y-8">
+                    {renderSettingCard("Display", (
+                        <div>
+                            <label className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">Theme</label>
+                            <select value={theme} onChange={e => setTheme(e.target.value)} className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 focus:ring-primary-500 focus:border-primary-500">
+                                <option value="light">Light Mode</option>
+                                <option value="dark">Dark Mode</option>
+                            </select>
+                        </div>
+                    ))}
+
+                    {userData.role === 'admin' && renderSettingCard("UI Customization", (
+                        <div className="flex items-center space-x-4 p-4 bg-blue-50 dark:bg-primary-900/30 border border-blue-200 dark:border-primary-800 rounded-lg">
+                           <label htmlFor="edit-mode-toggle" className="flex items-center cursor-pointer">
+                               <div className="relative">
+                                   <input type="checkbox" id="edit-mode-toggle" className="sr-only" checked={isEditMode} onChange={() => setIsEditMode(!isEditMode)} />
+                                   <div className="block bg-slate-600 w-14 h-8 rounded-full"></div>
+                                   <div className={`dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition ${isEditMode ? 'transform translate-x-full bg-primary-600' : ''}`}></div>
+                               </div>
+                           </label>
+                           <div>
+                               <p className="font-semibold text-slate-800 dark:text-slate-100">UI Edit Mode</p>
+                               <p className="text-sm text-slate-500 dark:text-slate-400">Enable to edit text directly on any page.</p>
+                           </div>
+                       </div>
+                    ))}
+
+                    {renderSettingCard("Data Export", (
+                         <button onClick={handleExportAllData} className="w-full flex items-center justify-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                            {ICONS.download}
+                            <span>Export All Data (CSV)</span>
+                        </button>
+                    ))}
+                </div>
+
+                {/* Right Column for Admin */}
+                 <div className="space-y-8">
+                    {userData.role === 'admin' && renderSettingCard("Application Branding", (
+                        <>
+                            <div>
+                                <label className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">Login Page Background</label>
+                                <input type="file" accept="image/*" onChange={e => setLoginBgFile(e.target.files ? e.target.files[0] : null)} className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100" />
+                            </div>
+                             <button onClick={handleSaveTheme} disabled={isSavingTheme} className="w-full flex items-center justify-center space-x-2 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50">
+                                {isSavingTheme ? <LoadingSpinner text="Saving..." /> : <span>Save Branding</span>}
+                            </button>
+                        </>
+                    ))}
+
+                    {renderSettingCard("My Profile", (
+                        <>
+                            <div>
+                               <label className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">My Profile Picture</label>
+                               <div className="flex items-center space-x-4">
+                                   <img src={userData.photoURL || `https://ui-avatars.com/api/?name=${userData.nama}&background=random`} alt="Profile" className="w-16 h-16 rounded-full object-cover" />
+                                   <input type="file" accept="image/*" onChange={e => setProfilePicFile(e.target.files ? e.target.files[0] : null)} className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100" />
+                               </div>
+                           </div>
+                           <button onClick={handleSaveProfilePic} disabled={isSavingProfilePic || !profilePicFile} className="w-full flex items-center justify-center space-x-2 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50">
+                               {isSavingProfilePic ? <LoadingSpinner text="Uploading..." /> : <span>Save Profile Picture</span>}
+                           </button>
+                        </>
+                    ))}
+                </div>
             </div>
         </div>
     );

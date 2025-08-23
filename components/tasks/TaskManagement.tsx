@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { collection, query, where, onSnapshot, deleteDoc, doc, addDoc } from '@firebase/firestore';
 import { ref, deleteObject } from '@firebase/storage';
@@ -99,7 +97,7 @@ const TaskManagement: React.FC = () => {
     };
 
     const getSortIndicator = (key: SortableTaskKeys) => {
-        if (sortConfig.key !== key) return null;
+        if (sortConfig.key !== key) return ' ▲▼';
         return sortConfig.direction === 'ascending' ? ' ▲' : ' ▼';
     };
     
@@ -114,16 +112,16 @@ const TaskManagement: React.FC = () => {
     };
 
     const handleDelete = async (taskId: string, fileUrl?: string) => {
-        if (window.confirm('Apakah Anda yakin ingin menghapus pekerjaan ini?')) {
+        if (window.confirm('Are you sure you want to delete this task?')) {
             try {
                 if (fileUrl) {
                     await deleteObject(ref(storage, fileUrl));
                 }
                 await deleteDoc(doc(db, "tasks", taskId));
-                alert("Pekerjaan berhasil dihapus!");
+                alert("Task deleted successfully!");
             } catch (error) {
                 console.error("Error deleting task: ", error);
-                alert("Gagal menghapus pekerjaan.");
+                alert("Failed to delete task.");
             }
         }
     };
@@ -134,37 +132,37 @@ const TaskManagement: React.FC = () => {
             weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
         });
 
-        const message = `*Detail Pekerjaan - ProjectFlow Pro*\n\n` +
-                        `*Judul:* ${task.title}\n` +
-                        `*Ditugaskan Kepada:* ${assignedUserName}\n\n` +
-                        `*Deskripsi:*\n${task.description || 'Tidak ada deskripsi.'}\n\n` +
-                        `*Prioritas:* ${task.priority}\n` +
-                        `*Batas Waktu:* ${formattedDueDate}\n\n` +
+        const message = `*Task Detail - ProjectFlow Pro*\n\n` +
+                        `*Title:* ${task.title}\n` +
+                        `*Assigned To:* ${assignedUserName}\n\n` +
+                        `*Description:*\n${task.description || 'No description.'}\n\n` +
+                        `*Priority:* ${task.priority}\n` +
+                        `*Due Date:* ${formattedDueDate}\n\n` +
                         `---\n` +
-                        `_Catatan: Tanggal kapan pekerjaan diberikan tidak tercatat dalam sistem._`;
+                        `_Note: The date when the task was assigned is not recorded in the system._`;
 
         const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
         window.open(whatsappUrl, '_blank');
     };
 
     const handleExportToTraining = async (task: Task) => {
-        if (window.confirm(`Apakah Anda yakin ingin membuat jadwal training dari pekerjaan "${task.title}"?`)) {
+        if (window.confirm(`Are you sure you want to create a training schedule from the task "${task.title}"?`)) {
             try {
                 const newTrainingData = {
                     nama: task.title,
                     tanggalMulai: task.dueDate,
                     tanggalSelesai: task.dueDate,
-                    lokasi: 'Akan ditentukan',
+                    lokasi: 'To be determined',
                     pic: getUserName(task.assignedTo),
-                    catatan: `Diekspor dari pekerjaan: ${task.description || 'Tidak ada deskripsi.'}`,
+                    catatan: `Exported from task: ${task.description || 'No description.'}`,
                     status: 'Belum Dikonfirmasi' as TrainingStatus,
                 };
 
                 await addDoc(collection(db, "trainings"), newTrainingData);
-                showNotification(`Pekerjaan "${task.title}" berhasil diekspor ke dashboard training.`, 'success');
+                showNotification(`Task "${task.title}" successfully exported to the training dashboard.`, 'success');
             } catch (error) {
                 console.error("Error exporting task to training: ", error);
-                showNotification("Gagal mengekspor pekerjaan ke training.", 'error');
+                showNotification("Failed to export task to training.", 'error');
             }
         }
     };
@@ -173,7 +171,7 @@ const TaskManagement: React.FC = () => {
         try {
             const result = await analyzeTextForEntry(text);
             if (result.entryType !== 'task' || !result.taskDetails) {
-                throw new Error("Teks yang Anda masukkan sepertinya bukan permintaan pekerjaan. Coba lagi.");
+                throw new Error("The text you entered does not seem to be a task request. Please try again.");
             }
 
             const { title, description, assignedTo, dueDate, priority } = result.taskDetails;
@@ -184,7 +182,7 @@ const TaskManagement: React.FC = () => {
                 if (foundUser) {
                     assignedToUid = foundUser.uid;
                 } else {
-                    showNotification(`Pegawai "${assignedTo}" tidak ditemukan. Silakan pilih manual.`, 'warning');
+                    showNotification(`Employee "${assignedTo}" not found. Please select manually.`, 'warning');
                 }
             }
 
@@ -206,87 +204,98 @@ const TaskManagement: React.FC = () => {
         }
     };
 
-    const getUserName = (userId: string) => users.find(u => u.uid === userId)?.nama || 'Tidak diketahui';
+    const getUserName = (userId: string) => users.find(u => u.uid === userId)?.nama || 'Unknown';
     
     const priorityClass: { [key in TaskPriority]: string } = {
-        High: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-        Mid: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-        Low: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+        High: 'bg-danger-bg text-danger-text',
+        Mid: 'bg-warning-bg text-warning-text',
+        Low: 'bg-success-bg text-success-text',
     };
 
     const statusClass: { [key in TaskStatus]: string } = {
-        'On Progress': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-        'Completed': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-        'Pending': 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
+        'On Progress': 'bg-info-bg text-info-text',
+        'Completed': 'bg-success-bg text-success-text',
+        'Pending': 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-200',
     };
 
     return (
-        <div className="space-y-6">
-            <div className="sticky top-0 z-10 p-6 rounded-b-2xl shadow-lg flex justify-between items-start" style={{backgroundColor: 'var(--card-bg)'}}>
+        <div className="space-y-6 animate-fade-in-down">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                  <div>
                     <EditableText 
-                        as="h3"
+                        as="h1"
                         contentKey="tasks.title"
                         defaultText={defaultTextContent['tasks.title']}
-                        className="text-2xl font-bold"
+                        className="text-3xl font-bold text-slate-800 dark:text-slate-100"
                     />
                     <EditableText 
                         as="p"
                         contentKey="tasks.description"
                         defaultText={defaultTextContent['tasks.description']}
-                        className=""
-                        style={{color: 'var(--text-secondary)'}}
+                        className="text-slate-500 dark:text-slate-400 mt-1"
                     />
                 </div>
                 <div className="flex space-x-2 flex-shrink-0">
-                    <button onClick={() => setIsAIModalOpen(true)} className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+                    <button onClick={() => setIsAIModalOpen(true)} className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
                         {ICONS.magic}
-                        <span>Tambah AI</span>
+                        <span>Add with AI</span>
                     </button>
-                    <button onClick={() => openModal()} className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                    <button onClick={() => openModal()} className="flex items-center space-x-2 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
                         {ICONS.add}
-                        <span>Tambah Manual</span>
+                        <span>Add Manually</span>
                     </button>
                 </div>
             </div>
             
-            {loading ? <LoadingSpinner text="Memuat data pekerjaan..." /> : (
-                <div className="overflow-x-auto p-6 rounded-2xl shadow-lg" style={{backgroundColor: 'var(--card-bg)'}}>
-                    <table className="w-full text-left">
-                        <thead>
-                            <tr className="border-b-2 dark:border-gray-700">
-                                <th className="p-4 cursor-pointer" onClick={() => requestSort('title')}>Judul{getSortIndicator('title')}</th>
-                                <th className="p-4">Ditugaskan Kepada</th>
-                                <th className="p-4 cursor-pointer" onClick={() => requestSort('dueDate')}>Batas Waktu{getSortIndicator('dueDate')}</th>
-                                <th className="p-4 cursor-pointer" onClick={() => requestSort('priority')}>Prioritas{getSortIndicator('priority')}</th>
-                                <th className="p-4 cursor-pointer" onClick={() => requestSort('status')}>Status{getSortIndicator('status')}</th>
-                                <th className="p-4">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {sortedTasks.map(task => (
-                                <tr key={task.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
-                                    <td className="p-4 font-medium">{task.title}</td>
-                                    <td className="p-4">{getUserName(task.assignedTo)}</td>
-                                    <td className="p-4">{new Date(task.dueDate).toLocaleDateString('id-ID')}</td>
-                                    <td className="p-4">
-                                        <span className={`px-3 py-1 text-sm font-semibold rounded-full ${priorityClass[task.priority]}`}>{task.priority}</span>
-                                    </td>
-                                    <td className="p-4">
-                                        <span className={`px-3 py-1 text-sm font-semibold rounded-full ${statusClass[task.status]}`}>{task.status}</span>
-                                    </td>
-                                    <td className="p-4 flex items-center space-x-1">
-                                        <button onClick={() => openModal(task)} className="p-2 rounded-full hover:bg-yellow-200 dark:hover:bg-yellow-800 text-yellow-600 dark:text-yellow-300" title="Edit">{ICONS.edit}</button>
-                                        <button onClick={() => handleDelete(task.id, task.fileUrl)} className="p-2 rounded-full hover:bg-red-200 dark:hover:bg-red-800 text-red-600 dark:text-red-300" title="Hapus">{ICONS.delete}</button>
-                                        <button onClick={() => handleWhatsAppExport(task)} className="p-2 rounded-full hover:bg-green-200 dark:hover:bg-green-800 text-green-600 dark:text-green-300" title="Export ke WhatsApp">{ICONS.whatsapp}</button>
-                                        {userData?.role !== 'pegawai' && (
-                                             <button onClick={() => handleExportToTraining(task)} className="p-2 rounded-full hover:bg-indigo-200 dark:hover:bg-indigo-800 text-indigo-600 dark:text-indigo-300" title="Buat Training dari Pekerjaan Ini">{ICONS.graduationCap}</button>
-                                        )}
-                                    </td>
+            {loading ? <LoadingSpinner text="Loading tasks..." /> : (
+                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm text-left">
+                            <thead className="bg-slate-50 dark:bg-slate-700/50">
+                                <tr>
+                                    <th className="p-4 font-semibold text-slate-600 dark:text-slate-300">
+                                        <button className="flex items-center gap-1" onClick={() => requestSort('title')}>Title<span className="text-slate-400">{getSortIndicator('title')}</span></button>
+                                    </th>
+                                    <th className="p-4 font-semibold text-slate-600 dark:text-slate-300">Assigned To</th>
+                                    <th className="p-4 font-semibold text-slate-600 dark:text-slate-300">
+                                        <button className="flex items-center gap-1" onClick={() => requestSort('dueDate')}>Due Date<span className="text-slate-400">{getSortIndicator('dueDate')}</span></button>
+                                    </th>
+                                    <th className="p-4 font-semibold text-slate-600 dark:text-slate-300">
+                                        <button className="flex items-center gap-1" onClick={() => requestSort('priority')}>Priority<span className="text-slate-400">{getSortIndicator('priority')}</span></button>
+                                    </th>
+                                    <th className="p-4 font-semibold text-slate-600 dark:text-slate-300">
+                                        <button className="flex items-center gap-1" onClick={() => requestSort('status')}>Status<span className="text-slate-400">{getSortIndicator('status')}</span></button>
+                                    </th>
+                                    <th className="p-4 font-semibold text-slate-600 dark:text-slate-300">Actions</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                                {sortedTasks.map(task => (
+                                    <tr key={task.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                                        <td className="p-4 font-medium text-slate-900 dark:text-slate-50">{task.title}</td>
+                                        <td className="p-4">{getUserName(task.assignedTo)}</td>
+                                        <td className="p-4">{new Date(task.dueDate).toLocaleDateString('id-ID')}</td>
+                                        <td className="p-4">
+                                            <span className={`px-3 py-1 text-xs font-semibold rounded-full ${priorityClass[task.priority]}`}>{task.priority}</span>
+                                        </td>
+                                        <td className="p-4">
+                                            <span className={`px-3 py-1 text-xs font-semibold rounded-full ${statusClass[task.status]}`}>{task.status}</span>
+                                        </td>
+                                        <td className="p-4">
+                                            <div className="flex items-center space-x-1 text-slate-500">
+                                                <button onClick={() => openModal(task)} className="p-2 rounded-full hover:bg-yellow-100 dark:hover:bg-yellow-400/20 text-yellow-600 dark:text-yellow-400" title="Edit">{ICONS.edit}</button>
+                                                <button onClick={() => handleDelete(task.id, task.fileUrl)} className="p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-400/20 text-red-600 dark:text-red-400" title="Delete">{ICONS.delete}</button>
+                                                <button onClick={() => handleWhatsAppExport(task)} className="p-2 rounded-full hover:bg-green-100 dark:hover:bg-green-400/20 text-green-600 dark:text-green-400" title="Export to WhatsApp">{ICONS.whatsapp}</button>
+                                                {userData?.role !== 'pegawai' && (
+                                                     <button onClick={() => handleExportToTraining(task)} className="p-2 rounded-full hover:bg-indigo-100 dark:hover:bg-indigo-400/20 text-indigo-600 dark:text-indigo-400" title="Create Training from Task">{ICONS.graduationCap}</button>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             )}
             
@@ -295,8 +304,8 @@ const TaskManagement: React.FC = () => {
                 isOpen={isAIModalOpen}
                 onClose={() => setIsAIModalOpen(false)}
                 onProcess={handleProcessAIText}
-                title="Tambah dari Teks (AI)"
-                prompt="Tempelkan teks dari WhatsApp atau catatan Anda di sini untuk membuat pekerjaan atau training baru secara otomatis."
+                title="Add from Text (AI)"
+                prompt="Paste text from WhatsApp or your notes here to automatically create a new task or training."
             />}
         </div>
     );

@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
@@ -35,8 +33,8 @@ const AppContent = () => {
     // Centralized loading check for both auth and theme data
     if (authLoading || themeLoading) {
         return (
-            <div className="flex items-center justify-center h-screen" style={{backgroundColor: 'var(--app-bg)'}}>
-                <LoadingSpinner text="Memuat Aplikasi..." />
+            <div className="flex items-center justify-center h-screen bg-slate-50 dark:bg-slate-900">
+                <LoadingSpinner text="Initializing App..." />
             </div>
         );
     }

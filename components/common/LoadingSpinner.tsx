@@ -1,11 +1,10 @@
-
 import React from 'react';
 
-const LoadingSpinner: React.FC<{ text?: string }> = ({ text = "Memuat..." }) => {
+const LoadingSpinner: React.FC<{ text?: string }> = ({ text = "Loading..." }) => {
     return (
-        <div className="flex flex-col items-center justify-center space-y-2">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-            <p className="text-lg text-gray-600 dark:text-gray-300">{text}</p>
+        <div className="flex flex-col items-center justify-center space-y-3">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600"></div>
+            <p className="text-slate-500 dark:text-slate-400">{text}</p>
         </div>
     );
 };

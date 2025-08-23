@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from 'react';
 import { collection, onSnapshot, doc, deleteDoc } from '@firebase/firestore';
 import { ref, deleteObject } from '@firebase/storage';
@@ -52,80 +50,84 @@ const UserManagement: React.FC = () => {
     };
 
     const handleDelete = async (user: UserData) => {
-        if (window.confirm(`Apakah Anda yakin ingin menghapus ${user.nama}? Tindakan ini akan menghapus data dan foto profilnya.`)) {
+        if (window.confirm(`Are you sure you want to delete ${user.nama}? This will remove their data and profile picture.`)) {
             try {
-                // Delete profile picture from Storage if it exists
                 if (user.photoURL) {
                     const photoRef = ref(storage, `profile-pictures/${user.uid}`);
                     await deleteObject(photoRef).catch(error => {
-                        // It's okay if the file doesn't exist, log other errors
                         if (error.code !== 'storage/object-not-found') {
                             console.error("Error deleting profile photo:", error);
                         }
                     });
                 }
                 
-                // Delete user document from Firestore
                 await deleteDoc(doc(db, "users", user.id));
-                alert("Pegawai berhasil dihapus.");
+                alert("Employee deleted successfully.");
             } catch (error) {
                 console.error("Error deleting user: ", error);
-                alert("Gagal menghapus pegawai.");
+                alert("Failed to delete employee.");
             }
         }
     };
     
     return (
-        <div className="p-6 rounded-2xl shadow-lg" style={{backgroundColor: 'var(--card-bg)'}}>
-            <div className="flex justify-between items-center mb-6">
+        <div className="space-y-6 animate-fade-in-down">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                  <EditableText 
-                    as="h3"
+                    as="h1"
                     contentKey="users.title"
                     defaultText={defaultTextContent['users.title']}
-                    className="text-2xl font-bold"
+                    className="text-3xl font-bold text-slate-800 dark:text-slate-100"
                 />
-                <button onClick={() => openModal()} className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                <button onClick={() => openModal()} className="flex items-center space-x-2 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
                     {ICONS.add}
-                    <span>Tambah Pegawai</span>
+                    <span>Add Employee</span>
                 </button>
             </div>
-            {loading ? <LoadingSpinner text="Memuat data pegawai..." /> : (
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead>
-                            <tr className="border-b-2 dark:border-gray-700">
-                                <th className="p-4">Foto</th>
-                                <th className="p-4">Nama</th>
-                                <th className="p-4">Email</th>
-                                <th className="p-4">No. WhatsApp</th>
-                                <th className="p-4">Role</th>
-                                <th className="p-4">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {users.map(user => (
-                                <tr key={user.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
-                                    <td className="p-4">
-                                        {user.photoURL ? (
-                                            <img src={user.photoURL} alt={user.nama} className="w-10 h-10 rounded-full object-cover" />
-                                        ) : (
-                                            <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center font-bold text-gray-500">
-                                                {user.nama.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
-                                            </div>
-                                        )}
-                                    </td>
-                                    <td className="p-4 font-medium">{user.nama}</td>
-                                    <td className="p-4">{user.email}</td>
-                                    <td className="p-4">{user.noWhatsapp}</td>
-                                    <td className="p-4 capitalize">{user.role}</td>
-                                    <td className="p-4 flex items-center space-x-2">
-                                        <button onClick={() => openModal(user)} className="p-2 rounded-full hover:bg-yellow-200 dark:hover:bg-yellow-800 text-yellow-600 dark:text-yellow-300">{ICONS.edit}</button>
-                                        {user.role !== 'admin' && <button onClick={() => handleDelete(user)} className="p-2 rounded-full hover:bg-red-200 dark:hover:bg-red-800 text-red-600 dark:text-red-300">{ICONS.delete}</button>}
-                                    </td>
+            {loading ? <LoadingSpinner text="Loading employee data..." /> : (
+                 <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm text-left">
+                            <thead className="bg-slate-50 dark:bg-slate-700/50">
+                                <tr>
+                                    <th className="p-4 font-semibold text-slate-600 dark:text-slate-300">Name</th>
+                                    <th className="p-4 font-semibold text-slate-600 dark:text-slate-300">Email</th>
+                                    <th className="p-4 font-semibold text-slate-600 dark:text-slate-300">WhatsApp No.</th>
+                                    <th className="p-4 font-semibold text-slate-600 dark:text-slate-300">Role</th>
+                                    <th className="p-4 font-semibold text-slate-600 dark:text-slate-300 text-center">Actions</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                                {users.map(user => (
+                                    <tr key={user.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                                        <td className="p-4 font-medium">
+                                            <div className="flex items-center space-x-3">
+                                                {user.photoURL ? (
+                                                    <img src={user.photoURL} alt={user.nama} className="w-10 h-10 rounded-full object-cover" />
+                                                ) : (
+                                                    <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center font-bold text-slate-500">
+                                                        {user.nama.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                                                    </div>
+                                                )}
+                                                <span className="text-slate-900 dark:text-slate-50">{user.nama}</span>
+                                            </div>
+                                        </td>
+                                        <td className="p-4">{user.email}</td>
+                                        <td className="p-4">{user.noWhatsapp}</td>
+                                        <td className="p-4">
+                                            <span className="px-3 py-1 text-xs font-semibold rounded-full bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-200 capitalize">{user.role}</span>
+                                        </td>
+                                        <td className="p-4 text-center">
+                                            <div className="flex items-center justify-center space-x-1 text-slate-500">
+                                                <button onClick={() => openModal(user)} title="Edit" className="p-2 rounded-full hover:bg-yellow-100 dark:hover:bg-yellow-400/20 text-yellow-600 dark:text-yellow-400">{ICONS.edit}</button>
+                                                {user.role !== 'admin' && <button onClick={() => handleDelete(user)} title="Delete" className="p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-400/20 text-red-600 dark:text-red-400">{ICONS.delete}</button>}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             )}
             {isModalOpen && <UserModal user={editingUser} closeModal={closeModal} />}

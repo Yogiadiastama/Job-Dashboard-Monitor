@@ -5,7 +5,7 @@ import { ref, deleteObject } from '@firebase/storage';
 import { db, storage, getFirestoreErrorMessage } from '../../services/firebase';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotification, useConnectivity } from '../../hooks/useNotification';
-import { Task, UserData, TaskPriority, TaskStatus, TrainingStatus } from '../../types';
+import { Task, UserData, TaskPriority, TaskStatus, Training } from '../../types';
 import { ICONS } from '../../constants';
 import LoadingSpinner from '../common/LoadingSpinner';
 import KanbanBoard from './KanbanBoard';
@@ -14,10 +14,11 @@ type SortableTaskKeys = keyof Pick<Task, 'title' | 'dueDate' | 'priority' | 'sta
 
 interface TaskManagementProps {
     onEditTask: (task: Task | Partial<Task>) => void;
+    onEditTraining: (training: Partial<Training>) => void;
     users: UserData[];
 }
 
-const TaskManagement: React.FC<TaskManagementProps> = ({ onEditTask, users }) => {
+const TaskManagement: React.FC<TaskManagementProps> = ({ onEditTask, onEditTraining, users }) => {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [loading, setLoading] = useState(true);
     const { userData } = useAuth();
@@ -87,6 +88,17 @@ const TaskManagement: React.FC<TaskManagementProps> = ({ onEditTask, users }) =>
             }
         }
     };
+    
+    const handleCreateTrainingFromTask = (task: Task) => {
+        const assignedUserName = users.find(u => u.uid === task.assignedTo)?.nama || '';
+        const trainingDetails: Partial<Training> = {
+            nama: task.title,
+            catatan: task.description,
+            pic: assignedUserName,
+            status: 'Belum Dikonfirmasi',
+        };
+        onEditTraining(trainingDetails);
+    };
 
     const getUserName = (userId: string) => users.find(u => u.uid === userId)?.nama || 'Unknown';
     
@@ -131,6 +143,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({ onEditTask, users }) =>
                                             <td className="p-4"><span className={`px-3 py-1 text-xs font-semibold rounded-full ${statusClass[task.status]}`}>{task.status}</span></td>
                                             <td className="p-4">
                                                 <div className="flex items-center space-x-1 text-slate-500">
+                                                    <button onClick={() => handleCreateTrainingFromTask(task)} className="p-2 rounded-full hover:bg-purple-100 dark:hover:bg-purple-400/20 text-purple-600 dark:text-purple-400" title="Create Training from Task">{ICONS.graduationCap}</button>
                                                     <button onClick={() => onEditTask(task)} className="p-2 rounded-full hover:bg-yellow-100 dark:hover:bg-yellow-400/20 text-yellow-600 dark:text-yellow-400" title="Edit">{ICONS.edit}</button>
                                                     <button onClick={() => handleDelete(task.id, task.fileUrl)} className="p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-400/20 text-red-600 dark:text-red-400" title="Delete">{ICONS.delete}</button>
                                                 </div>
@@ -142,7 +155,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({ onEditTask, users }) =>
                         </div>
                     </div>
                 ) : (
-                    <KanbanBoard tasks={tasks} users={users} onEditTask={onEditTask} />
+                    <KanbanBoard tasks={tasks} users={users} onEditTask={onEditTask} onEditTraining={onEditTraining} />
                 )
             )}
         </div>

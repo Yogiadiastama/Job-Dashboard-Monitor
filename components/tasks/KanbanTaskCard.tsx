@@ -1,7 +1,7 @@
 
 import React, { useRef } from 'react';
 import { useDrag } from 'react-dnd';
-import { Task, UserData } from '../../types';
+import { Task, UserData, Training } from '../../types';
 import { ICONS } from '../../constants';
 
 const ItemTypes = { TASK: 'task' };
@@ -10,9 +10,10 @@ interface KanbanTaskCardProps {
     task: Task;
     user?: UserData;
     onEditTask: (task: Task) => void;
+    onEditTraining: (training: Partial<Training>) => void;
 }
 
-const KanbanTaskCard: React.FC<KanbanTaskCardProps> = ({ task, user, onEditTask }) => {
+const KanbanTaskCard: React.FC<KanbanTaskCardProps> = ({ task, user, onEditTask, onEditTraining }) => {
     const ref = useRef<HTMLDivElement>(null);
     const [{ isDragging }, drag] = useDrag(() => ({
         type: ItemTypes.TASK,
@@ -23,6 +24,16 @@ const KanbanTaskCard: React.FC<KanbanTaskCardProps> = ({ task, user, onEditTask 
     }));
 
     drag(ref);
+
+    const handleCreateTrainingFromTask = () => {
+        const trainingDetails: Partial<Training> = {
+            nama: task.title,
+            catatan: task.description,
+            pic: user?.nama || '',
+            status: 'Belum Dikonfirmasi',
+        };
+        onEditTraining(trainingDetails);
+    };
 
     const priorityClasses = {
         High: 'bg-red-500',
@@ -39,9 +50,10 @@ const KanbanTaskCard: React.FC<KanbanTaskCardProps> = ({ task, user, onEditTask 
         >
             <div className="flex justify-between items-start">
                 <p className="font-semibold text-slate-800 dark:text-slate-100 pr-2">{task.title}</p>
-                <button onClick={() => onEditTask(task)} className="p-1 text-slate-400 hover:text-primary-600 dark:hover:text-primary-400">
-                    {ICONS.edit}
-                </button>
+                 <div className="flex items-center flex-shrink-0">
+                    <button onClick={handleCreateTrainingFromTask} className="p-1 text-slate-400 hover:text-purple-600 dark:hover:text-purple-400" title="Create Training">{ICONS.graduationCap}</button>
+                    <button onClick={() => onEditTask(task)} className="p-1 text-slate-400 hover:text-primary-600 dark:hover:text-primary-400" title="Edit">{ICONS.edit}</button>
+                </div>
             </div>
             <div className="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400 mt-3">
                 <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs ${isLate ? 'text-red-800 bg-red-100 dark:text-red-200 dark:bg-red-900/50' : ''}`}>

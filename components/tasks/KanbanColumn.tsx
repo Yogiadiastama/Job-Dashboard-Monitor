@@ -3,7 +3,7 @@ import React, { useRef } from 'react';
 import { useDrop } from 'react-dnd';
 import { doc, updateDoc } from '@firebase/firestore';
 import { db } from '../../services/firebase';
-import { Task, UserData, TaskStatus } from '../../types';
+import { Task, UserData, TaskStatus, Training } from '../../types';
 import KanbanTaskCard from './KanbanTaskCard';
 
 const ItemTypes = { TASK: 'task' };
@@ -13,9 +13,10 @@ interface KanbanColumnProps {
     tasks: Task[];
     users: UserData[];
     onEditTask: (task: Task) => void;
+    onEditTraining: (training: Partial<Training>) => void;
 }
 
-const KanbanColumn: React.FC<KanbanColumnProps> = ({ status, tasks, users, onEditTask }) => {
+const KanbanColumn: React.FC<KanbanColumnProps> = ({ status, tasks, users, onEditTask, onEditTraining }) => {
     const ref = useRef<HTMLDivElement>(null);
     const [{ isOver }, drop] = useDrop(() => ({
         accept: ItemTypes.TASK,
@@ -57,6 +58,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({ status, tasks, users, onEdi
                         task={task} 
                         user={users.find(u => u.uid === task.assignedTo)}
                         onEditTask={onEditTask}
+                        onEditTraining={onEditTraining}
                     />
                 ))}
             </div>

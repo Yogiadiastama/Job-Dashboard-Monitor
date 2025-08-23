@@ -32,6 +32,24 @@ const TrainingCard: React.FC<{
     onDelete: (id: string) => void;
 }> = ({ training, onStatusChange, onEdit, onDelete }) => {
     const { badge, border } = getStatusStyles(training.status);
+
+    const handleWhatsAppExport = () => {
+        let message = `*Pelatihan / Training*\n\n` +
+            `*Nama:* ${training.nama}\n` +
+            `*Tanggal:* ${formatDateRange(training.tanggalMulai, training.tanggalSelesai)}\n` +
+            `*Lokasi:* ${training.lokasi}\n` +
+            `*PIC:* ${training.pic}\n`;
+    
+        if (training.catatan) {
+            message += `*Catatan:* ${training.catatan}\n`;
+        }
+        
+        message += `*Status:* ${training.status}\n`;
+    
+        const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, '_blank');
+    };
+
     return (
         <div className={`bg-white dark:bg-slate-800 rounded-lg shadow-sm border-l-4 ${border} flex flex-col`}>
             <div className="p-5 flex-grow">
@@ -59,9 +77,10 @@ const TrainingCard: React.FC<{
                 >
                     {ALL_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
-                <div className="flex items-center space-x-2 text-slate-500 dark:text-slate-400">
-                    <button onClick={() => onEdit(training)} className="p-1 hover:text-primary-600 dark:hover:text-primary-400" title="Edit">{ICONS.edit}</button>
-                    <button onClick={() => onDelete(training.id)} className="p-1 hover:text-danger-text dark:hover:text-red-400" title="Delete">{ICONS.delete}</button>
+                <div className="flex items-center space-x-1 text-slate-500 dark:text-slate-400">
+                    <button onClick={handleWhatsAppExport} className="p-2 rounded-full hover:bg-green-100 dark:hover:bg-green-400/20 text-green-600 dark:text-green-400" title="Export to WhatsApp">{ICONS.whatsapp}</button>
+                    <button onClick={() => onEdit(training)} className="p-2 rounded-full hover:bg-yellow-100 dark:hover:bg-yellow-400/20 text-yellow-600 dark:text-yellow-400" title="Edit">{ICONS.edit}</button>
+                    <button onClick={() => onDelete(training.id)} className="p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-400/20 text-red-600 dark:text-red-400" title="Delete">{ICONS.delete}</button>
                 </div>
             </div>
         </div>

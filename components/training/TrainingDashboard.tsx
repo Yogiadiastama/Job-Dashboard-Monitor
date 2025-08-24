@@ -101,7 +101,7 @@ const TrainingDashboard: React.FC<TrainingDashboardProps> = ({ onEditTraining })
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('Semua Status');
     const [sortOrder, setSortOrder] = useState('Terdekat'); // For cards view
-    const [viewMode, setViewMode] = useState<'cards' | 'list' | 'calendar'>('cards');
+    const [viewMode, setViewMode] = useState<'cards' | 'list' | 'calendar'>('list');
     const [sortConfig, setSortConfig] = useState<{ key: SortableTrainingKeys; direction: 'ascending' | 'descending' }>({ key: 'tanggalMulai', direction: 'ascending' });
 
     useEffect(() => {

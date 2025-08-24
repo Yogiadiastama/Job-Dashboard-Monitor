@@ -115,11 +115,10 @@ const LoginPage: React.FC = () => {
                  <iframe
                     loading="lazy"
                     className="absolute w-full h-full top-0 left-0 border-none pointer-events-none"
-                    // Scale up slightly to ensure it covers the screen and hides Canva UI elements
-                    style={{ transform: 'scale(1.2)', transformOrigin: 'center' }}
                     src={themeSettings.loginBgUrl}
                     allowFullScreen
                     allow="fullscreen"
+                    title="Login Background"
                 ></iframe>
             )}
             

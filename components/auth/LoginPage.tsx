@@ -30,7 +30,7 @@ const LoginPage: React.FC = () => {
             }
             
             if (domain && domain !== 'localhost') {
-                return `Domain aplikasi ('${domain}') tidak diotorisasi. Buka Firebase Console > Authentication > Settings > Authorized domains, lalu tambahkan: ${domain} (tanpa "https://"). Ini adalah masalah umum di lingkungan pratinjau.`;
+                return `Domain aplikasi ('${domain}') tidak diotorisasi. Pastikan Anda telah mengonfigurasi proyek Firebase yang benar di file 'services/firebase.ts'. Lalu, buka Firebase Console > Authentication > Settings > Authorized domains, dan tambahkan: ${domain} (tanpa "https://").`;
             }
             
             return `Domain aplikasi ini tidak diotorisasi oleh Firebase. Buka Firebase Console > Authentication > Settings > Authorized domains, lalu tambahkan domain tempat aplikasi ini berjalan.`;

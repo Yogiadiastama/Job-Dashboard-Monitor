@@ -1,11 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { getDocs, collection, doc, setDoc, updateDoc } from '@firebase/firestore';
+import { doc, setDoc, updateDoc } from '@firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from '@firebase/storage';
 import { db, storage } from '../../services/firebase';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
 import { useCustomization } from '../../hooks/useCustomization';
+import { useNotification } from '../../hooks/useNotification';
 import { ICONS } from '../../constants';
 import LoadingSpinner from '../common/LoadingSpinner';
 
@@ -13,6 +14,7 @@ const Settings: React.FC = () => {
     const { userData } = useAuth();
     const { themeSettings, loading: themeLoading } = useTheme();
     const { isEditMode, setIsEditMode } = useCustomization();
+    const { showNotification } = useNotification();
 
     const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
     
@@ -22,7 +24,7 @@ const Settings: React.FC = () => {
     const [loginBgPreview, setLoginBgPreview] = useState<string | null>(null);
 
     const [profilePicFile, setProfilePicFile] = useState<File | null>(null);
-    const [isSavingTheme, setIsSavingTheme] = useState(false);
+    const [isSavingBranding, setIsSavingBranding] = useState(false);
     const [isSavingProfilePic, setIsSavingProfilePic] = useState(false);
 
     useEffect(() => {
@@ -61,12 +63,12 @@ const Settings: React.FC = () => {
         }
     };
 
-    const handleSaveTheme = async () => {
-        setIsSavingTheme(true);
+    const handleSaveBranding = async () => {
+        setIsSavingBranding(true);
         try {
             let finalLoginBgUrl = localLoginBgUrl;
             if (loginBgFile) {
-                const storageRef = ref(storage, `theme/login-background-${Date.now()}`);
+                const storageRef = ref(storage, `theme/login-background-${Date.now()}-${loginBgFile.name}`);
                 await uploadBytes(storageRef, loginBgFile);
                 finalLoginBgUrl = await getDownloadURL(storageRef);
             }
@@ -74,12 +76,12 @@ const Settings: React.FC = () => {
             const newThemeSettings = { ...themeSettings, loginBgUrl: finalLoginBgUrl };
             await setDoc(doc(db, "settings", "theme"), newThemeSettings, { merge: true });
             
-            alert("Display settings saved successfully!");
+            showNotification("Branding settings saved successfully!", "success");
         } catch (error) {
             console.error("Error saving theme settings: ", error);
-            alert("Failed to save display settings.");
+            showNotification("Failed to save branding settings. Please check console for details.", "error");
         } finally {
-            setIsSavingTheme(false);
+            setIsSavingBranding(false);
         }
     };
     
@@ -92,17 +94,17 @@ const Settings: React.FC = () => {
             const photoURL = await getDownloadURL(storageRef);
             
             await updateDoc(doc(db, "users", userData.uid), { photoURL });
-            alert("Profile picture updated successfully!");
+            showNotification("Profile picture updated successfully!", "success");
         } catch (error) {
             console.error("Error saving profile picture: ", error);
-            alert("Failed to save profile picture.");
+            showNotification("Failed to save profile picture.", "error");
         } finally {
             setIsSavingProfilePic(false);
         }
     };
 
     const handleExportAllData = async () => {
-        alert("This feature is coming soon!");
+        showNotification("This feature is coming soon!", "info");
     };
 
     if (themeLoading || !userData) {
@@ -183,8 +185,8 @@ const Settings: React.FC = () => {
                                     <img src={loginBgPreview} alt="Login background preview" className="mt-2 rounded-lg border border-slate-300 dark:border-slate-600 w-full object-cover h-40" />
                                 </div>
                             )}
-                             <button onClick={handleSaveTheme} disabled={isSavingTheme} className="w-full flex items-center justify-center space-x-2 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50">
-                                {isSavingTheme ? <LoadingSpinner text="Saving..." /> : <span>Save Branding</span>}
+                             <button onClick={handleSaveBranding} disabled={isSavingBranding} className="w-full flex items-center justify-center space-x-2 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50">
+                                {isSavingBranding ? <LoadingSpinner text="Saving..." /> : <span>Save Branding</span>}
                             </button>
                         </>
                     ))}

@@ -105,15 +105,22 @@ const LoginPage: React.FC = () => {
     };
     
     const isCanvaEmbed = themeSettings.loginBgUrl?.includes('canva.com/design');
+    
+    // Set a base background color to prevent flicker. If Canva is used, default to a dark background for a smoother load.
+    const containerClasses = `
+        relative min-h-screen flex items-center justify-center p-4
+        transition-colors duration-500 bg-cover bg-center
+        ${isCanvaEmbed ? 'bg-slate-900' : 'bg-slate-50 dark:bg-slate-900'}
+    `;
 
     return (
         <div 
-            className="relative min-h-screen flex items-center justify-center p-4 bg-slate-50 dark:bg-slate-900 transition-colors duration-500 bg-cover bg-center overflow-hidden"
+            className={containerClasses}
             style={!isCanvaEmbed && themeSettings.loginBgUrl ? { backgroundImage: `url(${themeSettings.loginBgUrl})` } : {}}
         >
-            {isCanvaEmbed && (
+            {isCanvaEmbed && themeSettings.loginBgUrl && (
                  <iframe
-                    loading="lazy"
+                    key={themeSettings.loginBgUrl}
                     className="absolute w-full h-full top-0 left-0 border-none pointer-events-none"
                     src={themeSettings.loginBgUrl}
                     allowFullScreen

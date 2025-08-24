@@ -7,10 +7,27 @@ import { useNotification, useConnectivity } from '../../hooks/useNotification';
 import { Task, Training, UserData } from '../../types';
 import LoadingSpinner from '../common/LoadingSpinner';
 import { ICONS } from '../../constants';
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import DashboardTaskModal from './DashboardTaskModal';
 import DashboardTrainingModal from './DashboardTrainingModal';
-import AIWeeklySummary from './AIWeeklySummary';
+
+const timeAgo = (date: Date): string => {
+    if (!date || isNaN(date.getTime())) return 'just now';
+    const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
+    if (seconds < 5) return "just now";
+    let interval = seconds / 31536000;
+    if (interval > 1) return Math.floor(interval) + " years ago";
+    interval = seconds / 2592000;
+    if (interval > 1) return Math.floor(interval) + " months ago";
+    interval = seconds / 86400;
+    if (interval > 1) return Math.floor(interval) + " days ago";
+    interval = seconds / 3600;
+    if (interval > 1) return Math.floor(interval) + " hours ago";
+    interval = seconds / 60;
+    if (interval > 1) return Math.floor(interval) + " minutes ago";
+    return Math.floor(seconds) + " seconds ago";
+};
+
 
 const DashboardStatCard: React.FC<{
     icon: React.ReactNode;
@@ -84,6 +101,8 @@ const Dashboard: React.FC = () => {
         };
     }, [userData, showNotification, setOffline]);
 
+    const userMap = useMemo(() => new Map(users.map(u => [u.uid, u.nama])), [users]);
+
     const dashboardStats = useMemo(() => {
         const todayStr = new Date().toISOString().split('T')[0];
         const myTasks = (userData?.role === 'admin' || userData?.role === 'pimpinan')
@@ -101,8 +120,52 @@ const Dashboard: React.FC = () => {
             { name: 'Completed', value: tasks.filter(t => t.status === 'Completed').length },
         ].filter(item => item.value > 0);
 
-        return { pendingTasks, onProgressTasks, lateTasks, upcomingTrainings, taskStatusDistribution };
-    }, [tasks, trainings, userData]);
+        const tasksPerEmployee = tasks.reduce((acc, task) => {
+            const userName = userMap.get(task.assignedTo) || 'Unassigned';
+            if (userName !== 'Unassigned') { // Only count tasks assigned to known users
+                acc[userName] = (acc[userName] || 0) + 1;
+            }
+            return acc;
+        }, {} as Record<string, number>);
+
+        const employeeTaskData = Object.entries(tasksPerEmployee)
+            .map(([name, count]) => ({ name, 'Jumlah Tugas': count }))
+            .sort((a, b) => b['Jumlah Tugas'] - a['Jumlah Tugas']);
+
+        return { pendingTasks, onProgressTasks, lateTasks, upcomingTrainings, taskStatusDistribution, employeeTaskData };
+    }, [tasks, trainings, userData, userMap]);
+
+    const recentActivity = useMemo(() => {
+        const taskActivities = tasks.map(task => {
+            const assignedToName = userMap.get(task.assignedTo) || 'an unassigned user';
+            const isCreation = !task.updatedAt || Math.abs(new Date(task.updatedAt).getTime() - new Date(task.createdAt || 0).getTime()) < 10000;
+            let text = '';
+            if (isCreation) {
+                text = `Task <strong>${task.title}</strong> was assigned to <strong>${assignedToName}</strong>.`;
+            } else {
+                text = `<strong>${assignedToName}</strong>'s task <strong>${task.title}</strong> was updated to ${task.status}.`;
+            }
+
+            return {
+                id: `task-${task.id}`,
+                type: 'task',
+                timestamp: new Date(task.updatedAt || task.createdAt || 0),
+                text: text,
+            };
+        });
+
+        const trainingActivities = trainings.map(training => ({
+            id: `training-${training.id}`,
+            type: 'training',
+            timestamp: new Date(training.tanggalMulai),
+            text: `Training <strong>${training.nama}</strong> scheduled with <strong>${training.pic}</strong> as PIC.`,
+        }));
+
+        return [...taskActivities, ...trainingActivities]
+            .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+            .slice(0, 7);
+    }, [tasks, trainings, userMap]);
+
 
     const handleOpenModal = (type: 'task' | 'training', title: string, data: any[]) => {
         if (data.length > 0) {
@@ -158,7 +221,25 @@ const Dashboard: React.FC = () => {
             
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
                  <div className="lg:col-span-3">
-                     <AIWeeklySummary tasks={tasks} users={users} />
+                     <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm h-full border border-slate-200 dark:border-slate-700">
+                        <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-4">Recent Activity</h3>
+                        <ul className="space-y-4">
+                            {recentActivity.map(activity => (
+                                <li key={activity.id} className="flex items-start space-x-4">
+                                    <div className={`flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full ${activity.type === 'task' ? 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400' : 'bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400'}`}>
+                                        {activity.type === 'task' ? ICONS.tasks : ICONS.training}
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="text-sm text-slate-700 dark:text-slate-200" dangerouslySetInnerHTML={{ __html: activity.text }} />
+                                        <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{timeAgo(activity.timestamp)}</p>
+                                    </div>
+                                </li>
+                            ))}
+                            {recentActivity.length === 0 && (
+                                <p className="text-center text-slate-500 dark:text-slate-400 py-10">No recent activity to display.</p>
+                            )}
+                        </ul>
+                    </div>
                  </div>
                  <div className="lg:col-span-2">
                     <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm h-full border border-slate-200 dark:border-slate-700">
@@ -176,6 +257,20 @@ const Dashboard: React.FC = () => {
                         </ResponsiveContainer>
                     </div>
                  </div>
+            </div>
+
+            <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+                <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-4">Jumlah Pekerjaan per Pegawai</h3>
+                <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={dashboardStats.employeeTaskData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip contentStyle={{ backgroundColor: 'var(--card-bg)', border: '1px solid #ccc', borderRadius: '0.5rem' }} />
+                        <Legend />
+                        <Bar dataKey="Jumlah Tugas" fill="#8884d8" />
+                    </BarChart>
+                </ResponsiveContainer>
             </div>
 
             {modalData?.type === 'task' && (

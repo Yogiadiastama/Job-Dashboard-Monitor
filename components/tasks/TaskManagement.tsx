@@ -152,14 +152,14 @@ const TaskManagement: React.FC<TaskManagementProps> = ({ onEditTask, onEditTrain
                                 </thead>
                                 <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
                                     {sortedTasks.map(task => (
-                                        <tr key={task.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                                        <tr key={task.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer" onClick={() => onEditTask(task)}>
                                             <td className="p-4 font-medium text-slate-900 dark:text-slate-50">{task.title}</td>
                                             <td className="p-4">{getUserName(task.assignedTo)}</td>
                                             <td className="p-4">{new Date(task.dueDate).toLocaleDateString('id-ID')}</td>
                                             <td className="p-4"><span className={`px-3 py-1 text-xs font-semibold rounded-full ${priorityClass[task.priority]}`}>{task.priority}</span></td>
                                             <td className="p-4"><span className={`px-3 py-1 text-xs font-semibold rounded-full ${statusClass[task.status]}`}>{task.status}</span></td>
                                             <td className="p-4">
-                                                <div className="flex items-center space-x-1 text-slate-500">
+                                                <div className="flex items-center space-x-1 text-slate-500" onClick={(e) => e.stopPropagation()}>
                                                     <button onClick={() => handleWhatsAppExport(task)} className="p-2 rounded-full hover:bg-green-100 dark:hover:bg-green-400/20 text-green-600 dark:text-green-400" title="Export to WhatsApp">{ICONS.whatsapp}</button>
                                                     <button onClick={() => handleCreateTrainingFromTask(task)} className="p-2 rounded-full hover:bg-purple-100 dark:hover:bg-purple-400/20 text-purple-600 dark:text-purple-400" title="Create Training from Task">{ICONS.graduationCap}</button>
                                                     <button onClick={() => onEditTask(task)} className="p-2 rounded-full hover:bg-yellow-100 dark:hover:bg-yellow-400/20 text-yellow-600 dark:text-yellow-400" title="Edit">{ICONS.edit}</button>

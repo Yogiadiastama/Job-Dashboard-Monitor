@@ -13,7 +13,7 @@ interface ThemeContextType {
 const defaultTheme: ThemeSettings = {
     headerTitle: 'Job Dashboard',
     accentColor: '#4F46E5', // Indigo-600
-    loginBgUrl: '',
+    loginBgUrl: 'https://www.canva.com/design/DAGw9oBVkSA/yQukWGgbKdl12Zdkj2hxoQ/view?embed',
 };
 
 const ThemeContext = createContext<ThemeContextType>({
@@ -32,7 +32,13 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         const unsubscribe = onSnapshot(docRef, 
             (docSnap) => {
                 if (docSnap.exists()) {
-                    setThemeSettings({ ...defaultTheme, ...docSnap.data() } as ThemeSettings);
+                    // Make sure loginBgUrl from Firestore takes precedence, but fall back to default if it's empty/not set in DB
+                    const dbSettings = docSnap.data();
+                    setThemeSettings({ 
+                        ...defaultTheme, 
+                        ...dbSettings,
+                        loginBgUrl: dbSettings.loginBgUrl || defaultTheme.loginBgUrl 
+                    } as ThemeSettings);
                 } else {
                     setThemeSettings(defaultTheme);
                 }

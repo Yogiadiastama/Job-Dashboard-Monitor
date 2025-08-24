@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from '@firebase/auth';
 import { collection, getDocs, setDoc, doc } from '@firebase/firestore';
@@ -103,14 +104,27 @@ const LoginPage: React.FC = () => {
         }
     };
     
-    const loginPageStyle = themeSettings.loginBgUrl ? { backgroundImage: `url(${themeSettings.loginBgUrl})` } : {};
+    const isCanvaEmbed = themeSettings.loginBgUrl?.includes('canva.com/design');
 
     return (
         <div 
-            className="min-h-screen flex items-center justify-center p-4 bg-slate-50 dark:bg-slate-900 transition-colors duration-500 bg-cover bg-center"
-            style={loginPageStyle}
+            className="relative min-h-screen flex items-center justify-center p-4 bg-slate-50 dark:bg-slate-900 transition-colors duration-500 bg-cover bg-center overflow-hidden"
+            style={!isCanvaEmbed && themeSettings.loginBgUrl ? { backgroundImage: `url(${themeSettings.loginBgUrl})` } : {}}
         >
+            {isCanvaEmbed && (
+                 <iframe
+                    loading="lazy"
+                    className="absolute w-full h-full top-0 left-0 border-none pointer-events-none"
+                    // Scale up slightly to ensure it covers the screen and hides Canva UI elements
+                    style={{ transform: 'scale(1.2)', transformOrigin: 'center' }}
+                    src={themeSettings.loginBgUrl}
+                    allowFullScreen
+                    allow="fullscreen"
+                ></iframe>
+            )}
+            
             {themeSettings.loginBgUrl && <div className="absolute inset-0 bg-black bg-opacity-50"></div>}
+            
             <div className="w-full max-w-sm z-10 animate-fade-in-down">
                 <div className="bg-white dark:bg-slate-800/90 shadow-2xl rounded-2xl p-8 backdrop-blur-sm border border-slate-200 dark:border-slate-700">
                     <div className="text-center mb-8">

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { getDocs, collection, doc, setDoc, updateDoc } from '@firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from '@firebase/storage';
@@ -15,6 +16,7 @@ const Settings: React.FC = () => {
 
     const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
     
+    const [localLoginBgUrl, setLocalLoginBgUrl] = useState(themeSettings.loginBgUrl);
     const [loginBgFile, setLoginBgFile] = useState<File | null>(null);
     const [profilePicFile, setProfilePicFile] = useState<File | null>(null);
     const [isSavingTheme, setIsSavingTheme] = useState(false);
@@ -28,11 +30,15 @@ const Settings: React.FC = () => {
         }
         localStorage.setItem('theme', theme);
     }, [theme]);
+
+    useEffect(() => {
+        setLocalLoginBgUrl(themeSettings.loginBgUrl);
+    }, [themeSettings.loginBgUrl]);
     
     const handleSaveTheme = async () => {
         setIsSavingTheme(true);
         try {
-            let loginBgUrl = themeSettings.loginBgUrl;
+            let loginBgUrl = localLoginBgUrl;
             if (loginBgFile) {
                 const storageRef = ref(storage, `theme/login-background.jpg`);
                 await uploadBytes(storageRef, loginBgFile);
@@ -132,7 +138,18 @@ const Settings: React.FC = () => {
                     {userData.role === 'admin' && renderSettingCard("Application Branding", (
                         <>
                             <div>
-                                <label className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">Login Page Background</label>
+                                <label className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">Login Page Background URL</label>
+                                <input
+                                    type="text"
+                                    value={localLoginBgUrl}
+                                    onChange={e => setLocalLoginBgUrl(e.target.value)}
+                                    placeholder="Enter image or Canva embed URL"
+                                    className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 focus:ring-primary-500 focus:border-primary-500"
+                                />
+                                 <p className="text-xs text-slate-400 mt-1">Paste an image URL or a Canva embed link.</p>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">Or Upload New Background</label>
                                 <input type="file" accept="image/*" onChange={e => setLoginBgFile(e.target.files ? e.target.files[0] : null)} className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100" />
                             </div>
                              <button onClick={handleSaveTheme} disabled={isSavingTheme} className="w-full flex items-center justify-center space-x-2 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50">

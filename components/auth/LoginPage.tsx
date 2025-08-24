@@ -129,8 +129,6 @@ const LoginPage: React.FC = () => {
                 ></iframe>
             )}
             
-            {!isCanvaEmbed && themeSettings.loginBgUrl && <div className="absolute inset-0 bg-black bg-opacity-50"></div>}
-            
             <div className="w-full max-w-sm z-10 animate-fade-in-down">
                 <div className="bg-white dark:bg-slate-800/90 shadow-2xl rounded-2xl p-8 backdrop-blur-sm border border-slate-200 dark:border-slate-700">
                     <div className="text-center mb-8">

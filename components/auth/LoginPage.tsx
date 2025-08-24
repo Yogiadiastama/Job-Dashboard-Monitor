@@ -22,18 +22,8 @@ const LoginPage: React.FC = () => {
         const combinedErrorString = `${errorCode} ${errorMessage}`;
         
         if (combinedErrorString.includes('requests-from-referer') || errorCode === 'auth/unauthorized-domain') {
-            let domain = window.location.hostname;
-            
-            const domainMatch = combinedErrorString.match(/https?:\/\/([^\s)]+)-are-blocked/);
-            if (domainMatch && domainMatch[1]) {
-                domain = domainMatch[1];
-            }
-            
-            if (domain && domain !== 'localhost') {
-                return `Domain aplikasi ('${domain}') tidak diotorisasi. Pastikan Anda telah mengonfigurasi proyek Firebase yang benar di file 'services/firebase.ts'. Lalu, buka Firebase Console > Authentication > Settings > Authorized domains, dan tambahkan: ${domain} (tanpa "https://").`;
-            }
-            
-            return `Domain aplikasi ini tidak diotorisasi oleh Firebase. Buka Firebase Console > Authentication > Settings > Authorized domains, lalu tambahkan domain tempat aplikasi ini berjalan.`;
+            const domain = window.location.hostname;
+            return `Domain aplikasi ('${domain}') tidak diotorisasi. Periksa dua hal: 1) Pastikan 'firebaseConfig' di file 'services/firebase.ts' sudah benar dan menunjuk ke proyek Firebase tempat data Anda disimpan. 2) Buka Firebase Console untuk proyek tersebut, lalu di Authentication > Settings > Authorized domains, tambahkan domain: ${domain} (tanpa "https://").`;
         }
 
         switch (errorCode) {

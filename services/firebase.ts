@@ -4,19 +4,21 @@ import { getFirestore, enableIndexedDbPersistence, CACHE_SIZE_UNLIMITED } from '
 import { getStorage } from '@firebase/storage';
 
 // ==========================================================================================
-// TODO: GANTI DENGAN KONFIGURASI PROYEK FIREBASE ANDA
+// KONFIGURASI FIREBASE (PROYEK LAMA: 'dashboard-app-final')
 // ==========================================================================================
-// Anda dapat menemukan nilai-nilai ini di Firebase Console:
-// Project Settings > General > Your apps > SDK setup and configuration
-// Pastikan ini cocok dengan proyek tempat Anda mengotorisasi domain Netlify Anda.
+// Konfigurasi ini telah diperbarui untuk menunjuk ke proyek Firebase lama Anda.
+// Ini memastikan bahwa aplikasi baru Anda ('jobdashboardmonitor') dapat mengakses
+// semua data (pengguna, tugas, dll.) yang sudah ada tanpa perlu migrasi.
+// Pastikan domain 'jobdashboardmonitor.netlify.app' telah ditambahkan ke
+// "Authorized domains" di pengaturan Authentication proyek Firebase ini.
 // ==========================================================================================
 export const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyBme0QBJ2p57XROfLUF6L8cZgz5loE00Mo",
+  authDomain: "dashboard-app-final.firebaseapp.com",
+  projectId: "dashboard-app-final",
+  storageBucket: "dashboard-app-final.firebasestorage.app",
+  messagingSenderId: "72857853228",
+  appId: "1:72857853228:web:7de9a0dceada37dc79a089"
 };
 
 // A simple check to see if the config is filled out. This is used by App.tsx to show a helpful warning.

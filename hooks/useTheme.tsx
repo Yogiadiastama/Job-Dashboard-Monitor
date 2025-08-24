@@ -11,7 +11,7 @@ interface ThemeContextType {
 }
 
 const defaultTheme: ThemeSettings = {
-    headerTitle: 'ProFlow',
+    headerTitle: 'Job Dashboard',
     accentColor: '#4F46E5', // Indigo-600
     loginBgUrl: '',
 };

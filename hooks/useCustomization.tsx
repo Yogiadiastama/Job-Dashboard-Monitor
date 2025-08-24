@@ -6,7 +6,7 @@ import { CustomTextContent, CustomColors, CustomizationContextType } from '../ty
 
 // --- Defaults ---
 export const defaultTextContent: CustomTextContent = {
-    'app.headerTitle': 'ProjectFlow Pro',
+    'app.headerTitle': 'Job Dashboard Monitor',
     'login.title': 'Welcome Back',
     'login.subtitle': 'Sign in to access your dashboard.',
     'dashboard.title': 'Dashboard',

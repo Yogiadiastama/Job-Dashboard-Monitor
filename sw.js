@@ -1,5 +1,5 @@
 // Nama cache, ganti versinya jika Anda membuat perubahan pada aset yang di-cache
-const CACHE_NAME = 'projectflow-pro-cache-v1';
+const CACHE_NAME = 'jobdashboardmonitor-cache-v1';
 
 // Daftar file inti yang membentuk "app shell"
 const urlsToCache = [

@@ -138,11 +138,11 @@ const EmployeeAnalyticsDashboard: React.FC = () => {
         const tenureDistribution = employeeData.reduce((acc, emp) => {
             if (!emp.masaKerja || typeof emp.masaKerja !== 'string') return acc;
             
-            // Looks for a number (integer or decimal with dot/comma) followed by "Tahun" or "Thn"
-            const yearsMatch = emp.masaKerja.match(/(\d+[,.]?\d*)\s*(Tahun|Thn)/i);
+            // Updated Regex: More robust, handles integers and decimals (with . or ,)
+            const yearsMatch = emp.masaKerja.match(/(\d+(?:[.,]\d+)?)\s*(?:Tahun|Thn)/i);
             if (!yearsMatch || !yearsMatch[1]) return acc;
             
-            // Replace comma with dot for float parsing
+            // Replace comma with dot for float parsing, which is safer.
             const years = parseFloat(yearsMatch[1].replace(',', '.'));
             if (isNaN(years)) return acc;
             
@@ -201,10 +201,10 @@ const EmployeeAnalyticsDashboard: React.FC = () => {
             <div className="lg:col-span-2">
                 <ChartCard title="Komposisi Unit Kerja (Top 10)" titleKey="analytics.topUnits.title">
                     <ResponsiveContainer>
-                        <BarChart data={analyticsData.topUnits} layout="vertical" margin={{ top: 20, right: 40, left: 50, bottom: 5 }}>
+                        <BarChart data={analyticsData.topUnits} layout="vertical" margin={{ top: 20, right: 40, left: 180, bottom: 5 }}>
                              <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#4B5563' : '#E5E7EB'} />
                             <XAxis type="number" tick={{ fill: axisColor, fontSize: 12 }} />
-                            <YAxis dataKey="name" type="category" width={120} tick={{ fill: axisColor, fontSize: 12 }} />
+                            <YAxis dataKey="name" type="category" width={240} tick={{ fill: axisColor, fontSize: 11 }} interval={0} />
                             <Tooltip contentStyle={tooltipStyle} cursor={{fill: 'rgba(128, 128, 128, 0.1)'}} />
                             <Bar dataKey="value" name="Jumlah" fill="#82ca9d" barSize={20}>
                                 <LabelList dataKey="value" position="right" fill={axisColor} fontSize={12} />

@@ -55,6 +55,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, users, closeModal }) => {
                     rating, 
                     createdAt: now,
                     updatedAt: now,
+                    assignedBy: userData.uid,
                 };
                 await addDoc(collection(db, "tasks"), taskData);
                 sendNotification(assignedTo, `You have a new task: "${title}".`);

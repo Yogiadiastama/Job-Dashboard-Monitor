@@ -101,16 +101,26 @@ const TaskManagement: React.FC<TaskManagementProps> = ({ onEditTask, onEditTrain
 
     const handleWhatsAppExport = (task: Task) => {
         const assignedUserName = users.find(u => u.uid === task.assignedTo)?.nama || 'N/A';
+        const assignerName = task.assignedBy ? (users.find(u => u.uid === task.assignedBy)?.nama || 'Unknown') : 'N/A';
         let message = `*Detail Tugas*\n\n` +
             `*Judul:* ${task.title}\n` +
             `*Deskripsi:* ${task.description || '-'}\n` +
+            `*Ditugaskan Oleh:* ${assignerName}\n` +
             `*Ditugaskan Kepada:* ${assignedUserName}\n` +
-            `*Batas Waktu:* ${new Date(task.dueDate).toLocaleDateString('id-ID')}\n` +
+            `*Batas Waktu:* ${new Date(task.dueDate).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}\n` +
             `*Prioritas:* ${task.priority}\n` +
             `*Status:* ${task.status}\n`;
-            
+    
+        if (task.rating && task.rating > 0) {
+            message += `*Rating:* ${'★'.repeat(task.rating)}${'☆'.repeat(5 - task.rating)}\n`;
+        }
+    
         if (task.fileUrl) {
             message += `*Lampiran:* Tersedia (tidak dapat dilampirkan via teks)\n`;
+        }
+    
+        if (task.createdAt) {
+             message += `\n_Dibuat pada: ${new Date(task.createdAt).toLocaleString('id-ID')}_`;
         }
     
         const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
@@ -144,6 +154,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({ onEditTask, onEditTrain
                                     <tr>
                                         <th className="p-4"><button className="font-semibold flex items-center gap-1" onClick={() => requestSort('title')}>Title<span className="text-slate-400">{getSortIndicator('title')}</span></button></th>
                                         <th className="p-4 font-semibold">Assigned To</th>
+                                        <th className="p-4 font-semibold">Assigned By</th>
                                         <th className="p-4"><button className="font-semibold flex items-center gap-1" onClick={() => requestSort('dueDate')}>Due Date<span className="text-slate-400">{getSortIndicator('dueDate')}</span></button></th>
                                         <th className="p-4"><button className="font-semibold flex items-center gap-1" onClick={() => requestSort('priority')}>Priority<span className="text-slate-400">{getSortIndicator('priority')}</span></button></th>
                                         <th className="p-4"><button className="font-semibold flex items-center gap-1" onClick={() => requestSort('status')}>Status<span className="text-slate-400">{getSortIndicator('status')}</span></button></th>
@@ -155,6 +166,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({ onEditTask, onEditTrain
                                         <tr key={task.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer" onClick={() => onEditTask(task)}>
                                             <td className="p-4 font-medium text-slate-900 dark:text-slate-50">{task.title}</td>
                                             <td className="p-4">{getUserName(task.assignedTo)}</td>
+                                            <td className="p-4">{task.assignedBy ? getUserName(task.assignedBy) : '-'}</td>
                                             <td className="p-4">{new Date(task.dueDate).toLocaleDateString('id-ID')}</td>
                                             <td className="p-4"><span className={`px-3 py-1 text-xs font-semibold rounded-full ${priorityClass[task.priority]}`}>{task.priority}</span></td>
                                             <td className="p-4"><span className={`px-3 py-1 text-xs font-semibold rounded-full ${statusClass[task.status]}`}>{task.status}</span></td>

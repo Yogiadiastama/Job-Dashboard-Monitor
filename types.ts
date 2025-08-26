@@ -18,6 +18,7 @@ export interface Task {
   id:string;
   title: string;
   description: string;
+  assignedBy?: string; // UID of user who created the task
   assignedTo: string;
   dueDate: string;
   priority: TaskPriority;

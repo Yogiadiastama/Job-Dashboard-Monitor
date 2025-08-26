@@ -15,18 +15,24 @@ interface TaskModalProps {
 const TaskModal: React.FC<TaskModalProps> = ({ task, users, closeModal }) => {
     const [title, setTitle] = useState(task?.title || '');
     const [description, setDescription] = useState(task?.description || '');
-    const [assignedTo, setAssignedTo] = useState(task?.assignedTo || '');
+    const { userData } = useAuth();
+    const [assignedTo, setAssignedTo] = useState(task?.assignedTo || (userData?.role === 'pegawai' ? userData.uid : ''));
     const [dueDate, setDueDate] = useState(task?.dueDate || '');
     const [priority, setPriority] = useState<TaskPriority>(task?.priority || 'Mid');
     const [status, setStatus] = useState<TaskStatus>(task?.status || 'Pending');
     const [rating, setRating] = useState(task?.rating || 0);
     const [file, setFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
-    const { userData } = useAuth();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!userData) return;
+
+        if (['admin', 'pimpinan'].includes(userData.role) && !assignedTo) {
+            alert("Please select an employee to assign the task to.");
+            return;
+        }
+        
         setLoading(true);
 
         try {
@@ -105,7 +111,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, users, closeModal }) => {
                                 <label className={labelStyle}>Assign To</label>
                                 <select value={assignedTo} onChange={e => setAssignedTo(e.target.value)} className={inputStyle} required>
                                     <option value="">Select Employee</option>
-                                    {users.filter(u => u.role !== 'admin').map(user => (
+                                    {users.map(user => (
                                         <option key={user.uid} value={user.uid}>{user.nama}</option>
                                     ))}
                                 </select>

@@ -16,7 +16,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, users, closeModal }) => {
     const [title, setTitle] = useState(task?.title || '');
     const [description, setDescription] = useState(task?.description || '');
     const { userData } = useAuth();
-    const [assignedTo, setAssignedTo] = useState(task?.assignedTo || (userData?.role === 'pegawai' ? userData.uid : ''));
+    const [assignedTo, setAssignedTo] = useState(task?.assignedTo || '');
     const [dueDate, setDueDate] = useState(task?.dueDate || '');
     const [priority, setPriority] = useState<TaskPriority>(task?.priority || 'Mid');
     const [status, setStatus] = useState<TaskStatus>(task?.status || 'Pending');
@@ -28,7 +28,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, users, closeModal }) => {
         e.preventDefault();
         if (!userData) return;
 
-        if (['admin', 'pimpinan'].includes(userData.role) && !assignedTo) {
+        if (!assignedTo) {
             alert("Please select an employee to assign the task to.");
             return;
         }
@@ -106,17 +106,15 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, users, closeModal }) => {
                             <label className={labelStyle}>Description</label>
                             <textarea value={description} onChange={e => setDescription(e.target.value)} className={`${inputStyle} min-h-[100px]`} rows={4}></textarea>
                         </div>
-                        {['admin', 'pimpinan'].includes(userData.role) && (
-                            <div>
-                                <label className={labelStyle}>Assign To</label>
-                                <select value={assignedTo} onChange={e => setAssignedTo(e.target.value)} className={inputStyle} required>
-                                    <option value="">Select Employee</option>
-                                    {users.map(user => (
-                                        <option key={user.uid} value={user.uid}>{user.nama}</option>
-                                    ))}
-                                </select>
-                            </div>
-                        )}
+                        <div>
+                            <label className={labelStyle}>Assign To</label>
+                            <select value={assignedTo} onChange={e => setAssignedTo(e.target.value)} className={inputStyle} required>
+                                <option value="">Select Employee</option>
+                                {users.map(user => (
+                                    <option key={user.uid} value={user.uid}>{user.nama}</option>
+                                ))}
+                            </select>
+                        </div>
                         <div>
                             <label className={labelStyle}>Due Date</label>
                             <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className={inputStyle} required />

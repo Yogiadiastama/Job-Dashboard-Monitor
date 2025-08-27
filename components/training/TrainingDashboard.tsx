@@ -20,6 +20,7 @@ const getStatusStyles = (status: TrainingStatus) => {
         case 'Belum Dikonfirmasi': return { badge: 'bg-danger-bg text-danger-text', border: 'border-danger-border' };
         case 'Terkonfirmasi': return { badge: 'bg-success-bg text-success-text', border: 'border-success-border' };
         case 'Menunggu Jawaban': return { badge: 'bg-warning-bg text-warning-text', border: 'border-warning-border' };
+        case 'Selesai': return { badge: 'bg-info-bg text-info-text', border: 'border-info-border' };
         default: return { badge: 'bg-slate-200 text-slate-800', border: 'border-slate-300' };
     }
 };
@@ -100,8 +101,7 @@ const TrainingDashboard: React.FC<TrainingDashboardProps> = ({ onEditTraining })
     
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('Semua Status');
-    const [sortOrder, setSortOrder] = useState('Terdekat'); // For cards view
-    const [viewMode, setViewMode] = useState<'cards' | 'list' | 'calendar'>('list');
+    const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
     const [sortConfig, setSortConfig] = useState<{ key: SortableTrainingKeys; direction: 'ascending' | 'descending' }>({ key: 'tanggalMulai', direction: 'ascending' });
 
     useEffect(() => {
@@ -130,25 +130,18 @@ const TrainingDashboard: React.FC<TrainingDashboardProps> = ({ onEditTraining })
                 (statusFilter === 'Semua Status' || t.status === statusFilter)
             );
 
-        if (viewMode === 'list') {
-            sorted.sort((a, b) => {
-                const valA = a[sortConfig.key];
-                const valB = b[sortConfig.key];
-                if (valA === undefined || valA === null) return 1;
-                if (valB === undefined || valB === null) return -1;
-                if (valA < valB) return sortConfig.direction === 'ascending' ? -1 : 1;
-                if (valA > valB) return sortConfig.direction === 'ascending' ? 1 : -1;
-                return 0;
-            });
-        } else { // For cards/calendar view
-            sorted.sort((a, b) => {
-                const dateA = new Date(a.tanggalMulai).getTime();
-                const dateB = new Date(b.tanggalMulai).getTime();
-                return sortOrder === 'Terdekat' ? dateA - dateB : dateB - dateA;
-            });
-        }
+        sorted.sort((a, b) => {
+            const valA = a[sortConfig.key];
+            const valB = b[sortConfig.key];
+            if (valA === undefined || valA === null) return 1;
+            if (valB === undefined || valB === null) return -1;
+            if (valA < valB) return sortConfig.direction === 'ascending' ? -1 : 1;
+            if (valA > valB) return sortConfig.direction === 'ascending' ? 1 : -1;
+            return 0;
+        });
+        
         return sorted;
-    }, [trainings, searchTerm, statusFilter, sortOrder, viewMode, sortConfig]);
+    }, [trainings, searchTerm, statusFilter, sortConfig]);
     
     const handleStatusChange = async (id: string, status: TrainingStatus) => {
         try {
@@ -181,7 +174,7 @@ const TrainingDashboard: React.FC<TrainingDashboardProps> = ({ onEditTraining })
     return (
         <div className="space-y-6 animate-fade-in-down">
              <div className="p-4 rounded-lg shadow-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                     <input 
                         type="text" placeholder="Cari Nama Training atau PIC..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
                         className="md:col-span-2 w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 focus:ring-primary-500 focus:border-primary-500"
@@ -190,15 +183,8 @@ const TrainingDashboard: React.FC<TrainingDashboardProps> = ({ onEditTraining })
                         <option>Semua Status</option>
                         {ALL_STATUSES.map(s => <option key={s}>{s}</option>)}
                     </select>
-                     {viewMode === 'cards' && (
-                        <select value={sortOrder} onChange={e => setSortOrder(e.target.value)} className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 focus:ring-primary-500 focus:border-primary-500">
-                           <option value="Terdekat">Urutkan: Terdekat</option>
-                           <option value="Terjauh">Urutkan: Terjauh</option>
-                       </select>
-                     )}
-                     <div className="md:col-span-4 flex justify-end">
+                     <div className="md:col-span-3 flex justify-end">
                         <div className="flex items-center p-1 bg-slate-200 dark:bg-slate-700 rounded-lg">
-                            <button onClick={() => setViewMode('cards')} className={`px-4 py-1 rounded-md text-sm font-semibold ${viewMode === 'cards' ? 'bg-white dark:bg-slate-800 shadow' : 'text-slate-600 dark:text-slate-300'}`}>Cards</button>
                             <button onClick={() => setViewMode('list')} className={`px-4 py-1 rounded-md text-sm font-semibold ${viewMode === 'list' ? 'bg-white dark:bg-slate-800 shadow' : 'text-slate-600 dark:text-slate-300'}`}>List</button>
                             <button onClick={() => setViewMode('calendar')} className={`px-4 py-1 rounded-md text-sm font-semibold ${viewMode === 'calendar' ? 'bg-white dark:bg-slate-800 shadow' : 'text-slate-600 dark:text-slate-300'}`}>Calendar</button>
                         </div>
@@ -208,13 +194,7 @@ const TrainingDashboard: React.FC<TrainingDashboardProps> = ({ onEditTraining })
 
             {loading ? <div className="text-center p-10"><LoadingSpinner text="Memuat data training..." /></div> : (
                 filteredAndSortedTrainings.length > 0 ? (
-                    viewMode === 'cards' ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                            {filteredAndSortedTrainings.map(training => (
-                                <TrainingCard key={training.id} training={training} onStatusChange={handleStatusChange} onEdit={() => onEditTraining(training)} onDelete={handleDelete} />
-                            ))}
-                        </div>
-                    ) : viewMode === 'list' ? (
+                    viewMode === 'list' ? (
                          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
                             <div className="overflow-x-auto">
                                 <table className="w-full text-sm text-left">

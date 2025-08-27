@@ -25,6 +25,8 @@ const TaskManagement: React.FC<TaskManagementProps> = ({ onEditTask, onEditTrain
     const { setOffline } = useConnectivity();
     const [sortConfig, setSortConfig] = useState<{ key: SortableTaskKeys; direction: 'ascending' | 'descending' }>({ key: 'createdAt', direction: 'descending' });
     const [viewMode, setViewMode] = useState<'list' | 'board'>('list');
+    const [assignedToFilter, setAssignedToFilter] = useState('all');
+    const [assignedByFilter, setAssignedByFilter] = useState('all');
     
     useEffect(() => {
         if (!userData) return;
@@ -48,6 +50,14 @@ const TaskManagement: React.FC<TaskManagementProps> = ({ onEditTask, onEditTrain
 
     const sortedTasks = useMemo(() => {
         let sortableItems = [...tasks];
+
+        if (assignedToFilter !== 'all') {
+            sortableItems = sortableItems.filter(t => t.assignedTo === assignedToFilter);
+        }
+        if (assignedByFilter !== 'all') {
+            sortableItems = sortableItems.filter(t => t.assignedBy === assignedByFilter);
+        }
+
         if (sortConfig.key) {
             sortableItems.sort((a, b) => {
                 const valA = a[sortConfig.key];
@@ -60,7 +70,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({ onEditTask, onEditTrain
             });
         }
         return sortableItems;
-    }, [tasks, sortConfig]);
+    }, [tasks, sortConfig, assignedToFilter, assignedByFilter]);
 
     const requestSort = (key: SortableTaskKeys) => {
         let direction: 'ascending' | 'descending' = 'ascending';
@@ -138,10 +148,42 @@ const TaskManagement: React.FC<TaskManagementProps> = ({ onEditTask, onEditTrain
 
     return (
         <div className="space-y-6 animate-fade-in-down">
-             <div className="flex justify-end">
-                <div className="flex items-center p-1 bg-slate-200 dark:bg-slate-700 rounded-lg">
-                    <button onClick={() => setViewMode('list')} className={`px-4 py-1 rounded-md text-sm font-semibold ${viewMode === 'list' ? 'bg-white dark:bg-slate-800 shadow' : 'text-slate-600 dark:text-slate-300'}`}>List</button>
-                    <button onClick={() => setViewMode('board')} className={`px-4 py-1 rounded-md text-sm font-semibold ${viewMode === 'board' ? 'bg-white dark:bg-slate-800 shadow' : 'text-slate-600 dark:text-slate-300'}`}>Board</button>
+             <div className="p-4 rounded-lg shadow-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div className="flex flex-wrap items-center gap-4">
+                        <div>
+                            <label htmlFor="assignedToFilter" className="text-sm font-medium text-slate-600 dark:text-slate-300 mr-2">Assigned To:</label>
+                            <select
+                                id="assignedToFilter"
+                                value={assignedToFilter}
+                                onChange={e => setAssignedToFilter(e.target.value)}
+                                className="p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 focus:ring-primary-500 focus:border-primary-500 text-sm"
+                            >
+                                <option value="all">All Users</option>
+                                {users.map(user => (
+                                    <option key={user.uid} value={user.uid}>{user.nama}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label htmlFor="assignedByFilter" className="text-sm font-medium text-slate-600 dark:text-slate-300 mr-2">Assigned By:</label>
+                            <select
+                                id="assignedByFilter"
+                                value={assignedByFilter}
+                                onChange={e => setAssignedByFilter(e.target.value)}
+                                className="p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 focus:ring-primary-500 focus:border-primary-500 text-sm"
+                            >
+                                <option value="all">All Users</option>
+                                {users.map(user => (
+                                    <option key={user.uid} value={user.uid}>{user.nama}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+                    <div className="flex items-center p-1 bg-slate-200 dark:bg-slate-700 rounded-lg">
+                        <button onClick={() => setViewMode('list')} className={`px-4 py-1 rounded-md text-sm font-semibold ${viewMode === 'list' ? 'bg-white dark:bg-slate-800 shadow' : 'text-slate-600 dark:text-slate-300'}`}>List</button>
+                        <button onClick={() => setViewMode('board')} className={`px-4 py-1 rounded-md text-sm font-semibold ${viewMode === 'board' ? 'bg-white dark:bg-slate-800 shadow' : 'text-slate-600 dark:text-slate-300'}`}>Board</button>
+                    </div>
                 </div>
             </div>
             
@@ -185,7 +227,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({ onEditTask, onEditTrain
                         </div>
                     </div>
                 ) : (
-                    <KanbanBoard tasks={tasks} users={users} onEditTask={onEditTask} onEditTraining={onEditTraining} />
+                    <KanbanBoard tasks={sortedTasks} users={users} onEditTask={onEditTask} onEditTraining={onEditTraining} />
                 )
             )}
         </div>

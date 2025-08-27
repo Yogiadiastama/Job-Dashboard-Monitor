@@ -44,9 +44,9 @@ export interface ThemeSettings {
 }
 
 // New types for the Training Dashboard
-export type TrainingStatus = 'Belum Dikonfirmasi' | 'Terkonfirmasi' | 'Menunggu Jawaban';
+export type TrainingStatus = 'Belum Dikonfirmasi' | 'Terkonfirmasi' | 'Menunggu Jawaban' | 'Selesai';
 
-export const ALL_STATUSES: TrainingStatus[] = ['Belum Dikonfirmasi', 'Terkonfirmasi', 'Menunggu Jawaban'];
+export const ALL_STATUSES: TrainingStatus[] = ['Belum Dikonfirmasi', 'Terkonfirmasi', 'Menunggu Jawaban', 'Selesai'];
 export const ALL_TASK_STATUSES: TaskStatus[] = ['Pending', 'On Progress', 'Completed'];
 
 

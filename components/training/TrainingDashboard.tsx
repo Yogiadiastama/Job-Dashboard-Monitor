@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { collection, onSnapshot, doc, deleteDoc, addDoc, updateDoc, query, orderBy } from '@firebase/firestore';
 import { db, getFirestoreErrorMessage } from '../../services/firebase';
@@ -174,20 +175,20 @@ const TrainingDashboard: React.FC<TrainingDashboardProps> = ({ onEditTraining })
     return (
         <div className="space-y-6 animate-fade-in-down">
              <div className="p-4 rounded-lg shadow-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                    <input 
-                        type="text" placeholder="Cari Nama Training atau PIC..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
-                        className="md:col-span-2 w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 focus:ring-primary-500 focus:border-primary-500"
-                    />
-                    <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 focus:ring-primary-500 focus:border-primary-500">
-                        <option>Semua Status</option>
-                        {ALL_STATUSES.map(s => <option key={s}>{s}</option>)}
-                    </select>
-                     <div className="md:col-span-3 flex justify-end">
-                        <div className="flex items-center p-1 bg-slate-200 dark:bg-slate-700 rounded-lg">
-                            <button onClick={() => setViewMode('list')} className={`px-4 py-1 rounded-md text-sm font-semibold ${viewMode === 'list' ? 'bg-white dark:bg-slate-800 shadow' : 'text-slate-600 dark:text-slate-300'}`}>List</button>
-                            <button onClick={() => setViewMode('calendar')} className={`px-4 py-1 rounded-md text-sm font-semibold ${viewMode === 'calendar' ? 'bg-white dark:bg-slate-800 shadow' : 'text-slate-600 dark:text-slate-300'}`}>Calendar</button>
-                        </div>
+                <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div className="flex-grow w-full flex flex-col sm:flex-row gap-4">
+                        <input 
+                            type="text" placeholder="Cari Nama Training atau PIC..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
+                            className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 focus:ring-primary-500 focus:border-primary-500"
+                        />
+                        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="w-full sm:w-52 p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 focus:ring-primary-500 focus:border-primary-500">
+                            <option>Semua Status</option>
+                            {ALL_STATUSES.map(s => <option key={s}>{s}</option>)}
+                        </select>
+                    </div>
+                     <div className="flex-shrink-0 flex items-center p-1 bg-slate-200 dark:bg-slate-700 rounded-lg">
+                        <button onClick={() => setViewMode('list')} className={`px-4 py-1 rounded-md text-sm font-semibold ${viewMode === 'list' ? 'bg-white dark:bg-slate-800 shadow' : 'text-slate-600 dark:text-slate-300'}`}>List</button>
+                        <button onClick={() => setViewMode('calendar')} className={`px-4 py-1 rounded-md text-sm font-semibold ${viewMode === 'calendar' ? 'bg-white dark:bg-slate-800 shadow' : 'text-slate-600 dark:text-slate-300'}`}>Calendar</button>
                     </div>
                 </div>
             </div>

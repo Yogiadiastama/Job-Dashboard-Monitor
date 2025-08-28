@@ -7,7 +7,7 @@ import { useNotification, useConnectivity } from '../../hooks/useNotification';
 import { Task, Training, UserData } from '../../types';
 import LoadingSpinner from '../common/LoadingSpinner';
 import { ICONS } from '../../constants';
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid, LabelList } from 'recharts';
 import DashboardTaskModal from './DashboardTaskModal';
 import DashboardTrainingModal from './DashboardTrainingModal';
 
@@ -178,6 +178,9 @@ const Dashboard: React.FC = () => {
     }
 
     const PIE_COLORS: { [key: string]: string } = { 'Pending': '#f59e0b', 'On Progress': '#3b82f6', 'Completed': '#10b981' };
+    const isDark = document.documentElement.classList.contains('dark');
+    const axisColor = isDark ? '#9CA3AF' : '#6B7280';
+
 
     return (
         <div className="space-y-8 animate-fade-in-down">
@@ -260,13 +263,15 @@ const Dashboard: React.FC = () => {
             <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
                 <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-4">Jumlah Pekerjaan per Pegawai</h3>
                 <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={dashboardStats.employeeTaskData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                    <BarChart data={dashboardStats.employeeTaskData} margin={{ top: 20, right: 20, left: -10, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="name" />
                         <YAxis />
                         <Tooltip contentStyle={{ backgroundColor: 'var(--card-bg)', border: '1px solid #ccc', borderRadius: '0.5rem' }} />
                         <Legend />
-                        <Bar dataKey="Jumlah Tugas" fill="#8884d8" />
+                        <Bar dataKey="Jumlah Tugas" fill="#8884d8">
+                            <LabelList dataKey="Jumlah Tugas" position="top" fill={axisColor} fontSize={12} />
+                        </Bar>
                     </BarChart>
                 </ResponsiveContainer>
             </div>

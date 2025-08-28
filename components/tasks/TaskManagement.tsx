@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { collection, query, onSnapshot, deleteDoc, doc } from '@firebase/firestore';
 import { ref, deleteObject } from '@firebase/storage';
 import { db, storage, getFirestoreErrorMessage } from '../../services/firebase';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotification, useConnectivity } from '../../hooks/useNotification';
-import { Task, UserData, TaskPriority, TaskStatus, Training } from '../../types';
+import { Task, UserData, TaskPriority, TaskStatus, Training, ALL_TASK_STATUSES } from '../../types';
 import { ICONS } from '../../constants';
 import LoadingSpinner from '../common/LoadingSpinner';
 import KanbanBoard from './KanbanBoard';
@@ -27,6 +28,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({ onEditTask, onEditTrain
     const [viewMode, setViewMode] = useState<'list' | 'board'>('list');
     const [assignedToFilter, setAssignedToFilter] = useState('all');
     const [assignedByFilter, setAssignedByFilter] = useState('all');
+    const [statusFilter, setStatusFilter] = useState('all');
     
     useEffect(() => {
         if (!userData) return;
@@ -57,6 +59,9 @@ const TaskManagement: React.FC<TaskManagementProps> = ({ onEditTask, onEditTrain
         if (assignedByFilter !== 'all') {
             sortableItems = sortableItems.filter(t => t.assignedBy === assignedByFilter);
         }
+        if (statusFilter !== 'all') {
+            sortableItems = sortableItems.filter(t => t.status === statusFilter);
+        }
 
         if (sortConfig.key) {
             sortableItems.sort((a, b) => {
@@ -70,7 +75,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({ onEditTask, onEditTrain
             });
         }
         return sortableItems;
-    }, [tasks, sortConfig, assignedToFilter, assignedByFilter]);
+    }, [tasks, sortConfig, assignedToFilter, assignedByFilter, statusFilter]);
 
     const requestSort = (key: SortableTaskKeys) => {
         let direction: 'ascending' | 'descending' = 'ascending';
@@ -176,6 +181,20 @@ const TaskManagement: React.FC<TaskManagementProps> = ({ onEditTask, onEditTrain
                                 <option value="all">All Users</option>
                                 {users.map(user => (
                                     <option key={user.uid} value={user.uid}>{user.nama}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label htmlFor="statusFilter" className="text-sm font-medium text-slate-600 dark:text-slate-300 mr-2">Status:</label>
+                            <select
+                                id="statusFilter"
+                                value={statusFilter}
+                                onChange={e => setStatusFilter(e.target.value)}
+                                className="p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 focus:ring-primary-500 focus:border-primary-500 text-sm"
+                            >
+                                <option value="all">All Statuses</option>
+                                {ALL_TASK_STATUSES.map(status => (
+                                    <option key={status} value={status}>{status}</option>
                                 ))}
                             </select>
                         </div>

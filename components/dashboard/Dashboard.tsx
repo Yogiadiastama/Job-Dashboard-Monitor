@@ -105,13 +105,11 @@ const Dashboard: React.FC = () => {
 
     const dashboardStats = useMemo(() => {
         const todayStr = new Date().toISOString().split('T')[0];
-        const myTasks = (userData?.role === 'admin' || userData?.role === 'pimpinan')
-            ? tasks
-            : tasks.filter(t => t.assignedTo === userData?.uid);
 
-        const pendingTasks = myTasks.filter(t => t.status === 'Pending');
-        const onProgressTasks = myTasks.filter(t => t.status === 'On Progress');
-        const lateTasks = myTasks.filter(t => t.dueDate < todayStr && t.status !== 'Completed');
+        // Global stats for all users
+        const pendingTasks = tasks.filter(t => t.status === 'Pending');
+        const onProgressTasks = tasks.filter(t => t.status === 'On Progress');
+        const lateTasks = tasks.filter(t => t.dueDate < todayStr && t.status !== 'Completed');
         const upcomingTrainings = trainings.filter(t => t.tanggalMulai >= todayStr);
 
         const taskStatusDistribution = [
@@ -133,7 +131,7 @@ const Dashboard: React.FC = () => {
             .sort((a, b) => b['Jumlah Tugas'] - a['Jumlah Tugas']);
 
         return { pendingTasks, onProgressTasks, lateTasks, upcomingTrainings, taskStatusDistribution, employeeTaskData };
-    }, [tasks, trainings, userData, userMap]);
+    }, [tasks, trainings, userMap]);
 
     const recentActivity = useMemo(() => {
         const taskActivities = tasks.map(task => {
@@ -190,11 +188,11 @@ const Dashboard: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                  <DashboardStatCard 
-                    title="My Pending Tasks" 
+                    title="Pending Tasks" 
                     value={dashboardStats.pendingTasks.length} 
                     icon={ICONS.tasks}
                     color="bg-yellow-100 dark:bg-yellow-500/20 text-yellow-600 dark:text-yellow-400"
-                    onClick={() => handleOpenModal('task', 'My Pending Tasks', dashboardStats.pendingTasks)}
+                    onClick={() => handleOpenModal('task', 'Pending Tasks', dashboardStats.pendingTasks)}
                  />
                  <DashboardStatCard 
                     title="Tasks In Progress" 

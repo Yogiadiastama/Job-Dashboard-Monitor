@@ -143,7 +143,7 @@ const UserModal: React.FC<UserModalProps> = ({ user, closeModal }) => {
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-lg max-h-[95vh] flex flex-col animate-fade-in-down">
+            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-lg max-h-[95vh] flex flex-col animate-fade-in-up">
                 <div className="p-6 border-b border-slate-200 dark:border-slate-700">
                     <h2 className="text-xl font-bold">{user ? 'Edit Employee' : 'Add New Employee'}</h2>
                 </div>

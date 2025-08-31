@@ -45,7 +45,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({ status, tasks, users, onEdi
     return (
         <div 
             ref={ref} 
-            className={`w-80 flex-shrink-0 bg-slate-100 dark:bg-slate-800 rounded-xl p-3 transition-colors ${isOver ? 'bg-slate-200 dark:bg-slate-700' : ''}`}
+            className={`w-80 flex-shrink-0 bg-slate-100 dark:bg-slate-800 rounded-xl p-3 transition-all duration-300 ${isOver ? 'bg-primary-50 dark:bg-primary-900/40 ring-2 ring-primary-500' : ''}`}
         >
             <div className={`flex items-center justify-between px-2 pb-2 mb-3 border-b-2 ${statusColors[status]}`}>
                 <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100">{status}</h3>

@@ -10,6 +10,7 @@ import { ICONS } from '../../constants';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid, LabelList } from 'recharts';
 import DashboardTaskModal from './DashboardTaskModal';
 import DashboardTrainingModal from './DashboardTrainingModal';
+import AIWeeklySummary from './AIWeeklySummary';
 
 const timeAgo = (date: Date): string => {
     if (!date || isNaN(date.getTime())) return 'just now';
@@ -225,8 +226,12 @@ const Dashboard: React.FC = () => {
                      <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm h-full border border-slate-200 dark:border-slate-700">
                         <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-4">Recent Activity</h3>
                         <ul className="space-y-4">
-                            {recentActivity.map(activity => (
-                                <li key={activity.id} className="flex items-start space-x-4">
+                            {recentActivity.map((activity, index) => (
+                                <li 
+                                    key={activity.id} 
+                                    className="flex items-start space-x-4 animate-fade-in-up"
+                                    style={{ animationDelay: `${index * 100}ms` }}
+                                >
                                     <div className={`flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full ${activity.type === 'task' ? 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400' : 'bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400'}`}>
                                         {activity.type === 'task' ? ICONS.tasks : ICONS.training}
                                     </div>
@@ -275,6 +280,8 @@ const Dashboard: React.FC = () => {
                     </BarChart>
                 </ResponsiveContainer>
             </div>
+            
+            <AIWeeklySummary tasks={tasks} users={users} />
 
             {modalData?.type === 'task' && (
                 <DashboardTaskModal isOpen={!!modalData} onClose={handleCloseModal} title={modalData.title} tasks={modalData.data} users={users} />

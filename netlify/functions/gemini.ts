@@ -38,7 +38,8 @@ const parsingResponseSchema = {
                 tanggalMulai: { type: 'STRING', description: "The start date in YYYY-MM-DD format." },
                 tanggalSelesai: { type: 'STRING', description: "The end date in YYYY-MM-DD format. If only one date is mentioned, use the same as tanggalMulai." },
                 lokasi: { type: 'STRING', description: "The location of the training." },
-                pic: { type: 'STRING', description: "The full name of the Person In Charge." }
+                pic: { type: 'STRING', description: "The full name of the Person In Charge." },
+                catatan: { type: 'STRING', description: "The entire original text from the input (text or image) MUST be placed here, verbatim. This is for reference." }
             },
         }
     }
@@ -48,6 +49,7 @@ const parsingSystemInstruction = `You are an intelligent assistant for a project
 - Today's date is ${new Date().toLocaleDateString('en-CA')}. Use this to resolve relative dates like 'tomorrow', 'next week', 'akhir bulan', etc.
 - For tasks, if a priority isn't mentioned, default to 'Mid'. The priority must be one of 'Low', 'Mid', or 'High'.
 - For trainings, if only one date is mentioned, use it for both 'tanggalMulai' and 'tanggalSelesai'.
+- **CRITICAL:** For trainings, you MUST extract the FULL, original, verbatim text from the input (text or image) and place it in the 'catatan' (notes) field. Do not summarize or omit any part of the original text for this field.
 - If the input is ambiguous or doesn't seem to be a task or training, set entryType to 'unknown'.
 - All dates must be in YYYY-MM-DD format.
 - Names of people ('assignedTo' for tasks, 'pic' for training) should be extracted as full names if possible.

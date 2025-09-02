@@ -115,6 +115,7 @@ export interface AIParsedTraining {
   tanggalSelesai?: string; // YYYY-MM-DD
   lokasi?: string;
   pic?: string; // Person In Charge name
+  catatan?: string;
 }
 
 export interface AIParsedData {

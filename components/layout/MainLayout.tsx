@@ -105,9 +105,9 @@ const MainLayout: React.FC = () => {
             }
             handleOpenTaskModal({ title, description, assignedTo: assignedToUid, dueDate, priority, status: 'Pending' });
         } else if (result.entryType === 'training' && result.trainingDetails) {
-            const { nama, tanggalMulai, tanggalSelesai, lokasi, pic } = result.trainingDetails;
+            const { nama, tanggalMulai, tanggalSelesai, lokasi, pic, catatan } = result.trainingDetails;
             const today = new Date().toISOString().split('T')[0];
-            handleOpenTrainingModal({ nama, tanggalMulai: tanggalMulai || today, tanggalSelesai: tanggalSelesai || tanggalMulai || today, lokasi, pic, status: 'Belum Dikonfirmasi' });
+            handleOpenTrainingModal({ nama, tanggalMulai: tanggalMulai || today, tanggalSelesai: tanggalSelesai || tanggalMulai || today, lokasi, pic, catatan, status: 'Belum Dikonfirmasi' });
         } else {
             throw new Error("Teks atau gambar tidak dapat dikenali sebagai tugas atau pelatihan.");
         }

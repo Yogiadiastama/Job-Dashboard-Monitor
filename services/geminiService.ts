@@ -1,12 +1,12 @@
-import { AIParsedData } from '../types';
+import { AIParsedData, AIInput } from '../types';
 
 /**
- * Analyzes natural language text by sending it to a secure backend function,
+ * Analyzes natural language text or an image by sending it to a secure backend function,
  * which then calls the Gemini API. This prevents exposing the API key on the client-side.
- * @param text The natural language text to analyze.
+ * @param input An object containing either text or image data to analyze.
  * @returns A promise that resolves to the parsed data structure (AIParsedData).
  */
-export const analyzeTextForEntry = async (text: string): Promise<AIParsedData> => {
+export const analyzeInputForEntry = async (input: AIInput): Promise<AIParsedData> => {
     try {
         // The endpoint for the Netlify serverless function.
         const response = await fetch('/.netlify/functions/gemini', {
@@ -14,7 +14,7 @@ export const analyzeTextForEntry = async (text: string): Promise<AIParsedData> =
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ text }),
+            body: JSON.stringify({ input, requestType: 'parsing' }),
         });
 
         if (!response.ok) {
@@ -43,7 +43,7 @@ export const analyzeTextForEntry = async (text: string): Promise<AIParsedData> =
         console.error("Error calling Gemini service proxy:", error);
         // Provide a user-friendly message that wraps the specific error.
         const message = error instanceof Error ? error.message : "Silakan coba lagi.";
-        throw new Error(`Gagal menganalisis teks. ${message}`);
+        throw new Error(`Gagal menganalisis input. ${message}`);
     }
 };
 

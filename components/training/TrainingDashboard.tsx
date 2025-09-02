@@ -8,6 +8,7 @@ import LoadingSpinner from '../common/LoadingSpinner';
 import { useNotification, useConnectivity } from '../../hooks/useNotification';
 import TrainingModal from './TrainingModal';
 import TrainingCalendar from './TrainingCalendar';
+import TrainingDetailModal from './TrainingDetailModal';
 
 const formatDateRange = (start: string, end: string) => {
     const options: Intl.DateTimeFormatOptions = { day: '2-digit', month: 'short', year: 'numeric' };
@@ -103,10 +104,12 @@ const TrainingDashboard: React.FC<TrainingDashboardProps> = ({ onEditTraining })
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('Semua Status');
     const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
-    const [sortConfig, setSortConfig] = useState<{ key: SortableTrainingKeys; direction: 'ascending' | 'descending' }>({ key: 'tanggalMulai', direction: 'ascending' });
+    const [sortConfig, setSortConfig] = useState<{ key: SortableTrainingKeys; direction: 'ascending' | 'descending' }>({ key: 'tanggalMulai', direction: 'descending' });
+    const [selectedTraining, setSelectedTraining] = useState<Training | null>(null);
+
 
     useEffect(() => {
-        const q = query(collection(db, 'trainings'), orderBy('tanggalMulai', 'asc'));
+        const q = query(collection(db, 'trainings'), orderBy('tanggalMulai', 'desc'));
         const unsub = onSnapshot(q, 
             (snapshot) => {
                 const trainingsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Training));
@@ -213,14 +216,14 @@ const TrainingDashboard: React.FC<TrainingDashboardProps> = ({ onEditTraining })
                                         {filteredAndSortedTrainings.map(training => {
                                             const { badge } = getStatusStyles(training.status);
                                             return (
-                                                <tr key={training.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                                                <tr key={training.id} onClick={() => setSelectedTraining(training)} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer">
                                                     <td className="p-4 font-medium text-slate-900 dark:text-slate-50">{training.nama}</td>
                                                     <td className="p-4">{formatDateRange(training.tanggalMulai, training.tanggalSelesai)}</td>
                                                     <td className="p-4">{training.lokasi}</td>
                                                     <td className="p-4">{training.pic}</td>
                                                     <td className="p-4"><span className={`px-3 py-1 text-xs font-semibold rounded-full ${badge}`}>{training.status}</span></td>
                                                     <td className="p-4">
-                                                        <div className="flex items-center space-x-1 text-slate-500">
+                                                        <div className="flex items-center space-x-1 text-slate-500" onClick={(e) => e.stopPropagation()}>
                                                             <button onClick={() => {
                                                                 let message = `*Pelatihan / Training*\n\n` +
                                                                     `*Nama:* ${training.nama}\n` +
@@ -252,6 +255,7 @@ const TrainingDashboard: React.FC<TrainingDashboardProps> = ({ onEditTraining })
                     </div>
                 )
             )}
+            {selectedTraining && <TrainingDetailModal training={selectedTraining} onClose={() => setSelectedTraining(null)} />}
         </div>
     );
 };

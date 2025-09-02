@@ -93,6 +93,14 @@ export interface EmployeeProfile {
 }
 
 // Types for AI Data Parsing
+export interface AIInput {
+  text?: string;
+  image?: {
+    base64: string;
+    mimeType: string;
+  };
+}
+
 export interface AIParsedTask {
   title?: string;
   description?: string;

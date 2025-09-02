@@ -8,7 +8,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useConnectivity } from '../../hooks/useNotification';
 import { useCustomization, defaultTextContent } from '../../hooks/useCustomization';
 import { ICONS } from '../../constants';
-import { Task, Training, UserData } from '../../types';
+import { Task, Training, UserData, AIInput } from '../../types';
 import Dashboard from '../dashboard/Dashboard';
 import TaskManagement from '../tasks/TaskManagement';
 import UserManagement from '../users/UserManagement';
@@ -22,7 +22,7 @@ import EditableText from '../common/EditableText';
 import TaskModal from '../tasks/TaskModal';
 import TrainingModal from '../training/TrainingModal'; 
 import AIInputModal from '../training/AddWithAIModal';
-import { analyzeTextForEntry } from '../../services/geminiService';
+import { analyzeInputForEntry } from '../../services/geminiService';
 
 
 interface MenuItem {
@@ -94,8 +94,8 @@ const MainLayout: React.FC = () => {
     const handleOpenTrainingModal = (training: Training | Partial<Training> | null = null) => { setEditingTraining(training); setIsTrainingModalOpen(true); };
     const handleCloseTrainingModal = () => { setEditingTraining(null); setIsTrainingModalOpen(false); };
     
-    const handleProcessAIText = async (text: string) => {
-        const result = await analyzeTextForEntry(text);
+    const handleProcessAIInput = async (input: AIInput) => {
+        const result = await analyzeInputForEntry(input);
         if (result.entryType === 'task' && result.taskDetails) {
             const { title, description, assignedTo, dueDate, priority } = result.taskDetails;
             let assignedToUid = '';
@@ -109,7 +109,7 @@ const MainLayout: React.FC = () => {
             const today = new Date().toISOString().split('T')[0];
             handleOpenTrainingModal({ nama, tanggalMulai: tanggalMulai || today, tanggalSelesai: tanggalSelesai || tanggalMulai || today, lokasi, pic, status: 'Belum Dikonfirmasi' });
         } else {
-            throw new Error("Teks tidak dapat dikenali sebagai tugas atau pelatihan.");
+            throw new Error("Teks atau gambar tidak dapat dikenali sebagai tugas atau pelatihan.");
         }
         setIsAIModalOpen(false);
     };
@@ -249,9 +249,9 @@ const MainLayout: React.FC = () => {
             {isAIModalOpen && <AIInputModal 
                 isOpen={isAIModalOpen}
                 onClose={() => setIsAIModalOpen(false)}
-                onProcess={handleProcessAIText}
+                onProcess={handleProcessAIInput}
                 title={`Tambah ${activeMenu === 'tasks' ? 'Tugas' : 'Pelatihan'} dengan AI`}
-                prompt={`Tempel teks untuk membuat ${activeMenu === 'tasks' ? 'tugas' : 'pelatihan'} baru secara otomatis.`}
+                prompt={`Tempel teks atau screenshot untuk membuat ${activeMenu === 'tasks' ? 'tugas' : 'pelatihan'} baru secara otomatis.`}
             />}
         </div>
     );

@@ -44,11 +44,11 @@ const parsingResponseSchema = {
     }
 };
 
-const parsingSystemInstruction = `You are an intelligent assistant for a project management app. Your task is to analyze natural language text and extract structured data for creating either a new 'task' or a new 'training' entry.
+const parsingSystemInstruction = `You are an intelligent assistant for a project management app. Your task is to analyze natural language text OR an image (like a screenshot of a conversation) and extract structured data for creating either a new 'task' or a new 'training' entry.
 - Today's date is ${new Date().toLocaleDateString('en-CA')}. Use this to resolve relative dates like 'tomorrow', 'next week', 'akhir bulan', etc.
 - For tasks, if a priority isn't mentioned, default to 'Mid'. The priority must be one of 'Low', 'Mid', or 'High'.
 - For trainings, if only one date is mentioned, use it for both 'tanggalMulai' and 'tanggalSelesai'.
-- If the text is ambiguous or doesn't seem to be a task or training, set entryType to 'unknown'.
+- If the input is ambiguous or doesn't seem to be a task or training, set entryType to 'unknown'.
 - All dates must be in YYYY-MM-DD format.
 - Names of people ('assignedTo' for tasks, 'pic' for training) should be extracted as full names if possible.
 - The output must be a valid JSON object matching the provided schema.`;
@@ -82,7 +82,7 @@ const handler: Handler = async (event, context) => {
     }
 
     try {
-        const { text, requestType, prompt } = JSON.parse(event.body || '{}');
+        const { input, requestType, prompt } = JSON.parse(event.body || '{}');
         const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
         
         let requestBody;
@@ -94,9 +94,28 @@ const handler: Handler = async (event, context) => {
               contents: [{ parts: [{ text: prompt }] }],
               systemInstruction: { parts: [{ text: summarySystemInstruction }] },
             };
-        } else if (text) {
-             requestBody = {
-              contents: [{ parts: [{ text }] }],
+        } else if (requestType === 'parsing' && input) {
+            const parts = [];
+            if (input.image && input.image.base64 && input.image.mimeType) {
+                parts.push({
+                    inlineData: {
+                        mimeType: input.image.mimeType,
+                        data: input.image.base64,
+                    }
+                });
+                parts.push({ text: "Analyze this image (e.g., a screenshot of a chat or note) and extract details for a new task or training event according to the schema." });
+            } else if (input.text) {
+                parts.push({ text: input.text });
+            } else {
+                 return { 
+                    statusCode: 400, 
+                    body: JSON.stringify({ error: 'Input tidak boleh kosong. Harap berikan teks atau gambar.' }),
+                    headers: { 'Content-Type': 'application/json' },
+                };
+            }
+            
+            requestBody = {
+              contents: [{ parts }],
               systemInstruction: { parts: [{ text: parsingSystemInstruction }] },
               generationConfig: {
                 responseMimeType: "application/json",
@@ -106,7 +125,7 @@ const handler: Handler = async (event, context) => {
         } else {
              return { 
                 statusCode: 400, 
-                body: JSON.stringify({ error: 'Input teks tidak boleh kosong.' }),
+                body: JSON.stringify({ error: 'Permintaan tidak valid. Harap berikan input yang benar.' }),
                 headers: { 'Content-Type': 'application/json' },
             };
         }

@@ -25,7 +25,7 @@ const DashboardTaskModal: React.FC<DashboardTaskModalProps> = ({ isOpen, onClose
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fade-in-up" onClick={onClose}>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fade-in-up modal-backdrop" onClick={onClose}>
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl p-6 sm:p-8 max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-xl sm:text-2xl font-bold">{title}</h2>

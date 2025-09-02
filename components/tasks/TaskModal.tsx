@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { addDoc, collection, doc, updateDoc } from '@firebase/firestore';
 import { getDownloadURL, ref, uploadBytes } from '@firebase/storage';
@@ -91,8 +90,8 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, users, closeModal }) => {
 
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-2xl max-h-[95vh] flex flex-col animate-fade-in-up">
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4" onClick={closeModal}>
+            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-2xl max-h-[95vh] flex flex-col animate-fade-in-up" onClick={(e) => e.stopPropagation()}>
                 <div className="p-6 border-b border-slate-200 dark:border-slate-700">
                     <h2 className="text-xl font-bold">{task && 'id' in task ? 'Edit Task' : 'Add New Task'}</h2>
                 </div>
@@ -163,4 +162,5 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, users, closeModal }) => {
     );
 };
 
+// FIX: Add default export for the component.
 export default TaskModal;

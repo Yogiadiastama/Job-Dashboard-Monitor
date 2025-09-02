@@ -50,38 +50,44 @@ const TrainingModal: React.FC<TrainingModalProps> = ({ training, closeModal }) =
                 <div className="p-6 border-b border-slate-200 dark:border-slate-700">
                     <h2 className="text-xl font-bold">{training && 'id' in training ? 'Edit Training' : 'Add New Training'}</h2>
                 </div>
-                <form id="training-modal-form" onSubmit={handleSubmit} className="flex-grow overflow-y-auto p-6 space-y-4">
-                     <div>
-                        <label className={labelStyle}>Training Name</label>
-                        <input type="text" value={nama} onChange={e => setNama(e.target.value)} className={inputStyle} required />
-                    </div>
+                <form id="training-modal-form" onSubmit={handleSubmit} className="flex-grow overflow-y-auto p-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="md:col-span-2">
+                            <label className={labelStyle}>Training Name</label>
+                            <input type="text" value={nama} onChange={e => setNama(e.target.value)} className={inputStyle} required />
+                        </div>
+                        
                         <div>
                             <label className={labelStyle}>Start Date</label>
                             <input type="date" value={tanggalMulai} onChange={e => setTanggalMulai(e.target.value)} className={inputStyle} required />
                         </div>
+
                         <div>
                             <label className={labelStyle}>End Date</label>
                             <input type="date" value={tanggalSelesai} onChange={e => setTanggalSelesai(e.target.value)} className={inputStyle} required />
                         </div>
-                    </div>
-                    <div>
-                        <label className={labelStyle}>Location</label>
-                        <input type="text" value={lokasi} onChange={e => setLokasi(e.target.value)} placeholder="e.g., Online via Zoom" className={inputStyle} required />
-                    </div>
-                     <div>
-                        <label className={labelStyle}>Person In Charge (PIC)</label>
-                        <input type="text" value={pic} onChange={e => setPic(e.target.value)} placeholder="e.g., Budi - Sales Dept." className={inputStyle} required />
-                    </div>
-                    <div>
-                        <label className={labelStyle}>Notes</label>
-                        <textarea value={catatan} onChange={e => setCatatan(e.target.value)} rows={3} className={inputStyle}></textarea>
-                    </div>
-                    <div>
-                        <label className={labelStyle}>Status</label>
-                        <select value={status} onChange={e => setStatus(e.target.value as TrainingStatus)} className={inputStyle}>
-                            {ALL_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-                        </select>
+
+                        <div className="md:col-span-2">
+                            <label className={labelStyle}>Location</label>
+                            <input type="text" value={lokasi} onChange={e => setLokasi(e.target.value)} placeholder="e.g., Online via Zoom" className={inputStyle} required />
+                        </div>
+
+                        <div>
+                            <label className={labelStyle}>Person In Charge (PIC)</label>
+                            <input type="text" value={pic} onChange={e => setPic(e.target.value)} placeholder="e.g., Budi - Sales Dept." className={inputStyle} required />
+                        </div>
+                        
+                        <div>
+                            <label className={labelStyle}>Status</label>
+                            <select value={status} onChange={e => setStatus(e.target.value as TrainingStatus)} className={inputStyle}>
+                                {ALL_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                            </select>
+                        </div>
+                        
+                        <div className="md:col-span-2">
+                            <label className={labelStyle}>Notes</label>
+                            <textarea value={catatan} onChange={e => setCatatan(e.target.value)} rows={3} className={`${inputStyle} min-h-[100px]`}></textarea>
+                        </div>
                     </div>
                 </form>
                 <div className="flex justify-end space-x-4 p-6 border-t border-slate-200 dark:border-slate-700">

@@ -9,6 +9,7 @@ import { Task, UserData, TaskPriority, TaskStatus, Training, ALL_TASK_STATUSES }
 import { ICONS } from '../../constants';
 import LoadingSpinner from '../common/LoadingSpinner';
 import KanbanBoard from './KanbanBoard';
+import TaskDetailModal from './TaskDetailModal';
 
 type SortableTaskKeys = keyof Pick<Task, 'title' | 'dueDate' | 'priority' | 'status' | 'createdAt'>;
 
@@ -29,6 +30,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({ onEditTask, onEditTrain
     const [assignedToFilter, setAssignedToFilter] = useState('all');
     const [assignedByFilter, setAssignedByFilter] = useState('all');
     const [statusFilter, setStatusFilter] = useState('all');
+    const [selectedTask, setSelectedTask] = useState<Task | null>(null);
     
     useEffect(() => {
         if (!userData) return;
@@ -153,7 +155,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({ onEditTask, onEditTrain
 
     return (
         <div className="space-y-6 animate-fade-in-down">
-             <div className="p-4 rounded-lg shadow-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+             <div className="sticky top-0 z-30 p-4 rounded-lg shadow-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                     <div className="flex flex-wrap items-center gap-4">
                         <div>
@@ -211,7 +213,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({ onEditTask, onEditTrain
                     <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
                         <div className="overflow-x-auto">
                             <table className="w-full text-sm text-left">
-                                <thead className="bg-slate-50 dark:bg-slate-700/50">
+                                <thead className="bg-slate-50 dark:bg-slate-700/50 sticky top-[88px] z-20">
                                     <tr>
                                         <th className="p-4"><button className="font-semibold flex items-center gap-1" onClick={() => requestSort('title')}>Title<span className="text-slate-400">{getSortIndicator('title')}</span></button></th>
                                         <th className="p-4 font-semibold">Assigned To</th>
@@ -224,7 +226,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({ onEditTask, onEditTrain
                                 </thead>
                                 <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
                                     {sortedTasks.map(task => (
-                                        <tr key={task.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer" onClick={() => onEditTask(task)}>
+                                        <tr key={task.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer" onClick={() => setSelectedTask(task)}>
                                             <td className="p-4 font-medium text-slate-900 dark:text-slate-50">{task.title}</td>
                                             <td className="p-4">{getUserName(task.assignedTo)}</td>
                                             <td className="p-4">{task.assignedBy ? getUserName(task.assignedBy) : '-'}</td>
@@ -249,6 +251,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({ onEditTask, onEditTrain
                     <KanbanBoard tasks={sortedTasks} users={users} onEditTask={onEditTask} onEditTraining={onEditTraining} />
                 )
             )}
+            {selectedTask && <TaskDetailModal task={selectedTask} users={users} onClose={() => setSelectedTask(null)} />}
         </div>
     );
 };

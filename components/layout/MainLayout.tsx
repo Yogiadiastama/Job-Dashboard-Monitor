@@ -54,28 +54,6 @@ const MainLayout: React.FC = () => {
         return () => usersUnsub();
     }, []);
 
-    // Effect to prevent background scroll when any modal is open
-    useEffect(() => {
-        const mainContent = document.getElementById('main-content');
-        
-        const observer = new MutationObserver(() => {
-            if (!mainContent) return;
-            const isModalOpen = document.querySelector('.modal-backdrop');
-            const currentOverflow = mainContent.style.overflowY;
-
-            if (isModalOpen && currentOverflow !== 'hidden') {
-                mainContent.style.overflowY = 'hidden';
-            } else if (!isModalOpen && currentOverflow === 'hidden') {
-                mainContent.style.overflowY = 'auto';
-            }
-        });
-
-        observer.observe(document.body, { childList: true, subtree: true });
-
-        return () => observer.disconnect();
-    }, []);
-
-
     const allMenuItems = useMemo<MenuItem[]>(() => [
         { id: 'dashboard', label: getText('dashboard.title', defaultTextContent['dashboard.title']), icon: ICONS.dashboard, roles: ['pegawai', 'pimpinan', 'admin'] },
         { id: 'tasks', label: getText('tasks.title', defaultTextContent['tasks.title']), icon: ICONS.tasks, roles: ['pegawai', 'pimpinan', 'admin'] },
@@ -260,7 +238,7 @@ const MainLayout: React.FC = () => {
                         </div>
                     </div>
                 </header>
-                <main id="main-content" className="flex-1 overflow-x-hidden overflow-y-auto p-6 lg:p-8">
+                <main className="flex-1 overflow-x-hidden overflow-y-auto p-6 lg:p-8">
                     {renderContent()}
                 </main>
             </div>

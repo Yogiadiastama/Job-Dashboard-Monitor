@@ -47,7 +47,7 @@ const TrainingModal: React.FC<TrainingModalProps> = ({ training, closeModal }) =
     const labelStyle = "block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300";
 
     return (
-         <div className="fixed inset-0 flex items-start justify-center z-50 p-4 modal-backdrop pt-16" onClick={closeModal}>
+         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 modal-backdrop" onClick={closeModal}>
             <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-2xl max-h-[95vh] flex flex-col animate-fade-in-up" onClick={e => e.stopPropagation()}>
                 <div className="p-6 border-b border-slate-200 dark:border-slate-700">
                     <h2 className="text-xl font-bold">{training && 'id' in training ? 'Edit Training' : 'Add New Training'}</h2>

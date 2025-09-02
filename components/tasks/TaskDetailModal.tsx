@@ -34,11 +34,11 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, users, onClose,
 
     return (
         <div
-            className="fixed inset-0 flex justify-center items-start z-50 p-4 animate-fade-in-up overflow-y-auto modal-backdrop pt-16"
+            className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 modal-backdrop"
             onClick={onClose}
         >
             <div
-                className="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-2xl transform transition-all"
+                className="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-2xl transform transition-all animate-fade-in-up"
                 onClick={e => e.stopPropagation()}
             >
                 <div className="p-6">

@@ -161,7 +161,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({ onEditTask, onEditTrain
 
     return (
         <div className="space-y-6 animate-fade-in-down">
-             <div className="p-4 rounded-lg shadow-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+             <div className="sticky top-0 z-10 p-4 rounded-lg shadow-sm bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                     <div className="flex flex-wrap items-center gap-4">
                         <div>

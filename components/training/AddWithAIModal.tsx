@@ -85,8 +85,8 @@ const AIInputModal: React.FC<AIInputModalProps> = ({ isOpen, onClose, onProcess,
     };
 
     return (
-        <div className="fixed inset-0 flex items-start justify-center z-50 p-4 animate-fade-in-up modal-backdrop pt-16" onClick={onClose}>
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 modal-backdrop" onClick={onClose}>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg animate-fade-in-up" onClick={e => e.stopPropagation()}>
                 <div className="p-6 border-b dark:border-gray-700">
                     <h2 className="text-2xl font-bold">{title}</h2>
                 </div>

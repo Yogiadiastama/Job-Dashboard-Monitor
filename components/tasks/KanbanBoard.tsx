@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
@@ -9,10 +10,11 @@ interface KanbanBoardProps {
     tasks: Task[];
     users: UserData[];
     onEditTask: (task: Task) => void;
+    onSelectTask: (task: Task) => void;
     onEditTraining: (training: Partial<Training>) => void;
 }
 
-const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks, users, onEditTask, onEditTraining }) => {
+const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks, users, onEditTask, onSelectTask, onEditTraining }) => {
     return (
         <DndProvider backend={HTML5Backend}>
             <div className="flex gap-6 overflow-x-auto p-2">
@@ -23,6 +25,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks, users, onEditTask, onE
                         tasks={tasks.filter(t => t.status === status)}
                         users={users}
                         onEditTask={onEditTask}
+                        onSelectTask={onSelectTask}
                         onEditTraining={onEditTraining}
                     />
                 ))}

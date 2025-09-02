@@ -1,3 +1,5 @@
+
+
 import React, { useRef } from 'react';
 import { useDrag } from 'react-dnd';
 import { Task, UserData, Training } from '../../types';
@@ -9,10 +11,11 @@ interface KanbanTaskCardProps {
     task: Task;
     user?: UserData;
     onEditTask: (task: Task) => void;
+    onSelectTask: (task: Task) => void;
     onEditTraining: (training: Partial<Training>) => void;
 }
 
-const KanbanTaskCard: React.FC<KanbanTaskCardProps> = ({ task, user, onEditTask, onEditTraining }) => {
+const KanbanTaskCard: React.FC<KanbanTaskCardProps> = ({ task, user, onEditTask, onSelectTask, onEditTraining }) => {
     const ref = useRef<HTMLDivElement>(null);
     const [{ isDragging }, drag] = useDrag(() => ({
         type: ItemTypes.TASK,
@@ -58,11 +61,12 @@ const KanbanTaskCard: React.FC<KanbanTaskCardProps> = ({ task, user, onEditTask,
     return (
         <div 
             ref={ref}
-            className={`bg-white dark:bg-slate-900 rounded-lg p-4 shadow-sm border border-slate-200 dark:border-slate-700 cursor-grab active:cursor-grabbing ${isDragging ? 'opacity-50' : 'opacity-100'}`}
+            onClick={() => onSelectTask(task)}
+            className={`bg-white dark:bg-slate-900 rounded-lg p-4 shadow-sm border border-slate-200 dark:border-slate-700 cursor-pointer active:cursor-grabbing ${isDragging ? 'opacity-50' : 'opacity-100'}`}
         >
             <div className="flex justify-between items-start">
                 <p className="font-semibold text-slate-800 dark:text-slate-100 pr-2">{task.title}</p>
-                 <div className="flex items-center flex-shrink-0">
+                 <div className="flex items-center flex-shrink-0" onClick={e => e.stopPropagation()}>
                     <button onClick={handleWhatsAppExport} className="p-1 text-slate-400 hover:text-green-600 dark:hover:text-green-400" title="Export to WhatsApp">{ICONS.whatsapp}</button>
                     <button onClick={handleCreateTrainingFromTask} className="p-1 text-slate-400 hover:text-purple-600 dark:hover:text-purple-400" title="Create Training">{ICONS.graduationCap}</button>
                     <button onClick={() => onEditTask(task)} className="p-1 text-slate-400 hover:text-primary-600 dark:hover:text-primary-400" title="Edit">{ICONS.edit}</button>

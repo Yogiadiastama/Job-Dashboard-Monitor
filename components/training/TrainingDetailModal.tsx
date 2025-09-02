@@ -29,11 +29,11 @@ const TrainingDetailModal: React.FC<TrainingDetailModalProps> = ({ training, onC
 
     return (
         <div 
-            className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 animate-fade-in-up" 
+            className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-start z-50 p-4 animate-fade-in-up overflow-y-auto" 
             onClick={onClose}
         >
             <div 
-                className="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-2xl transform transition-all"
+                className="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-2xl transform transition-all my-8"
                 onClick={e => e.stopPropagation()}
             >
                 <div className="p-6">

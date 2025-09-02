@@ -2,7 +2,7 @@ import React from 'react';
 import { Training, TrainingStatus } from '../../types';
 import { ICONS } from '../../constants';
 
-const formatDateRange = (start: string, end: string) => {
+const formatDateRange = (start: string, end:string) => {
     const options: Intl.DateTimeFormatOptions = { day: '2-digit', month: 'short', year: 'numeric' };
     const startDate = new Date(start).toLocaleDateString('id-ID', options);
     const endDate = new Date(end).toLocaleDateString('id-ID', options);
@@ -51,7 +51,9 @@ const TrainingDetailModal: React.FC<TrainingDetailModalProps> = ({ training, onC
                             <hr className="my-4 dark:border-slate-600"/>
                             <div>
                                 <h4 className="font-semibold mb-2 text-slate-800 dark:text-slate-200">Catatan:</h4>
-                                <p className="text-sm text-slate-600 dark:text-slate-300 whitespace-pre-wrap">{training.catatan}</p>
+                                <div className="max-h-64 overflow-y-auto p-3 bg-slate-50 dark:bg-slate-700/50 rounded-md border dark:border-slate-200 dark:border-slate-600">
+                                    <p className="text-sm text-slate-600 dark:text-slate-300 whitespace-pre-wrap">{training.catatan}</p>
+                                </div>
                             </div>
                         </>
                     )}

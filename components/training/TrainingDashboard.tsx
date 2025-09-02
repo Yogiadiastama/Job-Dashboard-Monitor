@@ -203,7 +203,7 @@ const TrainingDashboard: React.FC<TrainingDashboardProps> = ({ onEditTraining })
                          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
                             <div className="overflow-x-auto">
                                 <table className="w-full text-sm text-left">
-                                    <thead className="bg-slate-50 dark:bg-slate-700/50">
+                                    <thead className="sticky top-20 z-10 bg-slate-50 dark:bg-slate-700/50">
                                         <tr>
                                             <th className="p-4"><button className="font-semibold flex items-center gap-1" onClick={() => requestSort('nama')}>Nama Training<span className="text-slate-400">{getSortIndicator('nama')}</span></button></th>
                                             <th className="p-4"><button className="font-semibold flex items-center gap-1" onClick={() => requestSort('tanggalMulai')}>Tanggal<span className="text-slate-400">{getSortIndicator('tanggalMulai')}</span></button></th>

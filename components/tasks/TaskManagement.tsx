@@ -219,7 +219,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({ onEditTask, onEditTrain
                     <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
                         <div className="overflow-x-auto">
                             <table className="w-full text-sm text-left">
-                                <thead className="bg-slate-50 dark:bg-slate-700/50">
+                                <thead className="sticky top-20 z-10 bg-slate-50 dark:bg-slate-700/50">
                                     <tr>
                                         <th className="p-4"><button className="font-semibold flex items-center gap-1" onClick={() => requestSort('title')}>Title<span className="text-slate-400">{getSortIndicator('title')}</span></button></th>
                                         <th className="p-4 font-semibold">Assigned To</th>

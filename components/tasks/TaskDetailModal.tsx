@@ -38,14 +38,15 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, users, onClose 
     
     return (
         <div 
-            className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 animate-fade-in-up" 
+            className="fixed inset-0 z-50" 
             onClick={onClose}
         >
             <div 
-                className="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-2xl transform transition-all"
+                className="fixed top-0 right-0 h-full w-full max-w-2xl bg-white dark:bg-slate-800 shadow-xl flex flex-col animate-slide-in-right"
                 onClick={e => e.stopPropagation()}
             >
-                <div className="p-6">
+                {/* Scrollable Content Area */}
+                <div className="flex-grow p-6 overflow-y-auto">
                     <div className="flex justify-between items-start mb-4">
                         <h2 className="text-2xl font-bold text-slate-900 dark:text-white pr-4">{task.title}</h2>
                         <span className={`px-3 py-1 text-xs font-semibold rounded-full ${badge} flex-shrink-0`}>{task.status.toUpperCase()}</span>
@@ -85,7 +86,8 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, users, onClose 
                         </div>
                     )}
                 </div>
-                 <div className="p-4 bg-slate-50 dark:bg-slate-700/50 flex justify-end rounded-b-lg">
+                {/* Fixed Footer */}
+                 <div className="flex-shrink-0 p-4 bg-slate-50 dark:bg-slate-700/50 border-t border-slate-200 dark:border-slate-700 flex justify-end">
                     <button onClick={onClose} className="px-4 py-2 bg-slate-200 dark:bg-slate-600 rounded-md hover:bg-slate-300 dark:hover:bg-slate-500">
                         Tutup
                     </button>

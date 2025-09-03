@@ -210,42 +210,40 @@ const TaskManagement: React.FC<TaskManagementProps> = ({ onEditTask, onEditTrain
             
             {loading ? <LoadingSpinner text="Loading tasks..." /> : (
                 viewMode === 'list' ? (
-                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm text-left">
-                                <thead className="bg-slate-50 dark:bg-slate-700/50 sticky top-[88px] z-20">
-                                    <tr>
-                                        <th className="p-4"><button className="font-semibold flex items-center gap-1" onClick={() => requestSort('title')}>Title<span className="text-slate-400">{getSortIndicator('title')}</span></button></th>
-                                        <th className="p-4 font-semibold">Assigned To</th>
-                                        <th className="p-4 font-semibold">Assigned By</th>
-                                        <th className="p-4"><button className="font-semibold flex items-center gap-1" onClick={() => requestSort('dueDate')}>Due Date<span className="text-slate-400">{getSortIndicator('dueDate')}</span></button></th>
-                                        <th className="p-4"><button className="font-semibold flex items-center gap-1" onClick={() => requestSort('priority')}>Priority<span className="text-slate-400">{getSortIndicator('priority')}</span></button></th>
-                                        <th className="p-4"><button className="font-semibold flex items-center gap-1" onClick={() => requestSort('status')}>Status<span className="text-slate-400">{getSortIndicator('status')}</span></button></th>
-                                        <th className="p-4 font-semibold">Actions</th>
+                    <div className="overflow-x-auto rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+                        <table className="w-full text-sm text-left bg-white dark:bg-slate-800">
+                            <thead className="bg-slate-50 dark:bg-slate-700/50 sticky top-[72px] z-20">
+                                <tr>
+                                    <th className="p-4"><button className="font-semibold flex items-center gap-1" onClick={() => requestSort('title')}>Title<span className="text-slate-400">{getSortIndicator('title')}</span></button></th>
+                                    <th className="p-4 font-semibold">Assigned To</th>
+                                    <th className="p-4 font-semibold">Assigned By</th>
+                                    <th className="p-4"><button className="font-semibold flex items-center gap-1" onClick={() => requestSort('dueDate')}>Due Date<span className="text-slate-400">{getSortIndicator('dueDate')}</span></button></th>
+                                    <th className="p-4"><button className="font-semibold flex items-center gap-1" onClick={() => requestSort('priority')}>Priority<span className="text-slate-400">{getSortIndicator('priority')}</span></button></th>
+                                    <th className="p-4"><button className="font-semibold flex items-center gap-1" onClick={() => requestSort('status')}>Status<span className="text-slate-400">{getSortIndicator('status')}</span></button></th>
+                                    <th className="p-4 font-semibold">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                                {sortedTasks.map(task => (
+                                    <tr key={task.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer" onClick={() => setSelectedTask(task)}>
+                                        <td className="p-4 font-medium text-slate-900 dark:text-slate-50">{task.title}</td>
+                                        <td className="p-4">{getUserName(task.assignedTo)}</td>
+                                        <td className="p-4">{task.assignedBy ? getUserName(task.assignedBy) : '-'}</td>
+                                        <td className="p-4">{new Date(task.dueDate).toLocaleDateString('id-ID')}</td>
+                                        <td className="p-4"><span className={`px-3 py-1 text-xs font-semibold rounded-full ${priorityClass[task.priority]}`}>{task.priority}</span></td>
+                                        <td className="p-4"><span className={`px-3 py-1 text-xs font-semibold rounded-full ${statusClass[task.status]}`}>{task.status}</span></td>
+                                        <td className="p-4">
+                                            <div className="flex items-center space-x-1 text-slate-500" onClick={(e) => e.stopPropagation()}>
+                                                <button onClick={() => handleWhatsAppExport(task)} className="p-2 rounded-full hover:bg-green-100 dark:hover:bg-green-400/20 text-green-600 dark:text-green-400" title="Export to WhatsApp">{ICONS.whatsapp}</button>
+                                                <button onClick={() => handleCreateTrainingFromTask(task)} className="p-2 rounded-full hover:bg-purple-100 dark:hover:bg-purple-400/20 text-purple-600 dark:text-purple-400" title="Create Training from Task">{ICONS.graduationCap}</button>
+                                                <button onClick={() => onEditTask(task)} className="p-2 rounded-full hover:bg-yellow-100 dark:hover:bg-yellow-400/20 text-yellow-600 dark:text-yellow-400" title="Edit">{ICONS.edit}</button>
+                                                <button onClick={() => handleDelete(task.id, task.fileUrl)} className="p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-400/20 text-red-600 dark:text-red-400" title="Delete">{ICONS.delete}</button>
+                                            </div>
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                                    {sortedTasks.map(task => (
-                                        <tr key={task.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer" onClick={() => setSelectedTask(task)}>
-                                            <td className="p-4 font-medium text-slate-900 dark:text-slate-50">{task.title}</td>
-                                            <td className="p-4">{getUserName(task.assignedTo)}</td>
-                                            <td className="p-4">{task.assignedBy ? getUserName(task.assignedBy) : '-'}</td>
-                                            <td className="p-4">{new Date(task.dueDate).toLocaleDateString('id-ID')}</td>
-                                            <td className="p-4"><span className={`px-3 py-1 text-xs font-semibold rounded-full ${priorityClass[task.priority]}`}>{task.priority}</span></td>
-                                            <td className="p-4"><span className={`px-3 py-1 text-xs font-semibold rounded-full ${statusClass[task.status]}`}>{task.status}</span></td>
-                                            <td className="p-4">
-                                                <div className="flex items-center space-x-1 text-slate-500" onClick={(e) => e.stopPropagation()}>
-                                                    <button onClick={() => handleWhatsAppExport(task)} className="p-2 rounded-full hover:bg-green-100 dark:hover:bg-green-400/20 text-green-600 dark:text-green-400" title="Export to WhatsApp">{ICONS.whatsapp}</button>
-                                                    <button onClick={() => handleCreateTrainingFromTask(task)} className="p-2 rounded-full hover:bg-purple-100 dark:hover:bg-purple-400/20 text-purple-600 dark:text-purple-400" title="Create Training from Task">{ICONS.graduationCap}</button>
-                                                    <button onClick={() => onEditTask(task)} className="p-2 rounded-full hover:bg-yellow-100 dark:hover:bg-yellow-400/20 text-yellow-600 dark:text-yellow-400" title="Edit">{ICONS.edit}</button>
-                                                    <button onClick={() => handleDelete(task.id, task.fileUrl)} className="p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-400/20 text-red-600 dark:text-red-400" title="Delete">{ICONS.delete}</button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
                 ) : (
                     <KanbanBoard tasks={sortedTasks} users={users} onEditTask={onEditTask} onEditTraining={onEditTraining} />

@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { collection, onSnapshot, doc, deleteDoc, addDoc, updateDoc, query, orderBy } from '@firebase/firestore';
 import { db, getFirestoreErrorMessage } from '../../services/firebase';
@@ -91,11 +92,12 @@ const TrainingCard: React.FC<{
 
 interface TrainingDashboardProps {
     onEditTraining: (training: Training | Partial<Training>) => void;
+    onEditTask: (task: Partial<Task>) => void;
 }
 
 type SortableTrainingKeys = keyof Pick<Training, 'nama' | 'tanggalMulai' | 'lokasi' | 'pic' | 'status'>;
 
-const TrainingDashboard: React.FC<TrainingDashboardProps> = ({ onEditTraining }) => {
+const TrainingDashboard: React.FC<TrainingDashboardProps> = ({ onEditTraining, onEditTask }) => {
     const [trainings, setTrainings] = useState<Training[]>([]);
     const [loading, setLoading] = useState(true);
     const { showNotification } = useNotification();
@@ -162,6 +164,16 @@ const TrainingDashboard: React.FC<TrainingDashboardProps> = ({ onEditTraining })
         }
     };
 
+    const handleCreateTaskFromTraining = (training: Training) => {
+        const taskDetails: Partial<Task> = {
+            title: `Follow up: ${training.nama}`,
+            description: `This task is a follow-up for the training session "${training.nama}" held from ${training.tanggalMulai} to ${training.tanggalSelesai} at ${training.lokasi}. PIC was ${training.pic}.\n\nOriginal training notes:\n${training.catatan}`,
+            status: 'Pending',
+            priority: 'Mid',
+        };
+        onEditTask(taskDetails);
+    };
+
     const requestSort = (key: SortableTrainingKeys) => {
         let direction: 'ascending' | 'descending' = 'ascending';
         if (sortConfig.key === key && sortConfig.direction === 'ascending') {
@@ -224,6 +236,7 @@ const TrainingDashboard: React.FC<TrainingDashboardProps> = ({ onEditTraining })
                                                     <td className="p-4"><span className={`px-3 py-1 text-xs font-semibold rounded-full ${badge}`}>{training.status}</span></td>
                                                     <td className="p-4">
                                                         <div className="flex items-center space-x-1 text-slate-500" onClick={(e) => e.stopPropagation()}>
+                                                            <button onClick={() => handleCreateTaskFromTraining(training)} className="p-2 rounded-full hover:bg-blue-100 dark:hover:bg-blue-400/20 text-blue-600 dark:text-blue-400" title="Create Task from Training">{ICONS.tasks}</button>
                                                             <button onClick={() => {
                                                                 let message = `*Pelatihan / Training*\n\n` +
                                                                     `*Nama:* ${training.nama}\n` +
@@ -255,7 +268,7 @@ const TrainingDashboard: React.FC<TrainingDashboardProps> = ({ onEditTraining })
                     </div>
                 )
             )}
-            {selectedTraining && <TrainingDetailModal training={selectedTraining} onClose={() => setSelectedTraining(null)} />}
+            {selectedTraining && <TrainingDetailModal training={selectedTraining} onClose={() => setSelectedTraining(null)} onEditTask={onEditTask} />}
         </div>
     );
 };

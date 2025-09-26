@@ -119,14 +119,14 @@ const MainLayout: React.FC = () => {
     const renderContent = () => {
         const props = { onEditTask: handleOpenTaskModal, onEditTraining: handleOpenTrainingModal, users };
         switch (activeMenu) {
-            case 'dashboard': return <Dashboard />;
+            case 'dashboard': return <Dashboard onEditTask={handleOpenTaskModal} />;
             case 'tasks': return <TaskManagement {...props} />;
             case 'training': return <TrainingDashboard {...props} />;
             case 'analytics': return <EmployeeAnalyticsDashboard />;
             case 'search': return <EmployeeSearch />;
             case 'users': return <UserManagement />;
             case 'settings': return <Settings />;
-            default: return <Dashboard />;
+            default: return <Dashboard onEditTask={handleOpenTaskModal} />;
         }
     };
     

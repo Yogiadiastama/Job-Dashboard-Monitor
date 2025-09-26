@@ -1,5 +1,7 @@
+
+
 import React from 'react';
-import { Training, TrainingStatus } from '../../types';
+import { Training, TrainingStatus, Task } from '../../types';
 import { ICONS } from '../../constants';
 
 const formatDateRange = (start: string, end:string) => {
@@ -22,10 +24,22 @@ const getStatusStyles = (status: TrainingStatus) => {
 interface TrainingDetailModalProps {
     training: Training;
     onClose: () => void;
+    onEditTask: (task: Partial<Task>) => void;
 }
 
-const TrainingDetailModal: React.FC<TrainingDetailModalProps> = ({ training, onClose }) => {
+const TrainingDetailModal: React.FC<TrainingDetailModalProps> = ({ training, onClose, onEditTask }) => {
     const { badge } = getStatusStyles(training.status);
+
+    const handleCreateTask = () => {
+        const taskDetails: Partial<Task> = {
+            title: `Follow up for: ${training.nama}`,
+            description: `This task is a follow-up for the training session "${training.nama}" held from ${training.tanggalMulai} to ${training.tanggalSelesai} at ${training.lokasi}. PIC was ${training.pic}.\n\nOriginal training notes:\n${training.catatan}`,
+            status: 'Pending',
+            priority: 'Mid',
+        };
+        onEditTask(taskDetails);
+        onClose();
+    };
 
     return (
         <div 
@@ -58,7 +72,11 @@ const TrainingDetailModal: React.FC<TrainingDetailModalProps> = ({ training, onC
                         </>
                     )}
                 </div>
-                 <div className="p-4 bg-slate-50 dark:bg-slate-700/50 flex justify-end rounded-b-lg">
+                 <div className="p-4 bg-slate-50 dark:bg-slate-700/50 flex justify-between items-center rounded-b-lg">
+                    <button onClick={handleCreateTask} className="flex items-center space-x-2 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors">
+                        {ICONS.tasks}
+                        <span>Create Task</span>
+                    </button>
                     <button onClick={onClose} className="px-4 py-2 bg-slate-200 dark:bg-slate-600 rounded-md hover:bg-slate-300 dark:hover:bg-slate-500">
                         Tutup
                     </button>

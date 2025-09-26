@@ -4,7 +4,8 @@ import { useCustomization } from '../../hooks/useCustomization';
 interface EditableTextProps {
     contentKey: string;
     defaultText: string;
-    as?: keyof JSX.IntrinsicElements;
+    // FIX: Changed to React.JSX.IntrinsicElements to fix "Cannot find namespace 'JSX'" error.
+    as?: keyof React.JSX.IntrinsicElements;
     className?: string;
     isTextarea?: boolean;
     style?: React.CSSProperties;

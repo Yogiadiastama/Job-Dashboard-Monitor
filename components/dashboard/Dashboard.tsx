@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { collection, onSnapshot } from '@firebase/firestore';
 import { db, getFirestoreErrorMessage } from '../../services/firebase';
@@ -51,7 +52,11 @@ const DashboardStatCard: React.FC<{
     </div>
 );
 
-const Dashboard: React.FC = () => {
+interface DashboardProps {
+    onEditTask: (task: Partial<Task>) => void;
+}
+
+const Dashboard: React.FC<DashboardProps> = ({ onEditTask }) => {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [trainings, setTrainings] = useState<Training[]>([]);
     const [users, setUsers] = useState<UserData[]>([]);
@@ -161,7 +166,8 @@ const Dashboard: React.FC = () => {
         }));
 
         return [...taskActivities, ...trainingActivities]
-            .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+            // FIX: Explicitly cast Date objects to numbers for subtraction to resolve arithmetic operation error.
+            .sort((a, b) => Number(b.timestamp) - Number(a.timestamp))
             .slice(0, 7);
     }, [tasks, trainings, userMap]);
 
@@ -287,7 +293,7 @@ const Dashboard: React.FC = () => {
                 <DashboardTaskModal isOpen={!!modalData} onClose={handleCloseModal} title={modalData.title} tasks={modalData.data} users={users} />
             )}
             {modalData?.type === 'training' && (
-                 <DashboardTrainingModal isOpen={!!modalData} onClose={handleCloseModal} title={modalData.title} trainings={modalData.data} />
+                 <DashboardTrainingModal isOpen={!!modalData} onClose={handleCloseModal} title={modalData.title} trainings={modalData.data} onEditTask={onEditTask} />
             )}
         </div>
     );

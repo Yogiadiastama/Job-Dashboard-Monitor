@@ -1,12 +1,15 @@
 
+
 import React from 'react';
-import { Training, TrainingStatus } from '../../types';
+import { Training, TrainingStatus, Task } from '../../types';
+import { ICONS } from '../../constants';
 
 interface DashboardTrainingModalProps {
     isOpen: boolean;
     onClose: () => void;
     title: string;
     trainings: Training[];
+    onEditTask: (task: Partial<Task>) => void;
 }
 
 const statusClass: { [key in TrainingStatus]: string } = {
@@ -16,8 +19,18 @@ const statusClass: { [key in TrainingStatus]: string } = {
     'Selesai': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
 };
 
-const DashboardTrainingModal: React.FC<DashboardTrainingModalProps> = ({ isOpen, onClose, title, trainings }) => {
+const DashboardTrainingModal: React.FC<DashboardTrainingModalProps> = ({ isOpen, onClose, title, trainings, onEditTask }) => {
     if (!isOpen) return null;
+
+    const handleCreateTaskFromTraining = (training: Training) => {
+        const taskDetails: Partial<Task> = {
+            title: `Follow up: ${training.nama}`,
+            description: `This task is a follow-up for the training session "${training.nama}" held from ${training.tanggalMulai} to ${training.tanggalSelesai} at ${training.lokasi}. PIC was ${training.pic}.\n\nOriginal training notes:\n${training.catatan}`,
+            status: 'Pending',
+            priority: 'Mid',
+        };
+        onEditTask(taskDetails);
+    };
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fade-in-up" onClick={onClose}>
@@ -38,6 +51,7 @@ const DashboardTrainingModal: React.FC<DashboardTrainingModalProps> = ({ isOpen,
                                     <th className="p-3 sm:p-4">Lokasi</th>
                                     <th className="p-3 sm:p-4">PIC</th>
                                     <th className="p-3 sm:p-4">Status</th>
+                                    <th className="p-3 sm:p-4">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -51,6 +65,11 @@ const DashboardTrainingModal: React.FC<DashboardTrainingModalProps> = ({ isOpen,
                                             <span className={`px-3 py-1 text-sm font-semibold rounded-full ${statusClass[training.status] || 'bg-gray-100 text-gray-800'}`}>
                                                 {training.status}
                                             </span>
+                                        </td>
+                                        <td className="p-3 sm:p-4">
+                                            <button onClick={() => handleCreateTaskFromTraining(training)} className="p-2 rounded-full hover:bg-blue-100 dark:hover:bg-blue-400/20 text-blue-600 dark:text-blue-400" title="Create Task from Training">
+                                                {ICONS.tasks}
+                                            </button>
                                         </td>
                                     </tr>
                                 ))}

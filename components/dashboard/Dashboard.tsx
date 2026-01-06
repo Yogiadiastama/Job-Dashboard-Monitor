@@ -142,7 +142,12 @@ const Dashboard: React.FC<DashboardProps> = ({ onEditTask }) => {
     const recentActivity = useMemo(() => {
         const taskActivities = tasks.map(task => {
             const assignedToName = userMap.get(task.assignedTo) || 'an unassigned user';
-            const isCreation = !task.updatedAt || Math.abs(new Date(task.updatedAt).getTime() - new Date(task.createdAt || 0).getTime()) < 10000;
+            
+            // Safe date comparison
+            const updateTime = task.updatedAt ? new Date(task.updatedAt).getTime() : 0;
+            const createTime = new Date(task.createdAt || 0).getTime();
+            const isCreation = !task.updatedAt || Math.abs(updateTime - createTime) < 10000;
+            
             let text = '';
             if (isCreation) {
                 text = `Task <strong>${task.title}</strong> was assigned to <strong>${assignedToName}</strong>.`;
@@ -166,8 +171,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onEditTask }) => {
         }));
 
         return [...taskActivities, ...trainingActivities]
-            // FIX: Explicitly cast Date objects to numbers for subtraction to resolve arithmetic operation error.
-            .sort((a, b) => Number(b.timestamp) - Number(a.timestamp))
+            .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
             .slice(0, 7);
     }, [tasks, trainings, userMap]);
 

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, LabelList } from 'recharts';
 import { EmployeeProfile } from '../../types';
@@ -113,9 +114,13 @@ const EmployeeAnalyticsDashboard: React.FC = () => {
         }, {} as Record<string, number>);
 
         const levelDistribution = Object.entries(countBy('level')).map(([name, value]) => ({ name, value }));
-        const gradeDistribution = Object.entries(countBy('grade')).map(([name, value]) => ({ name, value })).sort((a,b) => b.value - a.value);
+        const gradeDistribution = Object.entries(countBy('grade'))
+            .map(([name, value]) => ({ name, value }))
+            .sort((a,b) => Number(b.value) - Number(a.value));
 
-        const unitDistribution = Object.entries(countBy('unitKerja')).map(([name, value]) => ({ name, value })).sort((a,b) => b.value - a.value);
+        const unitDistribution = Object.entries(countBy('unitKerja'))
+            .map(([name, value]) => ({ name, value }))
+            .sort((a,b) => Number(b.value) - Number(a.value));
         const topUnits = unitDistribution.slice(0, 10);
 
         // Robust Age/Generation Calculation

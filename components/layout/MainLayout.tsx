@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect, useCallback, useMemo, FC, ReactNode } from 'react';
 import { signOut } from '@firebase/auth';
 import { doc, updateDoc, collection, onSnapshot } from '@firebase/firestore';
@@ -14,7 +13,6 @@ import TaskManagement from '../tasks/TaskManagement';
 import UserManagement from '../users/UserManagement';
 import Settings from '../settings/Settings';
 import TrainingDashboard from '../training/TrainingDashboard';
-import EmployeeSearch from '../search/EmployeeSearch';
 import NotificationBanner from '../common/NotificationBanner';
 import EmployeeAnalyticsDashboard from '../analytics/EmployeeAnalyticsDashboard';
 import DraggableMenuItem from './DraggableMenuItem';
@@ -59,7 +57,6 @@ const MainLayout: React.FC = () => {
         { id: 'tasks', label: getText('tasks.title', defaultTextContent['tasks.title']), icon: ICONS.tasks, roles: ['pegawai', 'pimpinan', 'admin'] },
         { id: 'training', label: getText('training.title', defaultTextContent['training.title']), icon: ICONS.training, roles: ['pimpinan', 'admin'] },
         { id: 'analytics', label: getText('analytics.title', defaultTextContent['analytics.title']), icon: ICONS.chartPie, roles: ['pegawai', 'pimpinan', 'admin'] },
-        { id: 'search', label: getText('search.title', defaultTextContent['search.title']), icon: ICONS.search, roles: ['pimpinan', 'admin'] },
         { id: 'users', label: getText('users.title', defaultTextContent['users.title']), icon: ICONS.users, roles: ['admin'] },
         { id: 'settings', label: getText('settings.title', defaultTextContent['settings.title']), icon: ICONS.settings, roles: ['admin'] },
     ], [getText]);
@@ -123,7 +120,6 @@ const MainLayout: React.FC = () => {
             case 'tasks': return <TaskManagement {...props} />;
             case 'training': return <TrainingDashboard {...props} />;
             case 'analytics': return <EmployeeAnalyticsDashboard />;
-            case 'search': return <EmployeeSearch />;
             case 'users': return <UserManagement />;
             case 'settings': return <Settings />;
             default: return <Dashboard onEditTask={handleOpenTaskModal} />;

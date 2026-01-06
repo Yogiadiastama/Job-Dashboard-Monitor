@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, createContext, useContext, ReactNode, useCallback } from 'react';
 import { doc, onSnapshot, setDoc } from '@firebase/firestore';
 import { db } from '../services/firebase';
@@ -19,8 +20,6 @@ export const defaultTextContent: CustomTextContent = {
     'training.description': 'Manage all upcoming and past training sessions.',
     'analytics.title': 'Employee Analytics',
     'analytics.description': 'Visualize human resources data and insights.',
-    'search.title': 'Employee Directory',
-    'search.description': 'Instantly access detailed employee profiles.',
     'users.title': 'User Management',
     'settings.title': 'Settings',
 };
